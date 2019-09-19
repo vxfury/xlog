@@ -31,7 +31,7 @@ void *xlog_realloc( void *vptr, size_t nbytes )
 {
 	if( vptr ) {
 		vptr = (void *)((int *)vptr - 1);
-		return realloc( vptr, sizeof( int ) + nbytes );
+		return (void *)((int *)realloc( vptr, sizeof( int ) + nbytes ) + 1);
 	}
 	return NULL;
 }

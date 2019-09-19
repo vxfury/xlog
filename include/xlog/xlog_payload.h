@@ -39,10 +39,9 @@ enum {
 	XLOG_PAYLOAD_ODYNAMIC 	= 0x1 << 0, 	///< dynamic allocating and need free beyond life span
 	XLOG_PAYLOAD_OFIXED 	= 0x1 << 1, 	///< fixed size, alloc once or pre-allocated
 	XLOG_PAYLOAD_OALIGN 	= 0x1 << 2, 	///< aligned buffer
-	XLOG_PAYLOAD_OAUTOSIZE 	= 0x1 << 3, 	///< determine size to realloc or free automatically
-	XLOG_PAYLOAD_ORESERVING = 0x1 << 4, 	///< reserving some bytes, it's useful for string or some protocol(s)
-	XLOG_PAYLOAD_OTEXT		= 0x1 << 5,		///< text payload
-	XLOG_PAYLOAD_OBINARY	= 0x1 << 6,		///< binary payload
+	XLOG_PAYLOAD_ORESERVING = 0x1 << 3, 	///< reserving some bytes, it's useful for string or some protocol(s)
+	XLOG_PAYLOAD_OTEXT		= 0x1 << 4,		///< text payload
+	XLOG_PAYLOAD_OBINARY	= 0x1 << 5,		///< binary payload
 };
 #define XLOG_PAYLOAD_OALLOC_ONCE		XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OFIXED
 

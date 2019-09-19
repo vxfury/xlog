@@ -74,7 +74,7 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
 		payload->length = length - sizeof( xlog_payload_t ) - reserved;
 	} else {
 		if( XLOG_PAYLOAD_TEST_OPTION( options, XLOG_PAYLOAD_OFIXED ) ) {
-			options &= ~( XLOG_PAYLOAD_OAUTOSIZE | XLOG_PAYLOAD_OALIGN );
+			options &= ~( XLOG_PAYLOAD_OALIGN );
 			vptr = va_arg( ap, void * );
 			XLOG_ASSERT( vptr );
 			length = va_arg( ap, size_t );
@@ -107,6 +107,7 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
 			/** NOREACHED */
 		}
 	}
+	XLOG_PAYLOAD_TRACE( "magic = 0x%X.", XLOG_MAGIC_FROM_OBJECT( payload ) );
 	
 	return payload;
 }
@@ -149,7 +150,7 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 	*payload = temp;
 	( *payload )->length = new_size - sizeof( xlog_payload_t ) - reserved;
 	XLOG_PAYLOAD_TRACE(
-		"Payload: lenth = %u, offset = %u, reserved = %u",
+		"Payload: lenth = %u, offset = %u, reserved = %lu",
 		(*payload)->length, (*payload)->offset, XLOG_PAYLOAD_GET_RESERVED( (*payload)->options )
 	);
 	
@@ -197,7 +198,8 @@ XLOG_PUBLIC(void *) xlog_payload_data_vptr( const xlog_payload_t *payload )
 	XLOG_ASSERT( payload );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( XLOG_MAGIC_FROM_OBJECT( payload ) != XLOG_MAGIC_PAYLOAD ) {
-		return NULL;
+		XLOG_PAYLOAD_TRACE( "Runtime error: maybe payload has been destoryed. magic is 0x%X.", XLOG_MAGIC_FROM_OBJECT( payload ) );
+		// return NULL;
 	}
 	#endif
 	void *vptr = NULL;
@@ -226,7 +228,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char 
 	    || !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
 	    || text == NULL
 	) {
-		XLOG_PAYLOAD_TRACE( "Invalid parameters. text = %p" );
+		XLOG_PAYLOAD_TRACE( "Invalid parameters. text = %p", text );
 		return EINVAL;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -393,9 +395,11 @@ XLOG_PUBLIC(int) xlog_payload_append_binary( xlog_payload_t **payload, const voi
 		XLOG_PAYLOAD_TRACE( "Resize triggered, error = %d.", rv );
 		if( 0 == rv ) {
 			char *ptr = ( char * )xlog_payload_data_vptr( *payload );
+			XLOG_PAYLOAD_TRACE( "ptr = %p", ptr );
 			memcpy( ptr + ( *payload )->offset, vptr, size );
 			( *payload )->offset += size;
 		}
+		XLOG_PAYLOAD_TRACE( "test" );
 		
 		return rv;
 	}

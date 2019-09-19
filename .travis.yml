@@ -3,7 +3,9 @@ language: c
 script:
  - mkdir build && cd build && rm -rf ./*
  - cmake -DENABLE_COVERAGE_CHECK=ON .. && make
- - ./bin/demo-xlog > /dev/null && cd ..
+ - mkdir logs && ./bin/demo-xlog > /dev/null
+ - ./bin/cov-printer > /dev/null && ./bin/cov-payload > /dev/null
+ - cd ..
 
 after_success:
  - bash <(curl -s https://codecov.io/bash)

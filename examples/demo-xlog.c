@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#define XLOG_PRINTER	g_printer
+// #define XLOG_PRINTER	g_printer
 
 #include <xlog/xlog.h>
 #include <xlog/xlog_payload.h>
@@ -95,7 +95,7 @@ static xlog_module_t *g_sys = xlog_module_open
 
 static int xlog_test_init( void )
 {
-	g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/rotating.txt", 1024 * 1024 * 5, 64 );
+	g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "rotating.txt", 1024 * 1024 * 5, 64 );
 	XLOG_SET_THREAD_NAME( "thread-xlog" );
 	#if !(defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
 	g_master = xlog_open( "./xlog-nodes", 0 );
@@ -407,7 +407,7 @@ int main( int argc, char **argv )
 	xlog_test_init();
 	xlog_test_set_level();
 	// xlog_test_multi_thread( 10 );
-	xlog_bench_rate( 5 );
+	// xlog_bench_rate( 5 );
 	
 	#if 0
 	BENCH_START();
@@ -419,6 +419,8 @@ int main( int argc, char **argv )
 	#endif
 	
 	xlog_close( xlog_module_context( ROOT_MODULE ), 0 );
+	
+	xlog_printer_destory( g_printer );
 	
 	return 0;
 }

@@ -1137,9 +1137,15 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
 		XLOG_TRACE( "Runtime error: may be context has been closed." );
 		return 0;
 	}
-	if( printer && XLOG_MAGIC_FROM_OBJECT( printer ) != XLOG_MAGIC_PRINTER ) {
-		XLOG_TRACE( "Runtime error: may be printer has been closed." );
-		return 0;
+	if( printer ) {
+		if(
+			printer != xlog_printer_create( XLOG_PRINTER_STDOUT )
+		    && printer != xlog_printer_create( XLOG_PRINTER_STDERR )
+		    && XLOG_MAGIC_FROM_OBJECT( printer ) != XLOG_MAGIC_PRINTER
+		) {
+			XLOG_TRACE( "Runtime error: may be printer has been closed." );
+			return 0;
+		}
 	}
 	#endif
 	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_PRINTER)
@@ -1149,6 +1155,7 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
 	#else
 	XLOG_ASSERT( printer );
 	#endif
+	XLOG_TRACE( "printer = %p", printer );
 	
 	/** global setting in xlog */
 	if( context && !(context->options & XLOG_CONTEXT_OALIVE) ) {

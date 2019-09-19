@@ -41,31 +41,30 @@ add_subdirectory(xlog)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
 
-# demo-xlog
-set(
-	SOURCE_LIST_DEMO_LOGGING
-
-	examples/demo-xlog.c
-)
-
-add_executable(
-	demo-xlog
-
-	${SOURCE_LIST_DEMO_LOGGING}
-)
-target_link_libraries(
-	demo-xlog
-	xlog
-	pthread
-	getopt
-)
-
+# cov-printer
+set(SOURCES examples/cov-printer.c)
+add_executable(cov-printer ${SOURCES})
+target_link_libraries(cov-printer xlog)
 if(ENABLE_COVERAGE_CHECK)
-	target_link_libraries(
-		demo-xlog
-		gcov
-	)
+	target_link_libraries(cov-printer gcov)
 endif()
+redefine_file_macro(cov-printer)
 
+# cov-payload
+set(SOURCES examples/cov-payload.c)
+add_executable(cov-payload ${SOURCES})
+target_link_libraries(cov-payload xlog)
+if(ENABLE_COVERAGE_CHECK)
+	target_link_libraries(cov-payload gcov)
+endif()
+redefine_file_macro(cov-payload)
+
+# demo-xlog
+set(SOURCES examples/demo-xlog.c)
+add_executable(demo-xlog ${SOURCES})
+target_link_libraries(demo-xlog xlog pthread getopt)
+if(ENABLE_COVERAGE_CHECK)
+	target_link_libraries(demo-xlog gcov)
+endif()
 redefine_file_macro(demo-xlog)
 
