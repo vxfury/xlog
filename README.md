@@ -2,7 +2,7 @@
 [![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](https://github.com/vxfury/xlog/blob/master/LICENSE)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/vxfury/xlog?color=red&label=release)
 [![Build Status](https://travis-ci.org/vxfury/xlog.svg?branch=master)](https://travis-ci.org/vxfury/xlog)
-[![codecov](https://codecov.io/gh/vxfury/xlog/branch/master/graph/badge.svg)](https://codecov.io/gh/vxfury/xlog)
+[![codecov](https://codecov.io/gh/vxfury/xlog/branch/master/graph/badge.svg?token=FtsybxqPZU)](https://codecov.io/gh/vxfury/xlog)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/vxfury/xlog/pulls)
 
 High performance Extensible logging library designed for log formating and dynamic management via CLI(Command Line Interface) or API(Application Programming Interface).
