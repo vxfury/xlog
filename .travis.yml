@@ -1,0 +1,9 @@
+language: c
+
+script:
+ - mkdir build && cd build && rm -rf ./*
+ - cmake -DENABLE_COVERAGE_CHECK=ON .. && make
+ - ./bin/demo-xlog > /dev/null && cd ..
+
+after_success:
+ - bash <(curl -s https://codecov.io/bash)
