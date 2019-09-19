@@ -205,65 +205,6 @@ static int xlog_test_init( void )
 	return 0;
 }
 
-/** BENCH/DEMO: multi-thread */
-static void *xlog_test_thread( void *arg )
-{
-	#define TEST_LOG_INTERVAL (10)
-	#define TEST_LOG_TIMECTL (random() % TEST_LOG_INTERVAL)
-	int i = 5000; // random() % 1000;
-	char name[16];
-	snprintf( name, sizeof( name ), "thread-%d", (int)(intptr_t)arg );
-	XLOG_SET_THREAD_NAME( name );
-	
-	int len = 0;
-	while( ( i -- ) > 0 ) {
-		len = log_v( "verbose: use to trace variables, usually you won't use this level." );
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_d( "debug: keep silent in release edition." );
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_i(
-		    "info: part of the products, just like those words on the interactive interface.\n"
-		    "Feedback of current system status and/or action, so make sure it's significative and intelligible.\n"
-		    "Usaully meaningful event information, such as user login/logout, program startup/exit event, request event, etc."
-		);
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_w(
-		    "warn: running status that is not expected but can continue to process, so you'd better check and fix it.\n"
-		    "Usaully it's owing to improper calling of interface, such as a program invoking an interface that is about to expire, improper parameters, etc."
-		);
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_e( "error: runing time error, current process is terminated." );
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_f( "fatal: the service/system is not online now." );
-		usleep( TEST_LOG_TIMECTL );
-	}
-	
-	return NULL;
-}
-
-static int xlog_test_multi_thread( int nthread )
-{
-	pthread_t *threads = (pthread_t *)alloca( sizeof( pthread_t ) * nthread );
-	if( threads == NULL ) {
-		return -1;
-	}
-	
-	for( int i = 0; i < nthread; i ++ ) {
-		pthread_create( threads + i, NULL, xlog_test_thread, (void *)(uintptr_t)i );
-	}
-	
-	for( int i = 0; i < nthread; i ++ ) {
-		pthread_join( threads[i], NULL );
-	}
-	
-	return 0;
-}
-
 /** BENCH/DEMO: level control */
 static int xlog_test_set_level( void )
 {
