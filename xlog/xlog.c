@@ -1155,7 +1155,6 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
 	#else
 	XLOG_ASSERT( printer );
 	#endif
-	XLOG_TRACE( "printer = %p", printer );
 	
 	/** global setting in xlog */
 	if( context && !(context->options & XLOG_CONTEXT_OALIVE) ) {

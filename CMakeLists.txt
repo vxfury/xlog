@@ -59,6 +59,16 @@ if(ENABLE_COVERAGE_CHECK)
 endif()
 redefine_file_macro(cov-payload)
 
+# cov-xlog-no-default-context
+set(SOURCES examples/cov-xlog-not-default-context.c)
+add_executable(cov-xlog-not-default-context ${SOURCES})
+target_link_libraries(cov-xlog-not-default-context xlog)
+if(ENABLE_COVERAGE_CHECK)
+	target_link_libraries(cov-xlog-not-default-context gcov)
+endif()
+redefine_file_macro(cov-xlog-not-default-context)
+
+
 # demo-xlog
 set(SOURCES examples/demo-xlog.c)
 add_executable(demo-xlog ${SOURCES})

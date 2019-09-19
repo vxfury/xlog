@@ -63,7 +63,7 @@
 
 
 /** internal use */
-#define XLOG_TRACE(...)	printf( "<%s:%d> ", __func__, __LINE__ ), printf( __VA_ARGS__ ), printf( "\n" )
+#define XLOG_TRACE(...)	// printf( "<%s:%d> ", __func__, __LINE__ ), printf( __VA_ARGS__ ), printf( "\n" )
 
 
 #ifdef __cplusplus
