@@ -5,7 +5,7 @@ script:
  - cmake -DENABLE_COVERAGE_CHECK=ON .. && make
  - mkdir logs && ./bin/demo-xlog > /dev/null
  - ./bin/cov-printer > /dev/null && ./bin/cov-payload > /dev/null
- - ./bin/cov-xlog-no-default-context && ./bin/cov-xlog-no-default-context
+ - ./bin/./bin/cov-xlog-not-default-context && ./bin/./bin/cov-xlog-not-default-context
  - cd ..
 
 after_success:

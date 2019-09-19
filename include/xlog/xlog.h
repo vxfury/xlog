@@ -288,37 +288,37 @@ XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv );
 #define log_r(...)	xlog_output_rawlog( XLOG_PRINTER, NULL, __VA_ARGS__ )
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_FATAL
-#define log_f(...)  xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_FATAL, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__ )
+#define log_f(...)  xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_FATAL, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_f(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_ERROR
-#define log_e(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_ERROR, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__ )
+#define log_e(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_ERROR, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_e(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_WARN
-#define log_w(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_WARN, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__ )
+#define log_w(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_WARN, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_w(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_INFO
-#define log_i(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_INFO, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__ )
+#define log_i(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_INFO, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_i(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_DEBUG
-#define log_d(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_DEBUG, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__ )
+#define log_d(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_DEBUG, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_d(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_VERBOSE
-#define log_v(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_VERBOSE, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__ )
+#define log_v(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_VERBOSE, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_v(...)
 #endif
