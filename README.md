@@ -178,6 +178,16 @@ XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask );
 XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void );
 
 /**
+ * @brief  set default printer
+ * 
+ * @param  printer, printer you'd like be the default
+ *
+ * @return pointer to default printer.
+ *
+ */
+XLOG_PUBLIC(xlog_printer_t *) xlog_printer_set_default( const xlog_printer_t *printer );
+
+/**
  * @brief  create dynamic printer
  *
  * @param  options, options to create printer
