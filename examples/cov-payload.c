@@ -1,6 +1,5 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
-#include <xlog/xlog_payload.h>
 
 static unsigned long random_integer( void )
 {

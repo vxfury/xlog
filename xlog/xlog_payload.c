@@ -1,6 +1,5 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
-#include <xlog/xlog_payload.h>
 
 #include "internal/xlog.h"
 #include "internal/xlog_tree.h"
@@ -37,7 +36,7 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
 	va_start( ap, options );
 	if( XLOG_PAYLOAD_TEST_OPTION( options, XLOG_PAYLOAD_ODYNAMIC ) ) {
 		length = va_arg( ap, size_t );
-		XLOG_PAYLOAD_TRACE( "length = %zu", length );
+		XLOG_TRACE( "length = %zu", length );
 		length += sizeof( xlog_payload_t );
 		if( XLOG_PAYLOAD_TEST_OPTION( options, XLOG_PAYLOAD_OALIGN ) ) {
 			align = va_arg( ap, int );
@@ -46,20 +45,20 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
 		}
 		if( XLOG_PAYLOAD_TEST_OPTION( options, XLOG_PAYLOAD_ORESERVING ) ) {
 			reserved = va_arg( ap, int );
-			XLOG_PAYLOAD_TRACE( "reserved = %d", reserved );
+			XLOG_TRACE( "reserved = %d", reserved );
 			XLOG_ASSERT( reserved >= 0 );
 			length += reserved;
 			XLOG_PAYLOAD_SET_RESERVED( options, reserved );
 		}
 		if( XLOG_PAYLOAD_TEST_OPTION( options, XLOG_PAYLOAD_OALIGN ) ) {
-			length = XLOG_PAYLOAD_ALIGN_UP( length, align );
-			XLOG_PAYLOAD_TRACE( "length = %zu after alignment", length );
+			length = XLOG_ALIGN_UP( length, align );
+			XLOG_TRACE( "length = %zu after alignment", length );
 		}
 		va_end( ap );
 		
 		payload = ( xlog_payload_t * )XLOG_MALLOC( length );
 		if( NULL == payload ) {
-			XLOG_PAYLOAD_TRACE( "Out of memory" );
+			XLOG_TRACE( "Out of memory" );
 			return NULL;
 		}
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -81,7 +80,7 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
 			vptr = va_arg( ap, void * );
 			XLOG_ASSERT( vptr );
 			length = va_arg( ap, size_t );
-			XLOG_PAYLOAD_TRACE( "Pre-Allocated: vptr = %p, size = %zu", vptr, length );
+			XLOG_TRACE( "Pre-Allocated: vptr = %p, size = %zu", vptr, length );
 			if( XLOG_PAYLOAD_TEST_OPTION( options, XLOG_PAYLOAD_ORESERVING ) ) {
 				reserved = va_arg( ap, int );
 				XLOG_ASSERT( reserved >= 0 );
@@ -110,7 +109,7 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
 			/** NOREACHED */
 		}
 	}
-	XLOG_PAYLOAD_TRACE( "magic = 0x%X.", XLOG_MAGIC_FROM_OBJECT( payload ) );
+	XLOG_TRACE( "magic = 0x%X.", XLOG_MAGIC_FROM_OBJECT( payload ) );
 	
 	return payload;
 }
@@ -130,7 +129,7 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 	    || *payload == NULL
 	    || !XLOG_PAYLOAD_RESIZEABLE( ( *payload )->options )
 	) {
-		XLOG_PAYLOAD_TRACE( "Invalid parameters." );
+		XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -143,7 +142,7 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 	size_t new_size = size + reserved + sizeof( xlog_payload_t );
 	
 	if( XLOG_PAYLOAD_TEST_OPTION( ( *payload )->options, XLOG_PAYLOAD_OALIGN ) ) {
-		new_size = XLOG_PAYLOAD_ALIGN_UP( new_size, ( 0x1 << XLOG_PAYLOAD_GET_ALIGN_BITS( ( *payload )->options ) ) );
+		new_size = XLOG_ALIGN_UP( new_size, ( 0x1 << XLOG_PAYLOAD_GET_ALIGN_BITS( ( *payload )->options ) ) );
 	}
 	
 	xlog_payload_t *temp = (xlog_payload_t *)XLOG_REALLOC( ( *payload ), new_size );
@@ -152,7 +151,7 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 	}
 	*payload = temp;
 	( *payload )->length = new_size - sizeof( xlog_payload_t ) - reserved;
-	XLOG_PAYLOAD_TRACE(
+	XLOG_TRACE(
 		"Payload: lenth = %u, offset = %u, reserved = %lu",
 		(*payload)->length, (*payload)->offset, XLOG_PAYLOAD_GET_RESERVED( (*payload)->options )
 	);
@@ -173,7 +172,7 @@ XLOG_PUBLIC(int) xlog_payload_destory( xlog_payload_t **payload )
 	    payload == NULL
 	    || *payload == NULL
 	) {
-		XLOG_PAYLOAD_TRACE( "Invalid parameters." );
+		XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
 	
@@ -201,7 +200,7 @@ XLOG_PUBLIC(void *) xlog_payload_data_vptr( const xlog_payload_t *payload )
 	XLOG_ASSERT( payload );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( payload->magic != XLOG_MAGIC_PAYLOAD ) {
-		XLOG_PAYLOAD_TRACE( "Runtime error: maybe payload has been destoryed. magic is 0x%X.", XLOG_MAGIC_FROM_OBJECT( payload ) );
+		XLOG_TRACE( "Runtime error: maybe payload has been destoryed. magic is 0x%X.", XLOG_MAGIC_FROM_OBJECT( payload ) );
 		// return NULL;
 	}
 	#endif
@@ -231,7 +230,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char 
 	    || !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
 	    || text == NULL
 	) {
-		XLOG_PAYLOAD_TRACE( "Invalid parameters. text = %p", text );
+		XLOG_TRACE( "Invalid parameters. text = %p", text );
 		return EINVAL;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -243,7 +242,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char 
 	size_t textlen = XLOG_PAYLOAD_TEXT_LENGTH( text );
 	if( ( *payload )->offset + textlen < ( *payload )->length ) {
 		char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-		XLOG_PAYLOAD_TRACE( "ptr = %p", ptr );
+		XLOG_TRACE( "ptr = %p", ptr );
 		memcpy( ptr + ( *payload )->offset, text, textlen );
 		( *payload )->offset += textlen;
 		*( ptr + ( *payload )->offset ) = '\0';
@@ -251,10 +250,10 @@ XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char 
 		return 0;
 	} else if( XLOG_PAYLOAD_RESIZEABLE( ( *payload )->options ) ) {
 		int rv = xlog_payload_resize( payload, ( *payload )->offset + textlen + 1 );
-		XLOG_PAYLOAD_TRACE( "Resize triggered, error = %d.", rv );
+		XLOG_TRACE( "Resize triggered, error = %d.", rv );
 		if( 0 == rv ) {
 			char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-			XLOG_PAYLOAD_TRACE( "ptr = %p", ptr );
+			XLOG_TRACE( "ptr = %p", ptr );
 			memcpy( ptr + ( *payload )->offset, text, textlen );
 			( *payload )->offset += textlen;
 			*( ptr + ( *payload )->offset ) = '\0';
@@ -282,7 +281,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va_list( xlog_payload_t **payload, con
 	    || !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
 	    || format == NULL
 	) {
-		XLOG_PAYLOAD_TRACE( "Invalid parameters." );
+		XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
 	
@@ -297,9 +296,9 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va_list( xlog_payload_t **payload, con
 	
 	if( ( *payload )->offset < ( *payload )->length ) {
 		char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-		XLOG_PAYLOAD_TRACE( "ptr = %p", ptr );
+		XLOG_TRACE( "ptr = %p", ptr );
 		
-		int len = XLOG_VSNPRINTF( ptr + ( *payload )->offset, ( *payload )->length - ( *payload )->offset, format, ap );
+		int len = vsnprintf( ptr + ( *payload )->offset, ( *payload )->length - ( *payload )->offset, format, ap );
 		if( len < 0 ) {
 			return EIO;
 		} else if( len < ( *payload )->length - ( *payload )->offset ) {
@@ -307,11 +306,11 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va_list( xlog_payload_t **payload, con
 			return 0;
 		} else if( XLOG_PAYLOAD_RESIZEABLE( ( *payload )->options ) ) {
 			int rv = xlog_payload_resize( payload, ( *payload )->offset + len + 1 );
-			XLOG_PAYLOAD_TRACE( "Resize triggered, error = %d.", rv );
+			XLOG_TRACE( "Resize triggered, error = %d.", rv );
 			if( 0 == rv ) {
 				ptr = ( char * )xlog_payload_data_vptr( *payload );
-				XLOG_PAYLOAD_TRACE( "ptr = %p", ptr );
-				len = XLOG_VSNPRINTF( ptr + ( *payload )->offset, ( *payload )->length - ( *payload )->offset, format, ap_bkp );
+				XLOG_TRACE( "ptr = %p", ptr );
+				len = vsnprintf( ptr + ( *payload )->offset, ( *payload )->length - ( *payload )->offset, format, ap_bkp );
 				va_end( ap_bkp );
 				( *payload )->offset += len;
 			}
@@ -343,7 +342,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va( xlog_payload_t **payload, const ch
 	    || *payload == NULL
 	    || !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
 	) {
-		XLOG_PAYLOAD_TRACE( "Invalid parameters." );
+		XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
 	
@@ -376,7 +375,7 @@ XLOG_PUBLIC(int) xlog_payload_append_binary( xlog_payload_t **payload, const voi
 	    || *payload == NULL
 	    || !XLOG_PAYLOAD_BINARY_COMPATIBLE( ( *payload )->options )
 	) {
-		XLOG_PAYLOAD_TRACE( "Invalid parameters." );
+		XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
 	
@@ -388,21 +387,21 @@ XLOG_PUBLIC(int) xlog_payload_append_binary( xlog_payload_t **payload, const voi
 	
 	if( ( *payload )->offset + size <= ( *payload )->length ) {
 		char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-		XLOG_PAYLOAD_TRACE( "ptr = %p", ptr );
+		XLOG_TRACE( "ptr = %p", ptr );
 		memcpy( ptr + ( *payload )->offset, vptr, size );
 		( *payload )->offset += size;
 		
 		return 0;
 	} else if( XLOG_PAYLOAD_RESIZEABLE( ( *payload )->options ) ) {
 		int rv = xlog_payload_resize( payload, ( *payload )->offset + size );
-		XLOG_PAYLOAD_TRACE( "Resize triggered, error = %d.", rv );
+		XLOG_TRACE( "Resize triggered, error = %d.", rv );
 		if( 0 == rv ) {
 			char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-			XLOG_PAYLOAD_TRACE( "ptr = %p", ptr );
+			XLOG_TRACE( "ptr = %p", ptr );
 			memcpy( ptr + ( *payload )->offset, vptr, size );
 			( *payload )->offset += size;
 		}
-		XLOG_PAYLOAD_TRACE( "test" );
+		XLOG_TRACE( "test" );
 		
 		return rv;
 	}

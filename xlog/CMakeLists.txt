@@ -56,11 +56,6 @@ set(
 	internal/xlog_hexdump.c
 )
 
-option(XLOG_FEATURE_REPLACE_VSNPRINTF "Use custom vsnprintf instead of that in libc" OFF)
-if (XLOG_FEATURE_REPLACE_VSNPRINTF)
-    list(APPEND SOURCES internal/xlog_vsnprintf.c)
-endif()
-
 configure_file(
     "${CMAKE_SOURCE_DIR}/include/xlog/xlog_config.h.in"
     "${CMAKE_SOURCE_DIR}/include/xlog/xlog_config.h"

@@ -1,7 +1,4 @@
 #include <xlog/xlog.h>
-#include <xlog/xlog_tree.h>
-#include <xlog/xlog_payload.h>
-#include <xlog/xlog_hexdump.h>
 
 #include "internal/xlog.h"
 

@@ -1,10 +1,8 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
-#include <xlog/xlog_payload.h>
 
 #include "internal/xlog.h"
 #include "internal/xlog_tree.h"
-
 #include "internal/xlog_hexdump.h"
 
 #ifdef __GNUC__

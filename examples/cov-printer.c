@@ -2,7 +2,6 @@
 
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
-#include <xlog/xlog_payload.h>
 
 static xlog_printer_t *g_printer = NULL;
 static xlog_module_t *g_mod = NULL;

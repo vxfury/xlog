@@ -18,7 +18,7 @@
 // #define XLOG_PRINTER	g_printer
 
 #include <xlog/xlog.h>
-#include <xlog/xlog_payload.h>
+#include <xlog/xlog_helper.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wsign-compare"
