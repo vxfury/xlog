@@ -6,7 +6,7 @@
 /** version number */
 #define XLOG_VERSION_MAJOR        	2
 #define XLOG_VERSION_MINOR        	3
-#define XLOG_VERSION_PATCH     		2
+#define XLOG_VERSION_PATCH     		3
 
 #if ( XLOG_VERSION_MINOR > 0xF ) || ( XLOG_VERSION_PATCH > 0xF )
 #error We expected minor/revision version number which not greater than 0xF.
