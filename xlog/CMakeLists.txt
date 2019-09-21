@@ -54,6 +54,10 @@ set(
 	
 	internal/xlog_tree.c
 	internal/xlog_hexdump.c
+	
+	internal/stdio-printer.c
+	internal/basic-file-printer.c
+	internal/rotating-file-printer.c
 )
 
 configure_file(
