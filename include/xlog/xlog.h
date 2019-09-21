@@ -52,6 +52,7 @@ extern "C" {
 /** xlog shell list control options */
 #define XLOG_LIST_OWITH_TAG			BIT_MASK(0)
 #define XLOG_LIST_OONLY_DROP		BIT_MASK(1)
+#define XLOG_LIST_OALL				BIT_MASK(2)
 
 /**
  * @brief  open module under parent
@@ -116,10 +117,10 @@ XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog
  * @brief  list sub-modules
  *
  * @param  module, pointer to `xlog_module_t`
- *         list, print options
+ *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int mask );
+XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int options );
 
 /**
  * @brief  change level of module
@@ -187,10 +188,10 @@ XLOG_PUBLIC(int) xlog_version( char *buffer, int size );
  * @brief  list all modules under xlog context
  *
  * @param  context, pointer to `xlog_t`
- *         mask, print options
+ *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask );
+XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int options );
 
 
 

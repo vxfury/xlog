@@ -304,7 +304,7 @@ static int xlog_test_set_level( void )
 		char *targv[10];
 		
 		{
-			char cmdline[] = "debug -r -l=w /net";
+			char cmdline[] = "debug -r -L=w /net";
 			shell_make_args( cmdline, &targc, targv, 10 );
 			xlog_shell_main( XLOG_CONTEXT, targc, targv );
 

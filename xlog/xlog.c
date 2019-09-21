@@ -533,10 +533,10 @@ static const char * __xlog_module_node_dir( char *buffer, int length, const xlog
  * @brief  list sub-modules
  *
  * @param  module, pointer to `xlog_module_t`
- *         list, print options
+ *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int mask )
+XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int options )
 {
 	if( module == NULL ) {
 		XLOG_TRACE( "Invalid module" );
@@ -558,17 +558,27 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
 	
 	while( child ) {
 		__module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( child );
+		
+		// Feature(Hidden modules): don't show module whose name start with dot[.]
+		if(
+			__module->name[0] == '.' && !(options & XLOG_LIST_OALL)
+		) {
+			continue;
+		}
+		
 		__limit = xlog_module_level_limit( __module );
 		const char *name = xlog_module_name( modulepath, XLOG_LIMIT_MODULE_PATH, __module );
 		
 		bool show = true;
-		if( ( mask & XLOG_LIST_OONLY_DROP ) ) {
+		if( ( options & XLOG_LIST_OONLY_DROP ) ) {
 			if( !XLOG_IF_DROP_LEVEL( __module->level, __limit ) ) {
 				show = false;
 			}
 		}
+		
 		if( show ) {
-			if( mask & XLOG_LIST_OWITH_TAG ) {
+			
+			if( options & XLOG_LIST_OWITH_TAG ) {
 				log_r(
 				    "[%s]%c %s\n"
 				    , __xlog_level_short_name( __module->level )
@@ -580,7 +590,7 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
 			}
 		}
 		
-		xlog_module_list_submodules( __module, mask );
+		xlog_module_list_submodules( __module, options );
 		
 		child = child->next;
 	}
@@ -1033,10 +1043,10 @@ XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option )
  * @brief  list all modules under xlog context
  *
  * @param  context, pointer to `xlog_t`
- *         mask, print options
+ *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask )
+XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int options )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
@@ -1061,7 +1071,7 @@ XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask )
 	XLOG_ASSERT( context && context->module );
 	#endif
 	
-	xlog_module_list_submodules( context->module, mask );
+	xlog_module_list_submodules( context->module, options );
 }
 
 /**

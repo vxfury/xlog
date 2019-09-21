@@ -27,7 +27,7 @@ typedef struct {
 	int f_force;
 	int f_recursive;
 	int f_only;
-	int f_with_tag;
+	int f_list_options;
 	
 	int exit_code;
 	jmp_buf exit_jmp;
@@ -45,13 +45,13 @@ static const struct option debug_options[] = {
 	{ "list"			, no_argument		, NULL	, 'l'						},
 	{ "all"				, no_argument		, NULL	, 'a'						},
 	{ "only"			, no_argument		, NULL	, LOG_CLI_OPT_ONLY			},
-	{ "with-tag"		, no_argument		, NULL	, LOG_CLI_OPT_WITH_TAG		},
-	{ "without-tag"		, no_argument		, NULL	, LOG_CLI_OPT_WITHOUT_TAG	},
+	{ "tag"				, no_argument		, NULL	, LOG_CLI_OPT_WITH_TAG		},
+	{ "no-tag"			, no_argument		, NULL	, LOG_CLI_OPT_WITHOUT_TAG	},
 	{ "version"			, no_argument		, NULL	, 'v'						},
 	{ "help"			, no_argument		, NULL	, 'h'						},
 	{ NULL				, 0					, NULL	, '\0'						}
 };
-#define XLOG_CLI_SHORT_OPTIONS	"fFrLl:avh"
+#define XLOG_CLI_SHORT_OPTIONS	"fFrlL:avh"
 
 static void shell_debug_exit( xlog_shell_globals_t *globals, int code )
 {
@@ -91,7 +91,7 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 	
 	globals->level = XLOG_LEVEL_DEBUG;
 	globals->f_force = 1;
-	globals->f_with_tag = XLOG_LIST_OWITH_TAG;
+	globals->f_list_options = XLOG_LIST_OWITH_TAG;
 	
 	while( (
         ch = getopt_long_r(
@@ -109,7 +109,7 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 			case 'r':
 				globals->f_recursive = 1;
 				break;
-			case 'l':
+			case 'L':
 				if( getopt_reent.optarg && *( getopt_reent.optarg ) != '\0' ) {
 					#define __X( b ) (0 == strcasecmp( getopt_reent.optarg, b ))
 					#define __Y( num, tag, word ) ( __X( tag ) || __X( num ) || __X( word ) )
@@ -136,10 +136,13 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 				}
 				break;
 			case LOG_CLI_OPT_WITH_TAG:
-				globals->f_with_tag = 1;
+				globals->f_list_options |= XLOG_LIST_OWITH_TAG;
 				break;
 			case LOG_CLI_OPT_WITHOUT_TAG:
-				globals->f_with_tag = 0;
+				globals->f_list_options &= ~XLOG_LIST_OWITH_TAG;
+				break;
+			case 'a':
+				globals->f_list_options |= XLOG_LIST_OALL;
 				break;
 			case 'v': {
 				char _version[32];
@@ -153,7 +156,7 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 				break;
 			case 'l':
 				log_r( "Modules in your application:\n" );
-				xlog_list_modules( globals->context, globals->f_with_tag );
+				xlog_list_modules( globals->context, globals->f_list_options );
 				log_r( "\n" );
 				exit( EXIT_SUCCESS );
 				break;
