@@ -46,6 +46,9 @@ enum {
 #define XLOG_PAYLOAD_OALLOC_ONCE		XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OFIXED
 
 typedef struct {
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	int magic;
+	#endif
 	const char  *brief;			///< payload brief
 	unsigned int id;			///< payload identifier
 	unsigned int

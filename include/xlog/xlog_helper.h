@@ -80,6 +80,9 @@ typedef struct {
 } xlog_stats_t;
 
 typedef struct {
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	int magic;
+	#endif
 	pthread_mutex_t lock;
 	
 	int level;
@@ -91,6 +94,9 @@ typedef struct {
 } xlog_module_t;
 
 typedef struct __xlog_printer {
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	int magic;
+	#endif
 	void *context;
 	int options;
 	int (*append)(struct __xlog_printer *printer, const char *text);
@@ -105,6 +111,9 @@ typedef struct xlog_level_attr_tag {
 } xlog_level_attr_t;
 
 typedef struct {
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	int magic;
+	#endif
 	pthread_mutex_t lock;
 	int options;
 	char *savepath;

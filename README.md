@@ -7,7 +7,7 @@
 
 High performance Extensible logging library designed for log formating and dynamic management via CLI(Command Line Interface) or API(Application Programming Interface).
 
-![image](https://github.com/vxfury/logger/raw/master/doc/example.jpg)
+![image](https://github.com/vxfury/xlog/blob/master/doc/example.jpg)
 
 ## Command Line Interface
 
@@ -60,7 +60,16 @@ XLOG_PUBLIC(int) xlog_module_close( xlog_module_t *module );
 XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, const char *name );
 
 /**
- * @brief  get output level
+ * @brief  get context of xlog module
+ *
+ * @param  module, pointer to `xlog_module_t`
+ * @return xlog context. NULL if failed to get xlog context.
+ *
+ */
+XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module );
+
+/**
+ * @brief  get output level limit for this module
  *
  * @param  module, pointer to `xlog_module_t`
  * @return output level.
@@ -77,16 +86,6 @@ XLOG_PUBLIC(int) xlog_module_level_limit( const xlog_module_t *module );
  *
  */
 XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog_module_t *module );
-
-/**
- * @brief  get node dir of module
- *
- * @param  buffer/length, buffer to save node dir
- *         module, pointer to `xlog_module_t`
- * @return node dir.
- *
- */
-XLOG_PUBLIC(const char *) xlog_module_node_dir( char *buffer, int length, const xlog_module_t *module );
 
 /**
  * @brief  list sub-modules
@@ -109,15 +108,6 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
 XLOG_PUBLIC(int) xlog_module_set_level( xlog_module_t *module, int level, int flags );
 
 /**
- * @brief  get context of xlog module
- *
- * @param  module, pointer to `xlog_module_t`
- * @return xlog context. NULL if failed to get xlog context.
- *
- */
-XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module );
-
-/**
  * @brief  dump module's config to filesystem
  *
  * @param  module, pointer to `xlog_module_t`
@@ -136,6 +126,7 @@ XLOG_PUBLIC(int) xlog_module_dump_to( const xlog_module_t *module, const char *s
  *
  */
 XLOG_PUBLIC(int) xlog_module_load_from( xlog_module_t *module, const char *loadpath );
+
 
 
 /**
@@ -159,15 +150,6 @@ XLOG_PUBLIC(xlog_t *) xlog_open( const char *savepath, int option );
 XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option );
 
 /**
- * @brief  list all modules under xlog context
- *
- * @param  context, pointer to `xlog_t`
- *         mask, print options
- *
- */
-XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask );
-
-/**
  * @brief  get xlog version
  *
  * @param  buffer/size, buffer to save version description
@@ -177,24 +159,57 @@ XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask );
 XLOG_PUBLIC(int) xlog_version( char *buffer, int size );
 
 /**
- * @brief  get printer by id
+ * @brief  list all modules under xlog context
  *
- * @param  id, printer id
+ * @param  context, pointer to `xlog_t`
+ *         mask, print options
+ *
+ */
+XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask );
+
+
+
+/**
+ * @brief  get default printer
+ *
  * @return pointer to printer
  *
  */
-XLOG_PUBLIC(xlog_printer_t *) xlog_printer_get( int id );
+XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void );
+
+/**
+ * @brief  create dynamic printer
+ *
+ * @param  options, options to create printer
+ * @return pointer to printer
+ *
+ */
+XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... );
+
+/**
+ * @brief  destory created printer
+ *
+ * @param  printer, pointer to created printer
+ * @return error code
+ *
+ * @note   you MUST call to destory printer dynamically created.
+ *
+ */
+XLOG_PUBLIC(int) xlog_printer_destory( xlog_printer_t *printer );
+
+
 
 /**
  * @brief  output raw log
  *
  * @param  printer, printer to output log
+ *         prefix/suffix, prefix and suffix add to the raw log if NOT NULL
  *         context, xlog context
  * @return length of logging.
  *
  */
 XLOG_PUBLIC(int) xlog_output_rawlog(
-    xlog_printer_t *printer, xlog_t *context,
+    xlog_printer_t *printer, xlog_t *context, const char * prefix, const char *suffix,
     const char *format, ...
 );
 
@@ -210,7 +225,7 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  *
  */
 XLOG_PUBLIC(int) xlog_output_fmtlog(
-	xlog_printer_t *printer,
+    xlog_printer_t *printer,
     xlog_t *context, xlog_module_t *module, int level,
     const char *file, const char *func, long int line,
     const char *format, ...

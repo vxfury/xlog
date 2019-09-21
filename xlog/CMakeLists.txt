@@ -56,10 +56,6 @@ set(
 	internal/xlog_hexdump.c
 )
 
-if (XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	list(APPEND SOURCES internal/xlog_alloc.c)
-endif()
-
 option(XLOG_FEATURE_REPLACE_VSNPRINTF "Use custom vsnprintf instead of that in libc" OFF)
 if (XLOG_FEATURE_REPLACE_VSNPRINTF)
     list(APPEND SOURCES internal/xlog_vsnprintf.c)

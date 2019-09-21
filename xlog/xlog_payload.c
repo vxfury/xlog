@@ -57,11 +57,14 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
 		}
 		va_end( ap );
 		
-		payload = ( xlog_payload_t * )XLOG_MALLOC_RUNTIME_SAFE( XLOG_MAGIC_PAYLOAD, length );
+		payload = ( xlog_payload_t * )XLOG_MALLOC( length );
 		if( NULL == payload ) {
 			XLOG_PAYLOAD_TRACE( "Out of memory" );
 			return NULL;
 		}
+		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+		payload->magic = XLOG_MAGIC_PAYLOAD;
+		#endif
 		
 		payload->id = id;
 		#ifdef XLOG_PAYLOAD_ENABLE_DYNAMIC_BRIEF_INFO
@@ -87,7 +90,7 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
 			}
 			va_end( ap );
 			
-			payload = ( xlog_payload_t * )XLOG_MALLOC_RUNTIME_SAFE( XLOG_MAGIC_PAYLOAD, sizeof( xlog_payload_t ) + sizeof( void * ) );
+			payload = ( xlog_payload_t * )XLOG_MALLOC( sizeof( xlog_payload_t ) + sizeof( void * ) );
 			if( NULL == payload ) {
 				return NULL;
 			}
@@ -131,7 +134,7 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 		return EINVAL;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( *payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( ( *payload )->magic != XLOG_MAGIC_PAYLOAD ) {
 		return EINVAL;
 	}
 	#endif
@@ -143,7 +146,7 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 		new_size = XLOG_PAYLOAD_ALIGN_UP( new_size, ( 0x1 << XLOG_PAYLOAD_GET_ALIGN_BITS( ( *payload )->options ) ) );
 	}
 	
-	xlog_payload_t *temp = (xlog_payload_t *)XLOG_REALLOC_RUNTIME_SAFE( ( *payload ), new_size );
+	xlog_payload_t *temp = (xlog_payload_t *)XLOG_REALLOC( ( *payload ), new_size );
 	if( temp == NULL ) {
 		return ENOMEM;
 	}
@@ -175,12 +178,12 @@ XLOG_PUBLIC(int) xlog_payload_destory( xlog_payload_t **payload )
 	}
 	
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( *payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( ( *payload )->magic != XLOG_MAGIC_PAYLOAD ) {
 		return EINVAL;
 	}
 	#endif
 	
-	XLOG_FREE_RUNTIME_SAFE( *payload );
+	XLOG_FREE( *payload );
 	*payload = NULL;
 	
 	return 0;
@@ -197,7 +200,7 @@ XLOG_PUBLIC(void *) xlog_payload_data_vptr( const xlog_payload_t *payload )
 {
 	XLOG_ASSERT( payload );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( payload->magic != XLOG_MAGIC_PAYLOAD ) {
 		XLOG_PAYLOAD_TRACE( "Runtime error: maybe payload has been destoryed. magic is 0x%X.", XLOG_MAGIC_FROM_OBJECT( payload ) );
 		// return NULL;
 	}
@@ -232,7 +235,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char 
 		return EINVAL;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( *payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( ( *payload )->magic != XLOG_MAGIC_PAYLOAD ) {
 		return EINVAL;
 	}
 	#endif
@@ -284,7 +287,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va_list( xlog_payload_t **payload, con
 	}
 	
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( *payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( ( *payload )->magic != XLOG_MAGIC_PAYLOAD ) {
 		return EINVAL;
 	}
 	#endif
@@ -345,7 +348,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va( xlog_payload_t **payload, const ch
 	}
 	
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( *payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( ( *payload )->magic != XLOG_MAGIC_PAYLOAD ) {
 		return EINVAL;
 	}
 	#endif
@@ -378,7 +381,7 @@ XLOG_PUBLIC(int) xlog_payload_append_binary( xlog_payload_t **payload, const voi
 	}
 	
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( *payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( ( *payload )->magic != XLOG_MAGIC_PAYLOAD ) {
 		return EINVAL;
 	}
 	#endif
@@ -423,7 +426,8 @@ XLOG_PUBLIC(int) xlog_payload_print_TEXT(
 	XLOG_ASSERT( XLOG_PAYLOAD_TEXT_COMPATIBLE( payload->options ) );
 	
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( payload->magic != XLOG_MAGIC_PAYLOAD ) {
+		XLOG_TRACE( "Runtime error, magic is NOT XLOG_MAGIC_PAYLOAD." );
 		return 0;
 	}
 	#endif
@@ -466,7 +470,7 @@ XLOG_PUBLIC(int) xlog_payload_print_BINARY(
 	XLOG_ASSERT( printer );
 	
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( payload ) != XLOG_MAGIC_PAYLOAD ) {
+	if( payload->magic != XLOG_MAGIC_PAYLOAD ) {
 		return 0;
 	}
 	#endif

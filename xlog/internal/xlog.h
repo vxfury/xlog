@@ -35,7 +35,6 @@
 #endif
 
 
-
 /** xlog magic for runtime safe check */
 #define XLOG_MAGIC_BUILD(a, b, c, d)	((((d) & 0xF) << 24) | (((c) & 0xF) << 16) | (((b) & 0xF) << 8) | (((a) & 0xF) << 0))
 #define XLOG_MAGIC_CONTEXT			XLOG_MAGIC_BUILD('X', 'C', 'T', 'X')
@@ -43,7 +42,6 @@
 #define XLOG_MAGIC_PRINTER			XLOG_MAGIC_BUILD('X', 'P', 'R', 'T')
 #define XLOG_MAGIC_PAYLOAD			XLOG_MAGIC_BUILD('X', 'P', 'L', 'D')
 
-#define XLOG_MAGIC_FROM_OBJECT(pobj) *(((int *)(pobj)) - 1)
 
 /** memory allocation for xlog */
 #define XLOG_MALLOC(nbytes)			((nbytes) == 0 ? NULL : calloc(1, nbytes))
@@ -51,20 +49,13 @@
 #define XLOG_FREE(ptr)				free(ptr)
 #define XLOG_STRDUP(str)			strdup(str)
 
-#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-#define XLOG_MALLOC_RUNTIME_SAFE(magic, nbytes)	((nbytes) == 0 ? NULL : xlog_malloc(magic, nbytes))
-#define XLOG_REALLOC_RUNTIME_SAFE(ptr, nbytes)	xlog_realloc(ptr, nbytes)
-#define XLOG_FREE_RUNTIME_SAFE(ptr)				xlog_free(ptr)
-#else
-#define XLOG_MALLOC_RUNTIME_SAFE(magic, nbytes)	XLOG_MALLOC(nbytes)
-#define XLOG_REALLOC_RUNTIME_SAFE(ptr, nbytes)	XLOG_REALLOC(ptr, nbytes)
-#define XLOG_FREE_RUNTIME_SAFE(ptr)				XLOG_FREE(ptr)
-#endif
-
 
 /** internal use */
-#define XLOG_TRACE(...)	// printf( "<%s:%d> ", __func__, __LINE__ ), printf( __VA_ARGS__ ), printf( "\n" )
+#define STRING(x)	#x
+#define XSTRING(x)	STRING(x)
+#define __XLOG_TRACE(...) fprintf( stderr, "TRACE: <" __FILE__ ":" XSTRING(__LINE__) "> " ), fprintf( stderr, __VA_ARGS__ ), fprintf( stderr, "\r\n" )
 
+#define XLOG_TRACE(...)	xlog_output_rawlog( xlog_printer_create( XLOG_PRINTER_STDERR ), NULL, "TRACE: <" __FILE__ ":" XSTRING(__LINE__) "> ", "\r\n", __VA_ARGS__ )
 
 #ifdef __cplusplus
 extern "C" {

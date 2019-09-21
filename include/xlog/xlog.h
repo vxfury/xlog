@@ -216,7 +216,7 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... );
  *
  * @param  printer, pointer to created printer
  * @return error code
- * 
+ *
  * @note   you MUST call to destory printer dynamically created.
  *
  */
@@ -228,12 +228,13 @@ XLOG_PUBLIC(int) xlog_printer_destory( xlog_printer_t *printer );
  * @brief  output raw log
  *
  * @param  printer, printer to output log
+ *         prefix/suffix, prefix and suffix add to the raw log if NOT NULL
  *         context, xlog context
  * @return length of logging.
  *
  */
 XLOG_PUBLIC(int) xlog_output_rawlog(
-    xlog_printer_t *printer, xlog_t *context,
+    xlog_printer_t *printer, xlog_t *context, const char * prefix, const char *suffix,
     const char *format, ...
 );
 
@@ -285,7 +286,7 @@ XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv );
 #define XLOG_PRINTER 	NULL
 #endif
 
-#define log_r(...)	xlog_output_rawlog( XLOG_PRINTER, NULL, __VA_ARGS__ )
+#define log_r(...)	xlog_output_rawlog( XLOG_PRINTER, NULL, NULL, NULL, __VA_ARGS__ )
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_FATAL
 #define log_f(...)  xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_FATAL, __FILE__, __func__, __LINE__, __VA_ARGS__ )

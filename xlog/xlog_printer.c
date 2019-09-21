@@ -54,20 +54,84 @@ static int __stdxxx_control(xlog_printer_t *printer, int option, void *vptr UNUS
 	return 0;
 }
 
+
 static xlog_printer_t stdout_printer = {
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	.magic = XLOG_MAGIC_PRINTER,
+	#endif
 	.context = (void *)&stdout_printer_context,
 	.options = XLOG_PRINTER_STDOUT,
 	.append  = __stdxxx_append,
 	.control = __stdxxx_control,
-};
-
-static xlog_printer_t stderr_printer = {
+},
+stderr_printer = {
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	.magic = XLOG_MAGIC_PRINTER,
+	#endif
 	.context = (void *)&stderr_printer_context,
 	.options = XLOG_PRINTER_STDERR,
 	.append  = __stdxxx_append,
 	.control = __stdxxx_control,
 };
 
+/** Basic file */
+struct __basic_file_printer_context {
+	char *filename;
+	int fd;
+	#if (defined XLOG_FEATURE_ENABLE_STATS) && (defined XLOG_FEATURE_ENABLE_STATS_PRINTER)
+	xlog_stats_t stats;
+	#endif
+};
+
+static struct __basic_file_printer_context *__basic_file_create_context(const char *file)
+{
+	struct __basic_file_printer_context *context = (struct __basic_file_printer_context *)XLOG_MALLOC( sizeof( struct __basic_file_printer_context ) );
+	if( context ) {
+		context->filename = XLOG_STRDUP( file );
+		if( context->filename == NULL ) {
+			XLOG_FREE( context );
+			
+			return NULL;
+		}
+		context->fd = open( context->filename, O_WRONLY );
+		if( context->fd < 0 ) {
+			XLOG_FREE( context->filename );
+			XLOG_FREE( context );
+			
+			return 0;
+		}
+	}
+	
+	return context;
+}
+
+static int __basic_file_destory_context( struct __basic_file_printer_context *context )
+{
+	if( context ) {
+		XLOG_FREE( context->filename );
+		XLOG_FREE( context );
+		close( context->fd );
+	}
+	
+	return 0;
+}
+
+static int __basic_file_append(xlog_printer_t *printer, const char *text)
+{
+	struct __basic_file_printer_context *_ctx = (struct __basic_file_printer_context *)printer->context;
+	int fd = _ctx->fd;
+	if( fd >= 0 ) {
+		size_t size = strlen(text);
+		XLOG_STATS_UPDATE( &((struct __basic_file_printer_context *)printer->context)->stats, BYTE, OUTPUT, size );
+		return write( fd, text, size );
+	}
+	return 0;
+}
+
+static int __basic_files_control(xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED)
+{
+	return 0;
+}
 
 /** Rotating files */
 struct __rotating_files_printer_context {
@@ -250,8 +314,20 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... )
 		case XLOG_PRINTER_FILES_BASIC: {
 			va_list ap;
 			va_start(ap, options);
-			printer = NULL;
+			const char *file = va_arg( ap, const char * );
 			va_end(ap);
+			struct __basic_file_printer_context * _prt_ctx = __basic_file_create_context( file );
+			if( _prt_ctx ) {
+				printer = ( xlog_printer_t * )XLOG_MALLOC( sizeof( xlog_printer_t ) );
+				if( printer == NULL ) {
+					__basic_file_destory_context( _prt_ctx );
+					XLOG_FREE( printer );
+					break;
+				}
+				printer->context = (void *)_prt_ctx;
+				printer->append = __basic_file_append;
+				printer->control = __basic_files_control;
+			}
 		} break;
 		case XLOG_PRINTER_FILES_ROTATING: {
 			va_list ap;
@@ -264,7 +340,7 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... )
 			
 			struct __rotating_files_printer_context * _prt_ctx = __rotating_files_create_context( file, max_size_per_file, max_file_to_ratating);
 			if( _prt_ctx ) {
-				printer = ( xlog_printer_t * ) XLOG_MALLOC_RUNTIME_SAFE( XLOG_MAGIC_PRINTER, sizeof( xlog_printer_t ) );
+				printer = ( xlog_printer_t * ) XLOG_MALLOC( sizeof( xlog_printer_t ) );
 				if( printer == NULL ) {
 					__rotating_files_destory_context( _prt_ctx );
 					_prt_ctx = NULL;
@@ -318,7 +394,7 @@ XLOG_PUBLIC(int) xlog_printer_destory( xlog_printer_t *printer )
 		case XLOG_PRINTER_FILES_ROTATING: {
 			__rotating_files_destory_context( (struct __rotating_files_printer_context *)printer->context );
 			printer->context = NULL;
-			XLOG_FREE_RUNTIME_SAFE( printer );
+			XLOG_FREE( printer );
 		} break;
 		case XLOG_PRINTER_FILES_DAILY: {
 			//

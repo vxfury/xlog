@@ -23,14 +23,8 @@
 #define XLOG_PERM_MODULE_DIR		0740
 #define XLOG_PERM_MODULE_NODE		0640
 
-#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-#define XLOG_MODULE_FROM_NODE(node)	((int *)XLOG_TREE_DATA( node ) + 1)
-#define XLOG_MODULE_TO_NODE(module) XLOG_TREE_NODE( ((int *)(module)) - 1 )
-#define XLOG_MODULE_MAGIC_FROM_NODE(node) *(int *)XLOG_TREE_DATA( node )
-#else
-#define XLOG_MODULE_FROM_NODE(node)	XLOG_TREE_DATA( node )
-#define XLOG_MODULE_TO_NODE(module) XLOG_TREE_NODE( module )
-#endif
+#define XLOG_MODULE_FROM_NODE(node)	((xlog_module_t *)XLOG_TREE_DATA( node ))
+#define XLOG_MODULE_TO_NODE(module) ((xlog_tree_t *)XLOG_TREE_NODE( module ))
 
 #if (defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
 static xlog_t *__default_context = NULL;
@@ -209,7 +203,7 @@ static inline xlog_module_t *__xlog_module_lookup( const char *name, const xlog_
 	while( te_node ) {
 		xlog_module_t *module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( te_node );
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-		if( XLOG_MODULE_MAGIC_FROM_NODE( te_node ) != XLOG_MAGIC_MODULE ) {
+		if( module->magic != XLOG_MAGIC_MODULE ) {
 			XLOG_TRACE( "Runtime error: may be module has been closed." );
 			return NULL;
 		}
@@ -230,7 +224,7 @@ static inline xlog_module_t *__xlog_module_open( const char *name, int level, xl
 	xlog_module_t *module = parent ? __xlog_module_lookup( name, te_parent ) : NULL;
 	if( module ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-		if( XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+		if( module->magic != XLOG_MAGIC_MODULE ) {
 			XLOG_TRACE( "Runtime error: may be module has been closed." );
 			return NULL;
 		}
@@ -239,16 +233,12 @@ static inline xlog_module_t *__xlog_module_open( const char *name, int level, xl
 		return module;
 	}
 	
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	xlog_tree_t *te_module = xlog_tree_create( sizeof( xlog_module_t ) + sizeof( int ) );
-	if( te_module ) {
-		XLOG_MODULE_MAGIC_FROM_NODE( te_module ) = XLOG_MAGIC_MODULE;
-		module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( te_module );
-	#else
 	xlog_tree_t *te_module = xlog_tree_create( sizeof( xlog_module_t ) );
 	if( te_module ) {
 		module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( te_module );
-	#endif
+		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+		module->magic = XLOG_MAGIC_MODULE;
+		#endif
 		pthread_mutex_init( &module->lock, NULL );
 		module->level = level;
 		module->name = name ? XLOG_STRDUP( name ) : NULL;
@@ -269,13 +259,11 @@ static inline void __xlog_module_destory_hook( xlog_tree_t *node )
 {
 	if( node ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-		if( XLOG_MODULE_MAGIC_FROM_NODE( node ) != XLOG_MAGIC_MODULE ) {
+		if( XLOG_MODULE_FROM_NODE( node )->magic != XLOG_MAGIC_MODULE ) {
 			XLOG_TRACE( "Runtime error: may be module has been closed." );
 			return;
 		}
-		#endif
-		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-		XLOG_MODULE_MAGIC_FROM_NODE( node ) = 0;
+		XLOG_MODULE_FROM_NODE( node )->magic = 0;
 		#endif
 		xlog_module_t *module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( node );
 		XLOG_FREE( module->name );
@@ -298,7 +286,7 @@ static inline void __xlog_module_destory_hook( xlog_tree_t *node )
 XLOG_PUBLIC(xlog_module_t *) xlog_module_open( const char *name, int level, xlog_module_t *parent )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( parent && XLOG_MAGIC_FROM_OBJECT( parent ) != XLOG_MAGIC_MODULE ) {
+	if( parent && parent->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return NULL;
 	}
@@ -350,7 +338,7 @@ int xlog_module_close( xlog_module_t *module )
 {
 	if( module ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-		if( XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+		if( module->magic != XLOG_MAGIC_MODULE ) {
 			XLOG_TRACE( "Runtime error: may be module has been closed." );
 			return EINVAL;
 		}
@@ -377,7 +365,7 @@ XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, cons
 {
 	XLOG_ASSERT( name );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( root && XLOG_MAGIC_FROM_OBJECT( root ) != XLOG_MAGIC_MODULE ) {
+	if( root && root->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return NULL;
 	}
@@ -435,7 +423,7 @@ XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, cons
 XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( module && XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+	if( module && module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return NULL;
 	}
@@ -468,7 +456,7 @@ XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module )
 XLOG_PUBLIC(int) xlog_module_level_limit( const xlog_module_t *module )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( module && XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+	if( module && module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return XLOG_LEVEL_SILENT;
 	}
@@ -498,7 +486,7 @@ XLOG_PUBLIC(int) xlog_module_level_limit( const xlog_module_t *module )
 XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog_module_t *module )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( module && XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+	if( module && module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return NULL;
 	}
@@ -557,7 +545,7 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
 		return;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+	if( module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return;
 	}
@@ -612,7 +600,7 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
 XLOG_PUBLIC(int) xlog_module_set_level( xlog_module_t *module, int level, int flags )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( module && XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+	if( module && module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return EINVAL;
 	}
@@ -704,7 +692,7 @@ XLOG_PUBLIC(int) xlog_module_dump_to( const xlog_module_t *module, const char *s
 		return EINVAL;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+	if( module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return EINVAL;
 	}
@@ -780,7 +768,7 @@ XLOG_PUBLIC(int) xlog_module_load_from( xlog_module_t *module, const char *loadp
 		return EINVAL;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+	if( module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return EINVAL;
 	}
@@ -941,19 +929,19 @@ static int __xlog_load_modules( xlog_t *context )
 XLOG_PUBLIC(xlog_t *) xlog_open( const char *savepath, int option )
 {
 	xlog_t *context = NULL;
-	context = ( xlog_t * )XLOG_MALLOC_RUNTIME_SAFE( XLOG_MAGIC_CONTEXT, sizeof( xlog_t ) );
+	context = ( xlog_t * )XLOG_MALLOC( sizeof( xlog_t ) );
 	if( context ) {
 		memset( context, 0, sizeof( xlog_t ) );
 		
 		/** NOTE: initialize lock */
 		if( pthread_mutex_init( &context->lock, NULL ) != 0 ) {
-			XLOG_FREE_RUNTIME_SAFE( context );
+			XLOG_FREE( context );
 			context = NULL;
 		} else {
 			context->module = __xlog_module_open( NULL, XLOG_LEVEL_VERBOSE, NULL );
 			if( NULL == context->module ) {
 				pthread_mutex_destroy( &context->lock );
-				XLOG_FREE_RUNTIME_SAFE( context );
+				XLOG_FREE( context );
 				context = NULL;
 				
 				return context;
@@ -991,6 +979,10 @@ XLOG_PUBLIC(xlog_t *) xlog_open( const char *savepath, int option )
 			
 			/** NOTE: initialize stats */
 			XLOG_STATS_INIT( &context->stats, XLOG_STATS_CONTEXT_OPTION );
+			
+			#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+			context->magic = XLOG_MAGIC_CONTEXT;
+			#endif
 		}
 	}
 	
@@ -1009,10 +1001,11 @@ XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option )
 {
 	if( context ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-		if( XLOG_MAGIC_FROM_OBJECT( context ) != XLOG_MAGIC_CONTEXT ) {
+		if( context->magic != XLOG_MAGIC_CONTEXT ) {
 			XLOG_TRACE( "Runtime error: may be context has been closed." );
 			return EINVAL;
 		}
+		context->magic = XLOG_MAGIC_CONTEXT;
 		#endif
 		pthread_mutex_lock( &context->lock );
 		xlog_module_close( context->module );
@@ -1032,7 +1025,7 @@ XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option )
 			__default_context = NULL;
 		}
 		#endif
-		XLOG_FREE_RUNTIME_SAFE( context );
+		XLOG_FREE( context );
 	}
 	
 	return 0;
@@ -1048,7 +1041,7 @@ XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option )
 XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( context && XLOG_MAGIC_FROM_OBJECT( context ) != XLOG_MAGIC_CONTEXT ) {
+	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
 		XLOG_TRACE( "Runtime error: may be context has been closed." );
 		return;
 	}
@@ -1123,30 +1116,27 @@ XLOG_PUBLIC(int) xlog_version( char *buffer, int size )
  * @brief  output raw log
  *
  * @param  printer, printer to output log
+ *         prefix/suffix, prefix and suffix add to the raw log if NOT NULL
  *         context, xlog context
  * @return length of logging.
  *
  */
 XLOG_PUBLIC(int) xlog_output_rawlog(
-    xlog_printer_t *printer, xlog_t *context,
+    xlog_printer_t *printer, xlog_t *context, const char * prefix, const char *suffix,
     const char *format, ...
 )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( context && XLOG_MAGIC_FROM_OBJECT( context ) != XLOG_MAGIC_CONTEXT ) {
-		XLOG_TRACE( "Runtime error: may be context has been closed." );
+	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
+		__XLOG_TRACE( "Runtime error: may be context has been closed." );
 		return 0;
 	}
-	if( printer ) {
-		if(
-			printer != xlog_printer_create( XLOG_PRINTER_STDOUT )
-		    && printer != xlog_printer_create( XLOG_PRINTER_STDERR )
-		    && XLOG_MAGIC_FROM_OBJECT( printer ) != XLOG_MAGIC_PRINTER
-		) {
-			XLOG_TRACE( "Runtime error: may be printer has been closed." );
-			return 0;
-		}
+	#if 0
+	if( printer && printer->magic != XLOG_MAGIC_PRINTER ) {
+		__XLOG_TRACE( "Runtime error: may be printer has been closed." );
+		return 0;
 	}
+	#endif
 	#endif
 	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_PRINTER)
 	if( printer == NULL ) {
@@ -1158,20 +1148,27 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
 	
 	/** global setting in xlog */
 	if( context && !(context->options & XLOG_CONTEXT_OALIVE) ) {
-		XLOG_TRACE( "Dropped by context." );
+		__XLOG_TRACE( "Dropped by context." );
 		return 0;
 	}
 	
 	int length = 0;
 	xlog_payload_t *payload = xlog_payload_create( XLOG_PAYLOAD_ID_AUTO, "Log Text", XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN, 240, 32 );
 	if( payload ) {
+		if( prefix ) {
+			xlog_payload_append_text( &payload, prefix );
+		}
 		va_list ap;
 		va_start(ap, format);
 		xlog_payload_append_text_va_list( &payload, format, ap );
+		va_end(ap);
+		if( suffix ) {
+			xlog_payload_append_text( &payload, suffix );
+		}
 		length = xlog_payload_print_TEXT( payload, printer );
 		xlog_payload_destory( &payload );
 	} else {
-		XLOG_TRACE( "Failed to create payload." );
+		__XLOG_TRACE( "Failed to create payload." );
 	}
 	
 	return length;
@@ -1196,15 +1193,15 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( context && XLOG_MAGIC_FROM_OBJECT( context ) != XLOG_MAGIC_CONTEXT ) {
+	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
 		XLOG_TRACE( "Runtime error: may be context has been closed." );
 		return 0;
 	}
-	if( printer && XLOG_MAGIC_FROM_OBJECT( printer ) != XLOG_MAGIC_PRINTER ) {
+	if( printer && printer->magic != XLOG_MAGIC_PRINTER ) {
 		XLOG_TRACE( "Runtime error: may be printer has been closed." );
 		return 0;
 	}
-	if( module && XLOG_MAGIC_FROM_OBJECT( module ) != XLOG_MAGIC_MODULE ) {
+	if( module && module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
 		return 0;
 	}
@@ -1227,6 +1224,7 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 	#endif
 	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_PRINTER)
 	if( printer == NULL ) {
+		XLOG_TRACE( "Output via defualt printer." );
 		printer = xlog_printer_default();
 	}
 	#else
@@ -1353,6 +1351,7 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 		XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
 		XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
 	}
+	XLOG_TRACE( "Logged length is %d.", length );
 	
 	return length;
 }

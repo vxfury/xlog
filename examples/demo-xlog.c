@@ -259,6 +259,7 @@ static int xlog_test_multi_thread( int nthread )
 static int xlog_test_set_level( void )
 {
 	{
+		fprintf(stderr, "Testcase: level control with recursive option\n" );
 		log_r( "Testcase: level control with recursive option\n" );
 		
 		xlog_list_modules( XLOG_CONTEXT, XLOG_LIST_OWITH_TAG );
