@@ -1139,12 +1139,10 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
 		__XLOG_TRACE( "Runtime error: may be context has been closed." );
 		return 0;
 	}
-	#if 0
 	if( printer && printer->magic != XLOG_MAGIC_PRINTER ) {
 		__XLOG_TRACE( "Runtime error: may be printer has been closed." );
 		return 0;
 	}
-	#endif
 	#endif
 	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_PRINTER)
 	if( printer == NULL ) {
