@@ -13,15 +13,19 @@ High performance Extensible logging library designed for log formating and dynam
 
 ``` C
 /*
- * debug [OPTIONS] mod/submod/...
- *   OPTIONS:
- *      -f, --force        force enable module debugging[default].
- *      -F                 undo force option.
- *      -r, --recursive    apply to sub-modules recursively.
- *      -l, --level=LEVEL  debugging level. XLOG_LEVEL_DEBUG if not specified.
- *                         s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose].(-1 ~ 5).
- *      --list             list modules in your project.
- *      -h, --help         display this help and exit.
+ * Usage: debug [OPTIONS] MODULE[/SUB-MODULE/...]
+ *
+ *  Mandatory arguments to long options are mandatory for short options too.
+ *    -f, --force        Update module's paramters forcibly,
+ *                       minimal changes will applied to it's parent.
+ *    -F                 Make no changes on it's parent, contrary to --force option.
+ *    -r, --recursive    Update sub-modules too.
+ *    -l, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.
+ *                       s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).
+ *        --list         List modules in your application.
+ *        --only         Only enable output of specified modules(disabling will be applied to other modules).
+ *    -v, --version      Show version of logger.
+ *    -h, --help         Display this help and exit.
  */
 XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv );
 ```
@@ -241,3 +245,13 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
     const char *format, ...
 );
 ```
+
+## TODO
+1. Support Hidden modules(name start with dot[.]), will not show with --list option default.
+2. Determine whether colorful or not with multiple object, such as context, printer, module and so on.
+3. Much more printers: daily file, ring-buffer, async mode.
+4. Multi-language documents: Chinese, English and so on. 
+5. Support custom plugin development.
+6. Log builder, formater and filter.
+7. Timeline analyser client.
+8. Protobuf and High-Performance socket framework for log transmission.

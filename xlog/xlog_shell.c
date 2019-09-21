@@ -25,7 +25,7 @@ typedef struct {
 	
 	int level;
 	int f_force;
-	int f_traverse;
+	int f_recursive;
 	int f_only;
 	int f_with_tag;
 	
@@ -34,16 +34,16 @@ typedef struct {
 } xlog_shell_globals_t;
 
 #define LOG_CLI_OPT_BASE        128
-#define LOG_CLI_OPT_LIST        (LOG_CLI_OPT_BASE + 0)
 #define LOG_CLI_OPT_ONLY		(LOG_CLI_OPT_BASE + 1)
 #define LOG_CLI_OPT_WITH_TAG	(LOG_CLI_OPT_BASE + 2)
 #define LOG_CLI_OPT_WITHOUT_TAG	(LOG_CLI_OPT_BASE + 3)
 
 static const struct option debug_options[] = {
 	{ "force"			, no_argument		, NULL	, 'f'						},
-	{ "traverse"		, no_argument		, NULL	, 'r'						},
-	{ "level"			, required_argument	, NULL	, 'l'						},
-	{ "list"			, no_argument		, NULL	, LOG_CLI_OPT_LIST			},
+	{ "recursive"		, no_argument		, NULL	, 'r'						},
+	{ "level"			, required_argument	, NULL	, 'L'						},
+	{ "list"			, no_argument		, NULL	, 'l'						},
+	{ "all"				, no_argument		, NULL	, 'a'						},
 	{ "only"			, no_argument		, NULL	, LOG_CLI_OPT_ONLY			},
 	{ "with-tag"		, no_argument		, NULL	, LOG_CLI_OPT_WITH_TAG		},
 	{ "without-tag"		, no_argument		, NULL	, LOG_CLI_OPT_WITHOUT_TAG	},
@@ -51,7 +51,7 @@ static const struct option debug_options[] = {
 	{ "help"			, no_argument		, NULL	, 'h'						},
 	{ NULL				, 0					, NULL	, '\0'						}
 };
-#define XLOG_CLI_SHORT_OPTIONS	"fFrl:vh"
+#define XLOG_CLI_SHORT_OPTIONS	"fFrLl:avh"
 
 static void shell_debug_exit( xlog_shell_globals_t *globals, int code )
 {
@@ -67,15 +67,16 @@ static void usage( xlog_shell_globals_t *globals )
 	    "Usage: debug [OPTIONS] MODULE[/SUB-MODULE/...]\n"
 	    "\n"
 	    "Mandatory arguments to long options are mandatory for short options too.\n"
-	    "  -f, --force        force enable module debugging.\n"
-	    "  -F                 revert --force option.\n"
-	    "  -r, --traverse     traverse enable module debugging.\n"
-	    "  -l, --level=LEVEL  debugging level. XLOG_LEVEL_DEBUG if not specified.\n"
+	    "  -f, --force        Update module's paramters forcibly,\n"
+	    "                     minimal changes will applied to it's parent.\n"
+	    "  -F                 Make no changes on it's parent, contrary to --force option.\n"
+	    "  -r, --recursive    Update sub-modules too.\n"
+	    "  -L, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.\n"
 	    "                     s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).\n"
-	    "  --list             list modules in your application.\n"
-	    "  --only             enable xlog output of specified modules(disabling will be applied to other modules).\n"
-	    "  -v, --version      show version of logger.\n"
-	    "  -h, --help         display this help and exit.\n"
+	    "      --list         List modules in your application.\n"
+	    "      --only         Only enable output of specified modules(disabling will be applied to other modules).\n"
+	    "  -v, --version      Show version of logger.\n"
+	    "  -h, --help         Display this help and exit.\n"
 	    "\n"
 	);
 	exit( EXIT_FAILURE );
@@ -106,7 +107,7 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 				globals->f_force = 0;
 				break;
 			case 'r':
-				globals->f_traverse = 1;
+				globals->f_recursive = 1;
 				break;
 			case 'l':
 				if( getopt_reent.optarg && *( getopt_reent.optarg ) != '\0' ) {
@@ -150,8 +151,8 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 				usage( globals );
 				exit( EXIT_SUCCESS );
 				break;
-			case LOG_CLI_OPT_LIST:
-				log_r( "logging modules in your application:\n" );
+			case 'l':
+				log_r( "Modules in your application:\n" );
 				xlog_list_modules( globals->context, globals->f_with_tag );
 				log_r( "\n" );
 				exit( EXIT_SUCCESS );
@@ -168,7 +169,7 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 	argv += getopt_reent.optind;
 	
 	int flags = 0;
-	if( globals->f_traverse ) {
+	if( globals->f_recursive ) {
 		flags |= XLOG_LEVEL_ORECURSIVE;
 	}
 	if( globals->f_force ) {
@@ -199,15 +200,19 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 }
 
 /*
- * debug [OPTIONS] mod/submod/...
- *   OPTIONS:
- *      -f, --force        force enable module debugging[default].
- *      -F                 undo force option.
- *      -r, --recursive    apply to sub-modules recursively.
- *      -l, --level=LEVEL  debugging level. XLOG_LEVEL_DEBUG if not specified.
- *                         s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose].(-1 ~ 5).
- *      --list             list modules in your project.
- *      -h, --help         display this help and exit.
+ * Usage: debug [OPTIONS] MODULE[/SUB-MODULE/...]
+ *
+ *  Mandatory arguments to long options are mandatory for short options too.
+ *    -f, --force        Update module's paramters forcibly,
+ *                       minimal changes will applied to it's parent.
+ *    -F                 Make no changes on it's parent, contrary to --force option.
+ *    -r, --recursive    Update sub-modules too.
+ *    -l, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.
+ *                       s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).
+ *        --list         List modules in your application.
+ *        --only         Only enable output of specified modules(disabling will be applied to other modules).
+ *    -v, --version      Show version of logger.
+ *    -h, --help         Display this help and exit.
  */
 XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv )
 {
