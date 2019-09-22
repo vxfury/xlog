@@ -205,7 +205,7 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void );
 
 /**
  * @brief  set default printer
- * 
+ *
  * @param  printer, printer you'd like be the default
  *
  * @return pointer to default printer.
@@ -253,7 +253,6 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  * @brief  output formated log
  *
  * @param  printer, printer to output log
- *         context, xlog context
  *         module, logging module
  *         level, logging level
  *         file/func/line, source location
@@ -262,7 +261,7 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  */
 XLOG_PUBLIC(int) xlog_output_fmtlog(
 	xlog_printer_t *printer,
-    xlog_t *context, xlog_module_t *module, int level,
+    xlog_module_t *module, int level,
     const char *file, const char *func, long int line,
     const char *format, ...
 );
@@ -272,17 +271,18 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 /*
  * Usage: debug [OPTIONS] MODULE[/SUB-MODULE/...]
  *
- *  Mandatory arguments to long options are mandatory for short options too.
- *    -f, --force        Update module's paramters forcibly,
- *                       minimal changes will applied to it's parent.
- *    -F                 Make no changes on it's parent, contrary to --force option.
- *    -r, --recursive    Update sub-modules too.
- *    -l, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.
- *                       s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).
- *        --list         List modules in your application.
- *        --only         Only enable output of specified modules(disabling will be applied to other modules).
- *    -v, --version      Show version of logger.
- *    -h, --help         Display this help and exit.
+ * Mandatory arguments to long options are mandatory for short options too.
+ *   -f, --force        Update module's paramters forcibly,
+ *                      minimal changes will applied to it's parent.
+ *   -F                 Make no changes on it's parent, contrary to --force option.
+ *   -r, --recursive    Update sub-modules too.
+ *   -l, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.
+ *                      s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).
+ *   -l, --list         List modules in your application.
+ *   -a, --all          Show all modules, include the hidden.
+ *       --only         Only enable output of specified modules(disabling will be applied to other modules).
+ *   -v, --version      Show version of logger.
+ *   -h, --help         Display this help and exit.
  */
 XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv );
 
@@ -304,37 +304,37 @@ XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv );
 #define log_r(...)	xlog_output_rawlog( XLOG_PRINTER, NULL, NULL, NULL, __VA_ARGS__ )
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_FATAL
-#define log_f(...)  xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_FATAL, __FILE__, __func__, __LINE__, __VA_ARGS__ )
+#define log_f(...)  xlog_output_fmtlog( XLOG_PRINTER, XLOG_MODULE, XLOG_LEVEL_FATAL, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_f(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_ERROR
-#define log_e(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_ERROR, __FILE__, __func__, __LINE__, __VA_ARGS__ )
+#define log_e(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_MODULE, XLOG_LEVEL_ERROR, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_e(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_WARN
-#define log_w(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_WARN, __FILE__, __func__, __LINE__, __VA_ARGS__ )
+#define log_w(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_MODULE, XLOG_LEVEL_WARN, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_w(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_INFO
-#define log_i(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_INFO, __FILE__, __func__, __LINE__, __VA_ARGS__ )
+#define log_i(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_MODULE, XLOG_LEVEL_INFO, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_i(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_DEBUG
-#define log_d(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_DEBUG, __FILE__, __func__, __LINE__, __VA_ARGS__ )
+#define log_d(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_MODULE, XLOG_LEVEL_DEBUG, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_d(...)
 #endif
 
 #if XLOG_LIMIT_LEVEL_FACTORY >= XLOG_LEVEL_VERBOSE
-#define log_v(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_CONTEXT, XLOG_MODULE, XLOG_LEVEL_VERBOSE, __FILE__, __func__, __LINE__, __VA_ARGS__ )
+#define log_v(...)	xlog_output_fmtlog( XLOG_PRINTER, XLOG_MODULE, XLOG_LEVEL_VERBOSE, __FILE__, __func__, __LINE__, __VA_ARGS__ )
 #else
 #define log_v(...)
 #endif

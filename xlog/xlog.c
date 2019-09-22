@@ -1184,7 +1184,6 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  * @brief  output formated log
  *
  * @param  printer, printer to output log
- *         context, xlog context
  *         module, logging module
  *         level, logging level
  *         file/func/line, source location
@@ -1193,19 +1192,16 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  */
 XLOG_PUBLIC(int) xlog_output_fmtlog(
 	xlog_printer_t *printer,
-    xlog_t *context, xlog_module_t *module, int level,
+    xlog_module_t *module, int level,
     const char *file, const char *func, long int line,
     const char *format, ...
 )
 {
+	xlog_t *context = xlog_module_context( module );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
-		XLOG_TRACE( "Runtime error: may be context has been closed." );
-		return 0;
-	}
 	if( printer && printer->magic != XLOG_MAGIC_PRINTER ) {
-		XLOG_TRACE( "Runtime error: may be printer has been closed." );
-		return 0;
+		XLOG_TRACE( "Runtime error: may be printer has been closed. magic = 0x%X.", printer->magic );
+		// return 0;
 	}
 	if( module && module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
@@ -1297,7 +1293,7 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 		);
 	}
 	
-	/* package level and module info */
+	/* package class(level and module path) */
 	if( module && __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLEVEL | XLOG_FORMAT_OMODULE ) ) {
 		char modulename[XLOG_LIMIT_MODULE_PATH] = { 0 };
 		xlog_payload_append_text( &payload, context->attributes[level].class_prefix );
@@ -1307,7 +1303,7 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 		xlog_payload_append_text( &payload, context->attributes[level].class_suffix );
 	}
 	
-	/* package file directory and name, function name and line number info */
+	/* package source location */
 	if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLOCATION ) ) {
 		const char *_file = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OFILE ) ? file : NULL;
 		const char *_func = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OFUNC ) ? func : NULL;
@@ -1334,23 +1330,20 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 		xlog_payload_append_text( &payload, XLOG_TAG_SUFFIX_LOG_POINT );
 	}
 	
-	/* args point to the first variable parameter */
+	/* package log body */
+	va_list ap;
+	va_start( ap, format );
 	if( context && ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
 		xlog_payload_append_text( &payload, context->attributes[level].body_prefix );
 	}
-	va_list ap;
-	va_start(ap, format);
 	xlog_payload_append_text_va_list( &payload, format, ap );
 	if( context && ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
 		xlog_payload_append_text( &payload, context->attributes[level].body_suffix );
 	}
+	va_end( ap );
 	xlog_payload_append_text( &payload, XLOG_STYLE_NEWLINE );
 	
-	#ifdef XLOG_BENCH_NO_OUTPUT
-	int length = payload->offset;
-	#else
 	int length = xlog_payload_print_TEXT( payload, printer );
-	#endif
 	XLOG_STATS_UPDATE( &module->stats, BYTE, INPUT, payload->offset );
 	xlog_payload_destory( &payload );
 	if( length > 0 ) {

@@ -14,87 +14,70 @@
 #pragma GCC diagnostic ignored "-Wshorten-64-to-32"
 #endif
 
+static int __filepath( char *buffer, size_t size, const char *pattern, int i )
+{
+	char *_ptr_dir = strrchr( pattern, '/' );
+	if( _ptr_dir == NULL ) {
+		_ptr_dir = strrchr( pattern, '\\' );
+	}
+	char *_ptr_ext = strrchr( pattern, '.' );
+	
+	if( _ptr_ext ) {
+		if(
+		   ( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
+		   || ( _ptr_dir == NULL ) // file.ext, no parent dir
+		) {
+			snprintf(
+			    buffer, size,
+			    "%.*s_%05d%s"
+			    , (int)(_ptr_ext - pattern)
+			    , pattern
+			    , i
+			    , _ptr_ext
+			);
+		} else { // xxx/path/to/file.ext/
+			return -1;
+		}
+	} else {
+		// xxx/path/to/file, or file
+		snprintf( buffer, size, "%s_%05d", pattern, i );
+	}
+	
+	return 0;
+}
+
+
 /** Rotating files */
 struct __rotating_file_printer_context {
 	char *pattern_file;
 	size_t max_size_per_file;
 	size_t max_file_to_ratating;
 	
-	struct {
-		char **filenames;
-		size_t *offsets;
-		int current_file_id;
-		int current_fd;
-	} _status;
+	int current_fd;
+	int current_index;
+	int current_bytes;
 	#if (defined XLOG_FEATURE_ENABLE_STATS) && (defined XLOG_FEATURE_ENABLE_STATS_PRINTER)
 	xlog_stats_t stats;
 	#endif
 };
 
-#define XLOG_PRINTER_FILES_ROTATING_LIMIT_COUNT_STRLEN 12
 static struct __rotating_file_printer_context *__rotating_file_create_context(const char *file, size_t max_size_per_file, size_t max_file_to_ratating)
 {
+	char buffer[256] = { 0 };
+	if( __filepath( buffer, sizeof( buffer ), file, 0 ) != 0 ) {
+		XLOG_TRACE( "Invalid file pattern." );
+		return NULL;
+	}
 	struct __rotating_file_printer_context *context = (struct __rotating_file_printer_context *)XLOG_MALLOC( sizeof( struct __rotating_file_printer_context ) );
 	if( context ) {
 		context->pattern_file = XLOG_STRDUP( file );
 		context->max_size_per_file = max_size_per_file;
 		context->max_file_to_ratating = max_file_to_ratating;
-		context->_status.filenames = (char **)XLOG_MALLOC( sizeof( char * ) * max_file_to_ratating );
-		if( context->_status.filenames == NULL ) {
-			XLOG_FREE( context );
-			
-			return NULL;
-		}
-		context->_status.offsets = (size_t *)XLOG_MALLOC( sizeof( size_t ) * max_file_to_ratating );
-		if( context->_status.offsets == NULL ) {
-			XLOG_FREE( context->_status.filenames );
-			XLOG_FREE( context );
-			
-			return NULL;
-		}
-		memset( context->_status.offsets, 0, sizeof( size_t ) * max_file_to_ratating );
-		memset( context->_status.filenames, 0, sizeof( char * ) * max_file_to_ratating );
-		for( int i = 0; i < max_file_to_ratating; i ++ ) {
-			size_t __namelen = strlen( file ) + XLOG_PRINTER_FILES_ROTATING_LIMIT_COUNT_STRLEN;
-			char *__filename = (char *)XLOG_MALLOC( __namelen );
-			if( __filename == NULL ) {
-				if( i == 0 ) {
-					XLOG_FREE( context->_status.filenames );
-					XLOG_FREE( context );
-					return NULL;
-				}
-				break;
-			}
-			memset( __filename, 0, __namelen );
-			context->_status.filenames[i] = __filename;
-			
-			char _buffcnt[XLOG_PRINTER_FILES_ROTATING_LIMIT_COUNT_STRLEN + 1] = { 0 };
-			snprintf( _buffcnt, sizeof( _buffcnt ), "%05d", i );
-			/* generate filename for each log file */
-			char *_ptr_dir = strrchr( file, '/' );
-			if( _ptr_dir == NULL ) {
-				_ptr_dir = strrchr( file, '\\' );
-			}
-			char *_ptr_ext = strrchr( file, '.' );
-			if( _ptr_ext ) {
-				if(
-				   ( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
-				   || ( _ptr_dir == NULL ) // file.ext, no parent dir
-				) {
-					// xxx/path/to/file.ext
-					strncat( __filename, file, _ptr_ext - file );
-					strcat( __filename, _buffcnt );
-					strcat( __filename, _ptr_ext );
-				} else { // xxx/path/to/file.ext/
-					assert(0);
-				}
-			} else {
-				// xxx/path/to/file, or file
-				sprintf( __filename, "%s%s", file, _buffcnt );
-			}
-		}
-		context->_status.current_file_id = 0;
-		context->_status.current_fd = -1;
+		
+		context->current_bytes = 0;
+		context->current_index = 0;
+		context->current_fd = -1;
+		
 		XLOG_STATS_INIT( &context->stats, XLOG_STATS_PRINTER_OPTION );
 	}
 
@@ -104,14 +87,6 @@ static struct __rotating_file_printer_context *__rotating_file_create_context(co
 static int __rotating_file_destory_context(struct __rotating_file_printer_context * context)
 {
 	if( context ) {
-		for( int i = 0; i < context->max_file_to_ratating; i ++ ) {
-			XLOG_FREE( context->_status.filenames[i] );
-			context->_status.filenames[i] = NULL;
-		}
-		XLOG_FREE( context->_status.filenames );
-		context->_status.filenames = NULL;
-		XLOG_FREE( context->_status.offsets );
-		context->_status.offsets = NULL;
 		XLOG_FREE( context->pattern_file );
 		context->pattern_file = NULL;
 		XLOG_FREE( context );
@@ -124,20 +99,26 @@ static int rotating_file_get_fd(xlog_printer_t *printer)
 {
 	struct __rotating_file_printer_context * context = (struct __rotating_file_printer_context *)printer->context;
 	if( context ) {
-		int fd = context->_status.current_fd;
+		int fd = context->current_fd;
 		if( fd < 0 ) {
-			fd = open( context->_status.filenames[context->_status.current_file_id], O_WRONLY | O_CREAT, 0644 );
-			context->_status.current_fd = fd;
-		} else if( context->_status.offsets[context->_status.current_file_id] >= context->max_size_per_file ) {
+			char buffer[256] = { 0 };
+			__filepath( buffer, sizeof( buffer ), context->pattern_file, context->current_index );
+			fd = open( buffer, O_WRONLY | O_CREAT, 0644 );
+			context->current_fd = fd;
+			context->current_bytes = 0;
+		} else if( context->current_bytes >= context->max_size_per_file ) {
 			close( fd );
-			if( ( ++ context->_status.current_file_id ) >= context->max_file_to_ratating ) {
-				context->_status.current_file_id = 0;
+			if( ( ++ context->current_index ) >= context->max_file_to_ratating ) {
+				context->current_index = 0;
 			}
-			fd = open( context->_status.filenames[context->_status.current_file_id], O_WRONLY | O_CREAT, 0644 );
-			context->_status.current_fd = fd;
+			char buffer[256] = { 0 };
+			__filepath( buffer, sizeof( buffer ), context->pattern_file, context->current_index );
+			fd = open( buffer, O_WRONLY | O_CREAT, 0644 );
+			context->current_fd = fd;
+			context->current_bytes = 0;
 		}
 		
-		return context->_status.current_fd;
+		return context->current_fd;
 	}
 	return -1;
 }
@@ -148,7 +129,7 @@ static int rotating_file_append(xlog_printer_t *printer, const char *text)
 	struct __rotating_file_printer_context *_ctx = (struct __rotating_file_printer_context *)printer->context;
 	if( fd >= 0 ) {
 		size_t size = strlen(text);
-		_ctx->_status.offsets[_ctx->_status.current_file_id] += size;
+		_ctx->current_bytes += size;
 		XLOG_STATS_UPDATE( &((struct __rotating_file_printer_context *)printer->context)->stats, BYTE, OUTPUT, size );
 		return write( fd, text, size );
 	}
@@ -183,7 +164,7 @@ xlog_printer_t *xlog_printer_create_rotating_file( const char *file, size_t max_
 
 int xlog_printer_destory_rotating_file( xlog_printer_t *printer )
 {
-	#if (defined XLOG_POLICY_RUNTIME_SAFE)
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( printer->magic != XLOG_MAGIC_PRINTER ) {
 		return EINVAL;
 	}

@@ -15,17 +15,18 @@ High performance Extensible logging library designed for log formating and dynam
 /*
  * Usage: debug [OPTIONS] MODULE[/SUB-MODULE/...]
  *
- *  Mandatory arguments to long options are mandatory for short options too.
- *    -f, --force        Update module's paramters forcibly,
- *                       minimal changes will applied to it's parent.
- *    -F                 Make no changes on it's parent, contrary to --force option.
- *    -r, --recursive    Update sub-modules too.
- *    -l, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.
- *                       s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).
- *        --list         List modules in your application.
- *        --only         Only enable output of specified modules(disabling will be applied to other modules).
- *    -v, --version      Show version of logger.
- *    -h, --help         Display this help and exit.
+ * Mandatory arguments to long options are mandatory for short options too.
+ *   -f, --force        Update module's paramters forcibly,
+ *                      minimal changes will applied to it's parent.
+ *   -F                 Make no changes on it's parent, contrary to --force option.
+ *   -r, --recursive    Update sub-modules too.
+ *   -l, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.
+ *                      s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).
+ *   -l, --list         List modules in your application.
+ *   -a, --all          Show all modules, include the hidden.
+ *       --only         Only enable output of specified modules(disabling will be applied to other modules).
+ *   -v, --version      Show version of logger.
+ *   -h, --help         Display this help and exit.
  */
 XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv );
 ```
@@ -73,7 +74,7 @@ XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, cons
 XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module );
 
 /**
- * @brief  get output level limit for this module
+ * @brief  get output level
  *
  * @param  module, pointer to `xlog_module_t`
  * @return output level.
@@ -95,10 +96,10 @@ XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog
  * @brief  list sub-modules
  *
  * @param  module, pointer to `xlog_module_t`
- *         list, print options
+ *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int mask );
+XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int options );
 
 /**
  * @brief  change level of module
@@ -166,10 +167,10 @@ XLOG_PUBLIC(int) xlog_version( char *buffer, int size );
  * @brief  list all modules under xlog context
  *
  * @param  context, pointer to `xlog_t`
- *         mask, print options
+ *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int mask );
+XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int options );
 
 
 
@@ -183,7 +184,7 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void );
 
 /**
  * @brief  set default printer
- * 
+ *
  * @param  printer, printer you'd like be the default
  *
  * @return pointer to default printer.
@@ -231,7 +232,6 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  * @brief  output formated log
  *
  * @param  printer, printer to output log
- *         context, xlog context
  *         module, logging module
  *         level, logging level
  *         file/func/line, source location
@@ -240,7 +240,7 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  */
 XLOG_PUBLIC(int) xlog_output_fmtlog(
     xlog_printer_t *printer,
-    xlog_t *context, xlog_module_t *module, int level,
+    xlog_module_t *module, int level,
     const char *file, const char *func, long int line,
     const char *format, ...
 );
@@ -249,9 +249,10 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 ## TODO
 1. ~~Support Hidden modules(name start with dot[.]), will not show with --list option default.~~
 2. Determine whether colorful or not with multiple object, such as context, printer, module and so on.
-3. Much more printers: daily file, ring-buffer, async mode.
-4. Multi-language documents: Chinese, English and so on. 
-5. Support custom plugin development.
-6. Log builder, formater and filter.
-7. Timeline analyser client.
-8. Protobuf and High-Performance socket framework for log transmission.
+3. Much more printers: ~~daily file,~~ ring-buffer, async mode.
+4. Multi-language documents : Chinese, English, Japanese, etc. on the way.
+5. Bench demos and develop examples;
+6. Plugin support: allow (un)install/(dis)active plugin package.
+7. Log builder, filter support.
+8. Log Assitent: Timeline-based logging aggregationa.
+9. Protobuf and High-Performance socket framework for log transmission.

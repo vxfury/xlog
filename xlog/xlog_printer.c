@@ -1,4 +1,5 @@
 #include <xlog/xlog.h>
+#include <xlog/xlog_config.h>
 #include <xlog/xlog_helper.h>
 
 #include "internal/xlog.h"
@@ -24,12 +25,18 @@ static xlog_printer_t *__default_printer = &stdout_printer;
  */
 XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void )
 {
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	if( __default_printer->magic != XLOG_MAGIC_PRINTER ) {
+		__XLOG_TRACE( "Default printer has been closed, switch to stdout." );
+		__default_printer = &stdout_printer;
+	}
+	#endif
 	return __default_printer;
 }
 
 /**
  * @brief  set default printer
- * 
+ *
  * @param  printer, printer you'd like be the default
  *
  * @return pointer to default printer.
@@ -37,19 +44,19 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void )
  */
 XLOG_PUBLIC(xlog_printer_t *) xlog_printer_set_default( const xlog_printer_t *printer )
 {
-	#if (defined XLOG_POLICY_RUNTIME_SAFE)
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( printer->magic != XLOG_MAGIC_PRINTER ) {
-		XLOG_TRACE( "Invalid printer." );
+		__XLOG_TRACE( "Invalid printer." );
 		return __default_printer;
 	}
 	#endif
 	
 	if( printer->append && printer->control ) {
-		XLOG_TRACE( "Default printer has changed." );
+		__XLOG_TRACE( "Default printer has changed." );
 		__default_printer = ( xlog_printer_t * )printer;
 	}
 	
-	XLOG_TRACE( "Invalid printer" );
+	__XLOG_TRACE( "Invalid printer" );
 	return NULL;
 }
 
@@ -91,13 +98,21 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... )
 		case XLOG_PRINTER_FILES_DAILY: {
 			va_list ap;
 			va_start(ap, options);
-			
+			const char *file = va_arg( ap, const char * );
 			va_end(ap);
+			printer = xlog_printer_create_daily_file( file );
 		} break;
 		default: {
 			printer = NULL;
 		} break;
 	}
+	
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	if( printer ) {
+		__XLOG_TRACE( "Magic after created is 0x%X.", printer->magic );
+		printer->magic = XLOG_MAGIC_PRINTER;
+	}
+	#endif
 	
 	return printer;
 }
@@ -121,7 +136,7 @@ XLOG_PUBLIC(int) xlog_printer_destory( xlog_printer_t *printer )
 	switch( type ) {
 		case XLOG_PRINTER_STDOUT:
 		case XLOG_PRINTER_STDERR: {
-			XLOG_TRACE( "stdout/stderr printer, no need to destory" );
+			__XLOG_TRACE( "stdout/stderr printer, no need to destory" );
 		} break;
 		case XLOG_PRINTER_FILES_BASIC: {
 			xlog_printer_destory_basic_file( printer );
@@ -130,10 +145,10 @@ XLOG_PUBLIC(int) xlog_printer_destory( xlog_printer_t *printer )
 			xlog_printer_destory_rotating_file( printer );
 		} break;
 		case XLOG_PRINTER_FILES_DAILY: {
-			//
+			xlog_printer_destory_daily_file( printer );
 		} break;
 		default: {
-			XLOG_TRACE( "unkown printer type(%d).", type );
+			__XLOG_TRACE( "unkown printer type(%d).", type );
 			return EINVAL;
 		} break;
 	}

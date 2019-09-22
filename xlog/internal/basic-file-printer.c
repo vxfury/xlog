@@ -94,7 +94,7 @@ xlog_printer_t *xlog_printer_create_basic_file( const char *file )
 
 int xlog_printer_destory_basic_file( xlog_printer_t *printer )
 {
-	#if (defined XLOG_POLICY_RUNTIME_SAFE)
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( printer->magic != XLOG_MAGIC_PRINTER ) {
 		return EINVAL;
 	}

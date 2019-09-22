@@ -73,7 +73,8 @@ static void usage( xlog_shell_globals_t *globals )
 	    "  -r, --recursive    Update sub-modules too.\n"
 	    "  -L, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.\n"
 	    "                     s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).\n"
-	    "      --list         List modules in your application.\n"
+	    "  -l, --list         List modules in your application.\n"
+	    "  -a, --all          Show all modules, include the hidden.\n"
 	    "      --only         Only enable output of specified modules(disabling will be applied to other modules).\n"
 	    "  -v, --version      Show version of logger.\n"
 	    "  -h, --help         Display this help and exit.\n"
@@ -205,17 +206,18 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 /*
  * Usage: debug [OPTIONS] MODULE[/SUB-MODULE/...]
  *
- *  Mandatory arguments to long options are mandatory for short options too.
- *    -f, --force        Update module's paramters forcibly,
- *                       minimal changes will applied to it's parent.
- *    -F                 Make no changes on it's parent, contrary to --force option.
- *    -r, --recursive    Update sub-modules too.
- *    -l, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.
- *                       s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).
- *        --list         List modules in your application.
- *        --only         Only enable output of specified modules(disabling will be applied to other modules).
- *    -v, --version      Show version of logger.
- *    -h, --help         Display this help and exit.
+ * Mandatory arguments to long options are mandatory for short options too.
+ *   -f, --force        Update module's paramters forcibly,
+ *                      minimal changes will applied to it's parent.
+ *   -F                 Make no changes on it's parent, contrary to --force option.
+ *   -r, --recursive    Update sub-modules too.
+ *   -l, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.
+ *                      s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).
+ *   -l, --list         List modules in your application.
+ *   -a, --all          Show all modules, include the hidden.
+ *       --only         Only enable output of specified modules(disabling will be applied to other modules).
+ *   -v, --version      Show version of logger.
+ *   -h, --help         Display this help and exit.
  */
 XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv )
 {

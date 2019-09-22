@@ -15,7 +15,7 @@
 #include <fcntl.h>
 #include <assert.h>
 
-// #define XLOG_PRINTER	g_printer
+#define XLOG_PRINTER	g_printer
 
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>

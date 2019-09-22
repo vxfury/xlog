@@ -57,6 +57,7 @@ set(
 	
 	internal/stdio-printer.c
 	internal/basic-file-printer.c
+	internal/daily-file-printer.c
 	internal/rotating-file-printer.c
 )
 
