@@ -102,6 +102,13 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... )
 			va_end( ap );
 			printer = xlog_printer_create_daily_file( file );
 		} break;
+		case XLOG_PRINTER_RINGBUF: {
+			va_list ap;
+			va_start( ap, options );
+			size_t capacity = va_arg( ap, size_t );
+			va_end( ap );
+			printer = xlog_printer_create_ringbuf( capacity );
+		} break;
 		default: {
 			printer = NULL;
 		} break;
@@ -146,6 +153,9 @@ XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer )
 		} break;
 		case XLOG_PRINTER_FILES_DAILY: {
 			xlog_printer_destory_daily_file( printer );
+		} break;
+		case XLOG_PRINTER_RINGBUF: {
+			xlog_printer_destory_ringbuf( printer );
 		} break;
 		default: {
 			__XLOG_TRACE( "unkown printer type(%d).", type );
