@@ -219,7 +219,7 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
  *   -v, --version      Show version of logger.
  *   -h, --help         Display this help and exit.
  */
-XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv )
+XLOG_PUBLIC( int ) xlog_shell_main( xlog_t *context, int argc, char **argv )
 {
 	xlog_t *__context = context;
 	if( __context == NULL ) {

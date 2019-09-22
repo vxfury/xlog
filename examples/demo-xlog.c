@@ -84,7 +84,7 @@ static struct {
 #define BENCH_STATS() { \
 	gettimeofday( &bench_stats.bench_tv_end, NULL ); \
 	unsigned long tv_msec = 1000 * ( bench_stats.bench_tv_end.tv_sec - bench_stats.bench_tv_start.tv_sec ) \
-		+ ( bench_stats.bench_tv_end.tv_usec - bench_stats.bench_tv_start.tv_usec ) / 1000; \
+	    + ( bench_stats.bench_tv_end.tv_usec - bench_stats.bench_tv_start.tv_usec ) / 1000; \
 	fprintf(stderr, "time elapse: %lu ms, logging: %zu bytes, %zu items\n", tv_msec, bench_stats.log_bytes, bench_stats.log_items ); \
 }
 
@@ -111,10 +111,10 @@ static int xlog_test_init( void )
 		g_net = xlog_module_open( "net", XLOG_LEVEL_INFO, ROOT_MODULE );
 		g_net_http = xlog_module_open( "/net/http", XLOG_LEVEL_INFO, ROOT_MODULE );
 		g_net_dhcp = xlog_module_open( "dhcp", XLOG_LEVEL_DEBUG, g_net );
-		fprintf(stderr, "level now is %d\n", g_net_dhcp->level );
+		fprintf( stderr, "level now is %d\n", g_net_dhcp->level );
 		xlog_module_t *g_net_dhcp_cpy = xlog_module_open( "/net/dhcp", XLOG_LEVEL_VERBOSE, ROOT_MODULE );
 		assert( g_net_dhcp == g_net_dhcp_cpy );
-		fprintf(stderr, "level after reopen is %d\n", g_net_dhcp->level );
+		fprintf( stderr, "level after reopen is %d\n", g_net_dhcp->level );
 	}
 	
 	{
@@ -129,9 +129,9 @@ static int xlog_test_init( void )
 	{
 		char buffer[TEST_BUFFER_SIZE] = { 0 };
 		for( int i = 0; i < sizeof( buffer ); ++ i ) {
-			buffer[i] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[random_integer() % (10 + 26 * 2)];
+			buffer[i] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[random_integer() % ( 10 + 26 * 2 )];
 		}
-		buffer[sizeof(buffer) - 1] = '\0';
+		buffer[sizeof( buffer ) - 1] = '\0';
 		
 		log_r( "raw log output test: %s\n", buffer );
 		
@@ -195,7 +195,7 @@ static void *xlog_test_thread( void *arg )
 	#define TEST_LOG_TIMECTL (random() % TEST_LOG_INTERVAL)
 	int i = 5000; // random() % 1000;
 	char name[16];
-	snprintf( name, sizeof( name ), "thread-%d", (int)(intptr_t)arg );
+	snprintf( name, sizeof( name ), "thread-%d", ( int )( intptr_t )arg );
 	XLOG_SET_THREAD_NAME( name );
 	
 	int len = 0;
@@ -237,14 +237,14 @@ static void *xlog_test_thread( void *arg )
 
 static int xlog_test_multi_thread( int nthread )
 {
-	pthread_t *threads = (pthread_t *)alloca( sizeof( pthread_t ) * nthread );
+	pthread_t *threads = ( pthread_t * )alloca( sizeof( pthread_t ) * nthread );
 	if( threads == NULL ) {
 		return -1;
 	}
 	
 	BENCH_START();
 	for( int i = 0; i < nthread; i ++ ) {
-		pthread_create( threads + i, NULL, xlog_test_thread, (void *)(uintptr_t)i );
+		pthread_create( threads + i, NULL, xlog_test_thread, ( void * )( uintptr_t )i );
 	}
 	
 	for( int i = 0; i < nthread; i ++ ) {
@@ -259,7 +259,7 @@ static int xlog_test_multi_thread( int nthread )
 static int xlog_test_set_level( void )
 {
 	{
-		fprintf(stderr, "Testcase: level control with recursive option\n" );
+		fprintf( stderr, "Testcase: level control with recursive option\n" );
 		log_r( "Testcase: level control with recursive option\n" );
 		
 		xlog_list_modules( XLOG_CONTEXT, XLOG_LIST_OWITH_TAG );
@@ -337,17 +337,16 @@ static int xlog_bench_rate( int bench_time )
 		for( int i = 0; i < sizeof( buffer ); ++ i ) {
 			buffer[i] = 'a' + random_integer() % 26;
 		}
-		buffer[sizeof(buffer) - 1] = '\0';
-
+		buffer[sizeof( buffer ) - 1] = '\0';
+		
 		time_t ts = time( NULL );
 		size_t count = 0;
-		while( time(NULL) - ts <= BENCH_TIME )
-		{
-			log_w("%s", buffer);
+		while( time( NULL ) - ts <= BENCH_TIME ) {
+			log_w( "%s", buffer );
 			count ++;
 		}
 		count1 = count / BENCH_TIME;
-		fprintf(stderr, "count = %zu\n", count );
+		fprintf( stderr, "count = %zu\n", count );
 	}
 	
 	{
@@ -355,13 +354,12 @@ static int xlog_bench_rate( int bench_time )
 		for( int i = 0; i < sizeof( buffer ); ++ i ) {
 			buffer[i] = 'a' + random_integer() % 26;
 		}
-		buffer[sizeof(buffer) - 1] = '\0';
-
+		buffer[sizeof( buffer ) - 1] = '\0';
+		
 		time_t ts = time( NULL );
 		size_t count = 0;
-		while( time(NULL) - ts <= BENCH_TIME )
-		{
-			char *temp = (char *)malloc( 2048 );
+		while( time( NULL ) - ts <= BENCH_TIME ) {
+			char *temp = ( char * )malloc( 2048 );
 			if( temp ) {
 				xlog_time_t now;
 				#if ((defined __linux__) || (defined __FreeBSD__) || (defined __APPLE__) || (defined __unix__))
@@ -378,25 +376,25 @@ static int xlog_bench_rate( int bench_time )
 				time_t tv_sec = now.tv.tv_sec;
 				struct tm *p = localtime( &tv_sec );
 				snprintf(
-					temp, 2048,
-			        XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME XLOG_TAG_PREFIX_LOG_CLASS(WARN) "%s" XLOG_TAG_SUFFIX_LOG_CLASS(WARN) "%s",
-			        p->tm_mon + 1, p->tm_mday,
-			        p->tm_hour, p->tm_min, p->tm_sec, ( int )( now.tv.tv_usec / 1000 ),
-			        "/net/dhcp",
-			        buffer
-			    );
-			    #ifndef XLOG_BENCH_NO_OUTPUT
-			    printf("%s\n", temp);
-			    #endif
-			    free(temp);
+				    temp, 2048,
+				    XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME XLOG_TAG_PREFIX_LOG_CLASS( WARN ) "%s" XLOG_TAG_SUFFIX_LOG_CLASS( WARN ) "%s",
+				    p->tm_mon + 1, p->tm_mday,
+				    p->tm_hour, p->tm_min, p->tm_sec, ( int )( now.tv.tv_usec / 1000 ),
+				    "/net/dhcp",
+				    buffer
+				);
+				#ifndef XLOG_BENCH_NO_OUTPUT
+				printf( "%s\n", temp );
+				#endif
+				free( temp );
 				count ++;
 			}
 		}
 		count2 = count / BENCH_TIME;
-		fprintf(stderr, "count = %zu\n", count );
+		fprintf( stderr, "count = %zu\n", count );
 	}
-
-	fprintf(stderr, "count1 = %zu(%f), count2 = %zu\n", count1, (double)count1/(double)count2, count2 );
+	
+	fprintf( stderr, "count1 = %zu(%f), count2 = %zu\n", count1, ( double )count1 / ( double )count2, count2 );
 	
 	return 0;
 }
@@ -414,7 +412,7 @@ int main( int argc, char **argv )
 	BENCH_START();
 	for( int i = 0; i < 100000; i ++ ) {
 		int len = log_v( "cwnkewrnervejve jvebe" );
-		BENCH_RECORD(len);
+		BENCH_RECORD( len );
 	}
 	BENCH_STATS();
 	#endif
@@ -441,7 +439,7 @@ unsigned long random_integer( void )
 			fd = -1;
 		}
 		
-		srand( (unsigned int)seed );
+		srand( ( unsigned int )seed );
 		initialized = true;
 	}
 	

@@ -68,7 +68,7 @@ void xlog_tree_destory( xlog_tree_t *node );
  *         hook, this function will be executed before destory.
  *
  */
-void xlog_tree_destory_with_hook( xlog_tree_t *tree, void (*hook)( xlog_tree_t * ) );
+void xlog_tree_destory_with_hook( xlog_tree_t *tree, void ( *hook )( xlog_tree_t * ) );
 
 /**
  * @brief  Resize the xlog_tree_t

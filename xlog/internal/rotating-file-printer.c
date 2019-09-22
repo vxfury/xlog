@@ -24,13 +24,13 @@ static int __filepath( char *buffer, size_t size, const char *pattern, int i )
 	
 	if( _ptr_ext ) {
 		if(
-		   ( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
-		   || ( _ptr_dir == NULL ) // file.ext, no parent dir
+		    ( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
+		    || ( _ptr_dir == NULL ) // file.ext, no parent dir
 		) {
 			snprintf(
 			    buffer, size,
 			    "%.*s_%05d%s"
-			    , (int)(_ptr_ext - pattern)
+			    , ( int )( _ptr_ext - pattern )
 			    , pattern
 			    , i
 			    , _ptr_ext
@@ -61,14 +61,14 @@ struct __rotating_file_printer_context {
 	#endif
 };
 
-static struct __rotating_file_printer_context *__rotating_file_create_context(const char *file, size_t max_size_per_file, size_t max_file_to_ratating)
+static struct __rotating_file_printer_context *__rotating_file_create_context( const char *file, size_t max_size_per_file, size_t max_file_to_ratating )
 {
 	char buffer[256] = { 0 };
 	if( __filepath( buffer, sizeof( buffer ), file, 0 ) != 0 ) {
 		XLOG_TRACE( "Invalid file pattern." );
 		return NULL;
 	}
-	struct __rotating_file_printer_context *context = (struct __rotating_file_printer_context *)XLOG_MALLOC( sizeof( struct __rotating_file_printer_context ) );
+	struct __rotating_file_printer_context *context = ( struct __rotating_file_printer_context * )XLOG_MALLOC( sizeof( struct __rotating_file_printer_context ) );
 	if( context ) {
 		context->pattern_file = XLOG_STRDUP( file );
 		context->max_size_per_file = max_size_per_file;
@@ -80,11 +80,11 @@ static struct __rotating_file_printer_context *__rotating_file_create_context(co
 		
 		XLOG_STATS_INIT( &context->stats, XLOG_STATS_PRINTER_OPTION );
 	}
-
+	
 	return context;
 }
 
-static int __rotating_file_destory_context(struct __rotating_file_printer_context * context)
+static int __rotating_file_destory_context( struct __rotating_file_printer_context *context )
 {
 	if( context ) {
 		XLOG_FREE( context->pattern_file );
@@ -95,9 +95,9 @@ static int __rotating_file_destory_context(struct __rotating_file_printer_contex
 	return 0;
 }
 
-static int rotating_file_get_fd(xlog_printer_t *printer)
+static int rotating_file_get_fd( xlog_printer_t *printer )
 {
-	struct __rotating_file_printer_context * context = (struct __rotating_file_printer_context *)printer->context;
+	struct __rotating_file_printer_context *context = ( struct __rotating_file_printer_context * )printer->context;
 	if( context ) {
 		int fd = context->current_fd;
 		if( fd < 0 ) {
@@ -123,20 +123,20 @@ static int rotating_file_get_fd(xlog_printer_t *printer)
 	return -1;
 }
 
-static int rotating_file_append(xlog_printer_t *printer, const char *text)
+static int rotating_file_append( xlog_printer_t *printer, const char *text )
 {
 	int fd = rotating_file_get_fd( printer );
-	struct __rotating_file_printer_context *_ctx = (struct __rotating_file_printer_context *)printer->context;
+	struct __rotating_file_printer_context *_ctx = ( struct __rotating_file_printer_context * )printer->context;
 	if( fd >= 0 ) {
-		size_t size = strlen(text);
+		size_t size = strlen( text );
 		_ctx->current_bytes += size;
-		XLOG_STATS_UPDATE( &((struct __rotating_file_printer_context *)printer->context)->stats, BYTE, OUTPUT, size );
+		XLOG_STATS_UPDATE( &( ( struct __rotating_file_printer_context * )printer->context )->stats, BYTE, OUTPUT, size );
 		return write( fd, text, size );
 	}
 	return 0;
 }
 
-static int rotating_file_control(xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED)
+static int rotating_file_control( xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED )
 {
 	return 0;
 }
@@ -144,7 +144,7 @@ static int rotating_file_control(xlog_printer_t *printer UNUSED, int option UNUS
 xlog_printer_t *xlog_printer_create_rotating_file( const char *file, size_t max_size_per_file, size_t max_file_to_ratating )
 {
 	xlog_printer_t *printer = NULL;
-	struct __rotating_file_printer_context * _prt_ctx = __rotating_file_create_context( file, max_size_per_file, max_file_to_ratating);
+	struct __rotating_file_printer_context *_prt_ctx = __rotating_file_create_context( file, max_size_per_file, max_file_to_ratating );
 	if( _prt_ctx ) {
 		printer = ( xlog_printer_t * ) XLOG_MALLOC( sizeof( xlog_printer_t ) );
 		if( printer == NULL ) {
@@ -153,7 +153,7 @@ xlog_printer_t *xlog_printer_create_rotating_file( const char *file, size_t max_
 			
 			return NULL;
 		}
-		printer->context = (void *)_prt_ctx;
+		printer->context = ( void * )_prt_ctx;
 		printer->options = XLOG_PRINTER_FILES_ROTATING;
 		printer->append = rotating_file_append;
 		printer->control = rotating_file_control;
@@ -170,7 +170,7 @@ int xlog_printer_destory_rotating_file( xlog_printer_t *printer )
 	}
 	#endif
 	
-	__rotating_file_destory_context( (struct __rotating_file_printer_context *)printer->context );
+	__rotating_file_destory_context( ( struct __rotating_file_printer_context * )printer->context );
 	printer->context = NULL;
 	XLOG_FREE( printer );
 	

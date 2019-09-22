@@ -39,24 +39,24 @@ static int __filepath( char *buffer, size_t size, const char *pattern )
 	struct tm tm;
 	localtime_r( &tv.tv_sec, &tm );
 	snprintf(
-        __date, sizeof(__date),
-        "%02d%02d_%02d%02d%02d",
-        tm.tm_mon + 1, tm.tm_mday,
-        tm.tm_hour, tm.tm_min, tm.tm_sec
-    );
-    #else
+	    __date, sizeof( __date ),
+	    "%02d%02d_%02d%02d%02d",
+	    tm.tm_mon + 1, tm.tm_mday,
+	    tm.tm_hour, tm.tm_min, tm.tm_sec
+	);
+	#else
 	#error No implementation for this system.
 	#endif
 	
 	if( _ptr_ext ) {
 		if(
-		   ( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
-		   || ( _ptr_dir == NULL ) // file.ext, no parent dir
+		    ( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
+		    || ( _ptr_dir == NULL ) // file.ext, no parent dir
 		) {
 			snprintf(
 			    buffer, size,
 			    "%.*s_%s%s"
-			    , (int)(_ptr_ext - pattern)
+			    , ( int )( _ptr_ext - pattern )
 			    , pattern
 			    , __date
 			    , _ptr_ext
@@ -84,14 +84,14 @@ struct __daily_file_printer_context {
 	#endif
 };
 
-static struct __daily_file_printer_context *__daily_file_create_context(const char *file )
+static struct __daily_file_printer_context *__daily_file_create_context( const char *file )
 {
 	char buffer[256] = { 0 };
 	if( __filepath( buffer, sizeof( buffer ), file ) != 0 ) {
 		XLOG_TRACE( "Invalid file pattern." );
 		return NULL;
 	}
-	struct __daily_file_printer_context *context = (struct __daily_file_printer_context *)XLOG_MALLOC( sizeof( struct __daily_file_printer_context ) );
+	struct __daily_file_printer_context *context = ( struct __daily_file_printer_context * )XLOG_MALLOC( sizeof( struct __daily_file_printer_context ) );
 	if( context ) {
 		context->pattern_file = XLOG_STRDUP( file );
 		
@@ -100,11 +100,11 @@ static struct __daily_file_printer_context *__daily_file_create_context(const ch
 		
 		XLOG_STATS_INIT( &context->stats, XLOG_STATS_PRINTER_OPTION );
 	}
-
+	
 	return context;
 }
 
-static int __daily_file_destory_context(struct __daily_file_printer_context * context)
+static int __daily_file_destory_context( struct __daily_file_printer_context *context )
 {
 	if( context ) {
 		XLOG_FREE( context->pattern_file );
@@ -115,9 +115,9 @@ static int __daily_file_destory_context(struct __daily_file_printer_context * co
 	return 0;
 }
 
-static int daily_file_get_fd(xlog_printer_t *printer)
+static int daily_file_get_fd( xlog_printer_t *printer )
 {
-	struct __daily_file_printer_context * context = (struct __daily_file_printer_context *)printer->context;
+	struct __daily_file_printer_context *context = ( struct __daily_file_printer_context * )printer->context;
 	if( context ) {
 		int fd = context->current_fd;
 		if( fd < 0 ) {
@@ -140,18 +140,18 @@ static int daily_file_get_fd(xlog_printer_t *printer)
 	return -1;
 }
 
-static int daily_file_append(xlog_printer_t *printer, const char *text)
+static int daily_file_append( xlog_printer_t *printer, const char *text )
 {
 	int fd = daily_file_get_fd( printer );
 	if( fd >= 0 ) {
-		size_t size = strlen(text);
-		XLOG_STATS_UPDATE( &((struct __daily_file_printer_context *)printer->context)->stats, BYTE, OUTPUT, size );
+		size_t size = strlen( text );
+		XLOG_STATS_UPDATE( &( ( struct __daily_file_printer_context * )printer->context )->stats, BYTE, OUTPUT, size );
 		return write( fd, text, size );
 	}
 	return 0;
 }
 
-static int daily_file_control(xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED)
+static int daily_file_control( xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED )
 {
 	return 0;
 }
@@ -159,7 +159,7 @@ static int daily_file_control(xlog_printer_t *printer UNUSED, int option UNUSED,
 xlog_printer_t *xlog_printer_create_daily_file( const char *file )
 {
 	xlog_printer_t *printer = NULL;
-	struct __daily_file_printer_context * _prt_ctx = __daily_file_create_context( file );
+	struct __daily_file_printer_context *_prt_ctx = __daily_file_create_context( file );
 	if( _prt_ctx ) {
 		printer = ( xlog_printer_t * ) XLOG_MALLOC( sizeof( xlog_printer_t ) );
 		if( printer == NULL ) {
@@ -168,7 +168,7 @@ xlog_printer_t *xlog_printer_create_daily_file( const char *file )
 			
 			return NULL;
 		}
-		printer->context = (void *)_prt_ctx;
+		printer->context = ( void * )_prt_ctx;
 		printer->options = XLOG_PRINTER_FILES_DAILY;
 		printer->append = daily_file_append;
 		printer->control = daily_file_control;
@@ -185,7 +185,7 @@ int xlog_printer_destory_daily_file( xlog_printer_t *printer )
 	}
 	#endif
 	
-	__daily_file_destory_context( (struct __daily_file_printer_context *)printer->context );
+	__daily_file_destory_context( ( struct __daily_file_printer_context * )printer->context );
 	printer->context = NULL;
 	XLOG_FREE( printer );
 	

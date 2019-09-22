@@ -51,7 +51,7 @@ static const char *hexdump_format_of( int v )
 				errx( 1, "strdup" );
 			}
 			
-			for( char *p = colors_var, *token; (void)( token = strtok( p, " " ) ), token != NULL; p = NULL ) {
+			for( char *p = colors_var, *token; ( void )( token = strtok( p, " " ) ), token != NULL; p = NULL ) {
 				char *key = token, *value = strchr( token, '=' );
 				if( value == NULL ) {
 					warnx( "no '=' found in HEXD_COLORS property '%s'", p );
@@ -59,13 +59,13 @@ static const char *hexdump_format_of( int v )
 				*value++ = '\0';
 				
 				int i = (
-	                strcmp( key, "zero" ) == 0 ? 0 :
-	                strcmp( key, "all"  ) == 0 ? 1 :
-	                strcmp( key, "low"  ) == 0 ? 2 :
-	                strcmp( key, "high" ) == 0 ? 3 :
-	                strcmp( key, "high" ) == 0 ? 4 : -1
-	            );
-				if( i >= 0 && i < (int)HEXD_ARRAY_SIZE( formats ) ) {
+		            strcmp( key, "zero" ) == 0 ? 0 :
+		            strcmp( key, "all"  ) == 0 ? 1 :
+		            strcmp( key, "low"  ) == 0 ? 2 :
+		            strcmp( key, "high" ) == 0 ? 3 :
+		            strcmp( key, "high" ) == 0 ? 4 : -1
+		        );
+				if( i >= 0 && i < ( int )HEXD_ARRAY_SIZE( formats ) ) {
 					initialized = true;
 					snprintf( formats[i].format, sizeof( formats[i].format ), "%s", value );
 				} else {
@@ -100,7 +100,7 @@ int __hexdump_iterator(
 	XLOG_ASSERT( iterator->line );
 	XLOG_ASSERT( iterator->dumpline && iterator->dumpsize > 0 );
 	
-	size_t nread = options->end == -1 ? options->columns : HEXD_MIN( options->columns, (size_t)(options->end - iterator->offset) );
+	size_t nread = options->end == -1 ? options->columns : HEXD_MIN( options->columns, ( size_t )( options->end - iterator->offset ) );
 	int n = readline( target, iterator->offset, ( void * )iterator->line, nread );
 	if( n <= 0 ) {
 		iterator->status = HEXD_EOF;
@@ -111,9 +111,9 @@ int __hexdump_iterator(
 	char *dumpptr = iterator->dumpline;
 	
 	if(
-	   iterator->status != HEXD_FIRST_LINE
-	   && 0 == memcmp( iterator->line, iterator->prev_line, options->columns )
-	   && n == (int)options->columns
+	    iterator->status != HEXD_FIRST_LINE
+	    && 0 == memcmp( iterator->line, iterator->prev_line, options->columns )
+	    && n == ( int )options->columns
 	) {
 		switch( iterator->status ) {
 			case HEXD_DUPLICATE:
@@ -307,15 +307,15 @@ int __hexdump(
 
 static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg )
 {
-	(void)arg;
+	( void )arg;
 	printf( "%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline );
 }
 
 static int hexdump_memory_readline( const void *addr, off_t offset, void *buffer, size_t size )
 {
-	memcpy( buffer, (const char *)addr + offset, size );
+	memcpy( buffer, ( const char * )addr + offset, size );
 	
-	return (int)size;
+	return ( int )size;
 }
 
 void hexdump_memory( const void *addr, size_t size, hexdump_options_t *options )
@@ -330,7 +330,7 @@ void hexdump_memory( const void *addr, size_t size, hexdump_options_t *options )
 	hexdump_options_t *op = options ? options : &hexdopt_def;
 	
 	if( -1 == op->end ) {
-		op->end = op->start + (int)size;
+		op->end = op->start + ( int )size;
 	}
 	
 	__hexdump( addr, op, hexdump_memory_readline, hexdump_printline, NULL );
@@ -344,7 +344,7 @@ static int hexdump_file_readline( const void *target, off_t offset, void *buffer
 	if( cur < 0 ) {
 		return -1;
 	}
-	return (int)read( fd, buffer, size );
+	return ( int )read( fd, buffer, size );
 }
 
 void hexdump_file( const char *file, const hexdump_options_t *options )
@@ -428,7 +428,7 @@ int hexdump_shell_main( int argc, char **argv )
 	while( ( opt = getopt( argc, argv, "g:pPr:w:" ) ) != -1 ) {
 		switch ( opt ) {
 			case 'g':
-				hexdopt.groupsize = (size_t)atol( optarg );
+				hexdopt.groupsize = ( size_t )atol( optarg );
 				break;
 			case 'p':
 				hexdopt.use_formatting = false;
@@ -440,7 +440,7 @@ int hexdump_shell_main( int argc, char **argv )
 				hexdump_parse_range( optarg, &hexdopt );
 				break;
 			case 'w':
-				hexdopt.columns = (size_t)atol( optarg );
+				hexdopt.columns = ( size_t )atol( optarg );
 				break;
 			default:
 				fprintf( stderr, "usage: hexd [-p] [-P] [-g groupsize] [-r range] [-w width]\n" );

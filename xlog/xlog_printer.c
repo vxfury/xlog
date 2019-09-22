@@ -23,7 +23,7 @@ static xlog_printer_t *__default_printer = &stdout_printer;
  * @return pointer to printer
  *
  */
-XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void )
+XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_default( void )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( __default_printer->magic != XLOG_MAGIC_PRINTER ) {
@@ -42,7 +42,7 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void )
  * @return pointer to default printer.
  *
  */
-XLOG_PUBLIC(xlog_printer_t *) xlog_printer_set_default( const xlog_printer_t *printer )
+XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( const xlog_printer_t *printer )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( printer->magic != XLOG_MAGIC_PRINTER ) {
@@ -67,10 +67,10 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_set_default( const xlog_printer_t *pr
  * @return pointer to printer
  *
  */
-XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... )
+XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... )
 {
 	xlog_printer_t *printer = NULL;
-	int type = XLOG_PRINTER_TYPE_GET(options);
+	int type = XLOG_PRINTER_TYPE_GET( options );
 	
 	switch( type ) {
 		case XLOG_PRINTER_STDOUT: {
@@ -81,25 +81,25 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... )
 		} break;
 		case XLOG_PRINTER_FILES_BASIC: {
 			va_list ap;
-			va_start(ap, options);
+			va_start( ap, options );
 			const char *file = va_arg( ap, const char * );
-			va_end(ap);
+			va_end( ap );
 			printer = xlog_printer_create_basic_file( file );
 		} break;
 		case XLOG_PRINTER_FILES_ROTATING: {
 			va_list ap;
-			va_start(ap, options);
+			va_start( ap, options );
 			const char *file = va_arg( ap, const char * );
 			size_t max_size_per_file = va_arg( ap, size_t );
 			size_t max_file_to_ratating = va_arg( ap, size_t );
-			va_end(ap);
+			va_end( ap );
 			printer = xlog_printer_create_rotating_file( file, max_size_per_file, max_file_to_ratating );
 		} break;
 		case XLOG_PRINTER_FILES_DAILY: {
 			va_list ap;
-			va_start(ap, options);
+			va_start( ap, options );
 			const char *file = va_arg( ap, const char * );
-			va_end(ap);
+			va_end( ap );
 			printer = xlog_printer_create_daily_file( file );
 		} break;
 		default: {
@@ -122,11 +122,11 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... )
  *
  * @param  printer, pointer to created printer
  * @return error code
- * 
+ *
  * @note   you MUST call to destory printer dynamically created.
  *
  */
-XLOG_PUBLIC(int) xlog_printer_destory( xlog_printer_t *printer )
+XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer )
 {
 	if( printer == NULL ) {
 		return EINVAL;

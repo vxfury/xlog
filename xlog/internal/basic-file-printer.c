@@ -23,9 +23,9 @@ struct __basic_file_printer_context {
 	#endif
 };
 
-static struct __basic_file_printer_context *__basic_file_create_context(const char *file)
+static struct __basic_file_printer_context *__basic_file_create_context( const char *file )
 {
-	struct __basic_file_printer_context *context = (struct __basic_file_printer_context *)XLOG_MALLOC( sizeof( struct __basic_file_printer_context ) );
+	struct __basic_file_printer_context *context = ( struct __basic_file_printer_context * )XLOG_MALLOC( sizeof( struct __basic_file_printer_context ) );
 	if( context ) {
 		context->filename = XLOG_STRDUP( file );
 		if( context->filename == NULL ) {
@@ -56,19 +56,19 @@ static int __basic_file_destory_context( struct __basic_file_printer_context *co
 	return 0;
 }
 
-static int __basic_file_append(xlog_printer_t *printer, const char *text)
+static int __basic_file_append( xlog_printer_t *printer, const char *text )
 {
-	struct __basic_file_printer_context *_ctx = (struct __basic_file_printer_context *)printer->context;
+	struct __basic_file_printer_context *_ctx = ( struct __basic_file_printer_context * )printer->context;
 	int fd = _ctx->fd;
 	if( fd >= 0 ) {
-		size_t size = strlen(text);
-		XLOG_STATS_UPDATE( &((struct __basic_file_printer_context *)printer->context)->stats, BYTE, OUTPUT, size );
+		size_t size = strlen( text );
+		XLOG_STATS_UPDATE( &( ( struct __basic_file_printer_context * )printer->context )->stats, BYTE, OUTPUT, size );
 		return write( fd, text, size );
 	}
 	return 0;
 }
 
-static int __basic_file_control(xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED)
+static int __basic_file_control( xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED )
 {
 	return 0;
 }
@@ -76,7 +76,7 @@ static int __basic_file_control(xlog_printer_t *printer UNUSED, int option UNUSE
 xlog_printer_t *xlog_printer_create_basic_file( const char *file )
 {
 	xlog_printer_t *printer = NULL;
-	struct __basic_file_printer_context * _prt_ctx = __basic_file_create_context( file );
+	struct __basic_file_printer_context *_prt_ctx = __basic_file_create_context( file );
 	if( _prt_ctx ) {
 		printer = ( xlog_printer_t * )XLOG_MALLOC( sizeof( xlog_printer_t ) );
 		if( printer == NULL ) {
@@ -84,7 +84,7 @@ xlog_printer_t *xlog_printer_create_basic_file( const char *file )
 			_prt_ctx = NULL;
 			return NULL;
 		}
-		printer->context = (void *)_prt_ctx;
+		printer->context = ( void * )_prt_ctx;
 		printer->append = __basic_file_append;
 		printer->control = __basic_file_control;
 	}
@@ -100,7 +100,7 @@ int xlog_printer_destory_basic_file( xlog_printer_t *printer )
 	}
 	#endif
 	
-	__basic_file_destory_context( (struct __basic_file_printer_context *)printer->context );
+	__basic_file_destory_context( ( struct __basic_file_printer_context * )printer->context );
 	printer->context = NULL;
 	XLOG_FREE( printer );
 	

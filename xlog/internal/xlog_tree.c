@@ -29,7 +29,7 @@ xlog_tree_t *xlog_tree_create( size_t size )
 	return tree;
 }
 
-static inline void __xlog_tree_destory( xlog_tree_t *tree, void (*hook)( xlog_tree_t * ) )
+static inline void __xlog_tree_destory( xlog_tree_t *tree, void ( *hook )( xlog_tree_t * ) )
 {
 	if( NULL == tree ) {
 		return;
@@ -69,7 +69,7 @@ void xlog_tree_destory( xlog_tree_t *tree )
  *         hook, this function will be executed before destory.
  *
  */
-void xlog_tree_destory_with_hook( xlog_tree_t *tree, void (*hook)( xlog_tree_t * ) )
+void xlog_tree_destory_with_hook( xlog_tree_t *tree, void ( *hook )( xlog_tree_t * ) )
 {
 	if( NULL == tree ) {
 		return;
@@ -278,7 +278,7 @@ int xlog_tree_depth( const xlog_tree_t *tree )
 {
 	XLOG_TREE_ASSERT( tree );
 	int degree = xlog_tree_degree( tree );
-	int *depths = (int *)alloca( sizeof( int ) * degree );
+	int *depths = ( int * )alloca( sizeof( int ) * degree );
 	if( !depths ) {
 		return 1;
 	}

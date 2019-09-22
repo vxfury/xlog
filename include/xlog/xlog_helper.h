@@ -140,21 +140,21 @@ then using the XLOG_API_VISIBILITY flag to "export" the same symbols the way XLO
 #define AVERAGE(x, y)			(((x) & (y)) + (((x) ^ (y)) >> 1))
 
 /** count how many bits set */
-static inline unsigned long BITS_COUNT(unsigned long x)
+static inline unsigned long BITS_COUNT( unsigned long x )
 {
 	#if BITS_PER_LONG == 32
-	x = (x & 0x55555555) + ((x & 0xaaaaaaaa) >> 1);
-	x = (x & 0x33333333) + ((x & 0xcccccccc) >> 2);
-	x = (x & 0x0f0f0f0f) + ((x & 0xf0f0f0f0) >> 4);
-	x = (x & 0x00ff00ff) + ((x & 0xff00ff00) >> 8);
-	x = (x & 0x0000ffff) + ((x & 0xffff0000) >> 16);
+	x = ( x & 0x55555555 ) + ( ( x & 0xaaaaaaaa ) >> 1 );
+	x = ( x & 0x33333333 ) + ( ( x & 0xcccccccc ) >> 2 );
+	x = ( x & 0x0f0f0f0f ) + ( ( x & 0xf0f0f0f0 ) >> 4 );
+	x = ( x & 0x00ff00ff ) + ( ( x & 0xff00ff00 ) >> 8 );
+	x = ( x & 0x0000ffff ) + ( ( x & 0xffff0000 ) >> 16 );
 	#elif BITS_PER_LONG == 64
-	x = (x & 0x5555555555555555) + ((x & 0xaaaaaaaaaaaaaaaa) >> 1);
-	x = (x & 0x3333333333333333) + ((x & 0xcccccccc33333333) >> 2);
-	x = (x & 0x0f0f0f0f0f0f0f0f) + ((x & 0xf0f0f0f0f0f0f0f0) >> 4);
-	x = (x & 0x00ff00ff00ff00ff) + ((x & 0xff00ff00ff00ff00) >> 8);
-	x = (x & 0x0000ffff0000ffff) + ((x & 0xffff0000ffff0000) >> 16);
-	x = (x & 0x00000000ffffffff) + ((x & 0xffffffff00000000) >> 32);
+	x = ( x & 0x5555555555555555 ) + ( ( x & 0xaaaaaaaaaaaaaaaa ) >> 1 );
+	x = ( x & 0x3333333333333333 ) + ( ( x & 0xcccccccc33333333 ) >> 2 );
+	x = ( x & 0x0f0f0f0f0f0f0f0f ) + ( ( x & 0xf0f0f0f0f0f0f0f0 ) >> 4 );
+	x = ( x & 0x00ff00ff00ff00ff ) + ( ( x & 0xff00ff00ff00ff00 ) >> 8 );
+	x = ( x & 0x0000ffff0000ffff ) + ( ( x & 0xffff0000ffff0000 ) >> 16 );
+	x = ( x & 0x00000000ffffffff ) + ( ( x & 0xffffffff00000000 ) >> 32 );
 	#endif
 	
 	return x;
@@ -245,8 +245,8 @@ typedef struct __xlog_printer {
 	#endif
 	void *context;
 	int options;
-	int (*append)(struct __xlog_printer *printer, const char *text);
-	int (*control)(struct __xlog_printer *printer, int option, void *vptr);
+	int ( *append )( struct __xlog_printer *printer, const char *text );
+	int ( *control )( struct __xlog_printer *printer, int option, void *vptr );
 } xlog_printer_t;
 
 typedef struct xlog_level_attr_tag {
@@ -451,7 +451,7 @@ extern "C" {
  * @return pointer to `xlog_payload_t`, NULL if failed to allocate memory.
  *
  */
-XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *brief, int options, ... );
+XLOG_PUBLIC( xlog_payload_t * ) xlog_payload_create( unsigned int id, const char *brief, int options, ... );
 
 /**
  * @brief  resize data field of payload object
@@ -461,7 +461,7 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size );
+XLOG_PUBLIC( int ) xlog_payload_resize( xlog_payload_t **payload, size_t size );
 
 /**
  * @brief  destory the payload object
@@ -470,7 +470,7 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size );
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_destory( xlog_payload_t **payload );
+XLOG_PUBLIC( int ) xlog_payload_destory( xlog_payload_t **payload );
 
 /**
  * @brief  get pointer to data field of payload object
@@ -479,7 +479,7 @@ XLOG_PUBLIC(int) xlog_payload_destory( xlog_payload_t **payload );
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC(void *) xlog_payload_data_vptr( const xlog_payload_t *payload );
+XLOG_PUBLIC( void * ) xlog_payload_data_vptr( const xlog_payload_t *payload );
 
 /**
  * @brief  append text to a payload object
@@ -489,7 +489,7 @@ XLOG_PUBLIC(void *) xlog_payload_data_vptr( const xlog_payload_t *payload );
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char *text );
+XLOG_PUBLIC( int ) xlog_payload_append_text( xlog_payload_t **payload, const char *text );
 
 /**
  * @brief  append text to a payload object
@@ -499,7 +499,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char 
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_append_text_va_list( xlog_payload_t **payload, const char *format, va_list args );
+XLOG_PUBLIC( int ) xlog_payload_append_text_va_list( xlog_payload_t **payload, const char *format, va_list args );
 
 /**
  * @brief  append text to a payload object
@@ -509,7 +509,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va_list( xlog_payload_t **payload, con
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_append_text_va( xlog_payload_t **payload, const char *format, ... );
+XLOG_PUBLIC( int ) xlog_payload_append_text_va( xlog_payload_t **payload, const char *format, ... );
 
 /**
  * @brief  append binary to a payload object
@@ -519,7 +519,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va( xlog_payload_t **payload, const ch
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_append_binary( xlog_payload_t **payload, const void *vptr, size_t size );
+XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const void *vptr, size_t size );
 
 /**
  * @brief  print TEXT compatible payload
@@ -529,8 +529,8 @@ XLOG_PUBLIC(int) xlog_payload_append_binary( xlog_payload_t **payload, const voi
  * @return length of printed payload data
  *
  */
-XLOG_PUBLIC(int) xlog_payload_print_TEXT(
-	const xlog_payload_t *payload, xlog_printer_t *printer
+XLOG_PUBLIC( int ) xlog_payload_print_TEXT(
+    const xlog_payload_t *payload, xlog_printer_t *printer
 );
 
 /**
@@ -541,7 +541,7 @@ XLOG_PUBLIC(int) xlog_payload_print_TEXT(
  * @return length of printed payload data
  *
  */
-XLOG_PUBLIC(int) xlog_payload_print_BINARY(
+XLOG_PUBLIC( int ) xlog_payload_print_BINARY(
     const xlog_payload_t *payload, xlog_printer_t *printer
 );
 

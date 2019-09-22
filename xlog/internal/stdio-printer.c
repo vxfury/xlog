@@ -28,7 +28,7 @@ stderr_printer_context = {
 	.lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
-static int __stdxxx_append(xlog_printer_t *printer, const char *text)
+static int __stdxxx_append( xlog_printer_t *printer, const char *text )
 {
 	return fprintf(
 	    XLOG_PRINTER_TYPE_GET(printer->options) == XLOG_PRINTER_STDOUT ? stdout : stderr,
@@ -36,10 +36,10 @@ static int __stdxxx_append(xlog_printer_t *printer, const char *text)
 	);
 }
 
-static int __stdxxx_control(xlog_printer_t *printer, int option, void *vptr UNUSED)
+static int __stdxxx_control( xlog_printer_t *printer, int option, void *vptr UNUSED )
 {
-	struct __stdio_printer_context * context = (struct __stdio_printer_context *)printer->context;
-	switch(option) {
+	struct __stdio_printer_context *context = ( struct __stdio_printer_context * )printer->context;
+	switch( option ) {
 		case XLOG_PRINTER_CTRL_LOCK: {
 			pthread_mutex_lock( &context->lock );
 		} break;
@@ -57,7 +57,7 @@ xlog_printer_t stdout_printer = {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	.magic = XLOG_MAGIC_PRINTER,
 	#endif
-	.context = (void *)&stdout_printer_context,
+	.context = ( void * ) &stdout_printer_context,
 	.options = XLOG_PRINTER_STDOUT,
 	.append  = __stdxxx_append,
 	.control = __stdxxx_control,
@@ -66,7 +66,7 @@ stderr_printer = {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	.magic = XLOG_MAGIC_PRINTER,
 	#endif
-	.context = (void *)&stderr_printer_context,
+	.context = ( void * ) &stderr_printer_context,
 	.options = XLOG_PRINTER_STDERR,
 	.append  = __stdxxx_append,
 	.control = __stdxxx_control,

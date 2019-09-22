@@ -4,13 +4,8 @@ function __comp_debug()
 	local prev="${COMP_WORDS[COMP_CWORD-1]}"
 	
 	case $prev in
-		--level | -l)
+		--level | -L)
 			local options="verbose debug info warn error fatal"
-			COMPREPLY=($(compgen -W "$options" -- ${cur#=}))
-			return 0
-			;;
-		--interface | -i)
-			local options="serial logcat"
 			COMPREPLY=($(compgen -W "$options" -- ${cur#=}))
 			return 0
 			;;
@@ -26,11 +21,10 @@ function __comp_debug()
 			COMPREPLY=($(compgen -P "-" -W "$options" -- ${cur#-}))
 			;;
 		*)
-			local modules="/system/init /net/netcmd"
+			local modules=`debug --no-tag --list`
 			COMPREPLY=($(compgen -W "$modules" -- ${cur}))
 			;;
 	esac
 }
 
-alias debug="extend debug"
 complete -F __comp_debug debug

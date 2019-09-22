@@ -28,7 +28,7 @@ High performance Extensible logging library designed for log formating and dynam
  *   -v, --version      Show version of logger.
  *   -h, --help         Display this help and exit.
  */
-XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv );
+XLOG_PUBLIC( int ) xlog_shell_main( xlog_t *context, int argc, char **argv );
 ```
 
 ## Application Programming Interface
@@ -42,7 +42,7 @@ XLOG_PUBLIC(int) xlog_shell_main( xlog_t *context, int argc, char **argv );
  * @return pointer to `xlog_module_t`, NULL if failed to create module.
  *
  */
-XLOG_PUBLIC(xlog_module_t *) xlog_module_open( const char *name, int level, xlog_module_t *parent );
+XLOG_PUBLIC( xlog_module_t * ) xlog_module_open( const char *name, int level, xlog_module_t *parent );
 
 /**
  * @brief  close module
@@ -52,7 +52,7 @@ XLOG_PUBLIC(xlog_module_t *) xlog_module_open( const char *name, int level, xlog
  * @node   set `module` to NULL to avoid wild pointer
  *
  */
-XLOG_PUBLIC(int) xlog_module_close( xlog_module_t *module );
+XLOG_PUBLIC( int ) xlog_module_close( xlog_module_t *module );
 
 /**
  * @brief  lookup module by name
@@ -62,7 +62,7 @@ XLOG_PUBLIC(int) xlog_module_close( xlog_module_t *module );
  * @return pointer to `xlog_module_t`, NULL if failed.
  *
  */
-XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, const char *name );
+XLOG_PUBLIC( xlog_module_t * ) xlog_module_lookup( const xlog_module_t *root, const char *name );
 
 /**
  * @brief  get context of xlog module
@@ -71,7 +71,7 @@ XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, cons
  * @return xlog context. NULL if failed to get xlog context.
  *
  */
-XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module );
+XLOG_PUBLIC( xlog_t * ) xlog_module_context( const xlog_module_t *module );
 
 /**
  * @brief  get output level
@@ -80,7 +80,7 @@ XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module );
  * @return output level.
  *
  */
-XLOG_PUBLIC(int) xlog_module_level_limit( const xlog_module_t *module );
+XLOG_PUBLIC( int ) xlog_module_level_limit( const xlog_module_t *module );
 
 /**
  * @brief  get name of module
@@ -90,7 +90,7 @@ XLOG_PUBLIC(int) xlog_module_level_limit( const xlog_module_t *module );
  * @return module name. full name if buffer given.
  *
  */
-XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog_module_t *module );
+XLOG_PUBLIC( const char * ) xlog_module_name( char *buffer, int length, const xlog_module_t *module );
 
 /**
  * @brief  list sub-modules
@@ -99,7 +99,7 @@ XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog
  *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int options );
+XLOG_PUBLIC( void ) xlog_module_list_submodules( const xlog_module_t *module, int options );
 
 /**
  * @brief  change level of module
@@ -110,7 +110,7 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
  * @return error code.
  *
  */
-XLOG_PUBLIC(int) xlog_module_set_level( xlog_module_t *module, int level, int flags );
+XLOG_PUBLIC( int ) xlog_module_set_level( xlog_module_t *module, int level, int flags );
 
 /**
  * @brief  dump module's config to filesystem
@@ -120,7 +120,7 @@ XLOG_PUBLIC(int) xlog_module_set_level( xlog_module_t *module, int level, int fl
  * @return error code.
  *
  */
-XLOG_PUBLIC(int) xlog_module_dump_to( const xlog_module_t *module, const char *savepath );
+XLOG_PUBLIC( int ) xlog_module_dump_to( const xlog_module_t *module, const char *savepath );
 
 /**
  * @brief  load module's config from filesystem
@@ -130,7 +130,7 @@ XLOG_PUBLIC(int) xlog_module_dump_to( const xlog_module_t *module, const char *s
  * @return error code.
  *
  */
-XLOG_PUBLIC(int) xlog_module_load_from( xlog_module_t *module, const char *loadpath );
+XLOG_PUBLIC( int ) xlog_module_load_from( xlog_module_t *module, const char *loadpath );
 
 
 
@@ -142,7 +142,7 @@ XLOG_PUBLIC(int) xlog_module_load_from( xlog_module_t *module, const char *loadp
  * @return pointer to `xlog_t`, NULL if failed to create context.
  *
  */
-XLOG_PUBLIC(xlog_t *) xlog_open( const char *savepath, int option );
+XLOG_PUBLIC( xlog_t * ) xlog_open( const char *savepath, int option );
 
 /**
  * @brief  destory xlog context
@@ -152,7 +152,7 @@ XLOG_PUBLIC(xlog_t *) xlog_open( const char *savepath, int option );
  * @return error code.
  *
  */
-XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option );
+XLOG_PUBLIC( int ) xlog_close( xlog_t *context, int option );
 
 /**
  * @brief  get xlog version
@@ -161,7 +161,7 @@ XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option );
  * @return version code[MSB...8 major, 7...4 minor, 3...0 revision]
  *
  */
-XLOG_PUBLIC(int) xlog_version( char *buffer, int size );
+XLOG_PUBLIC( int ) xlog_version( char *buffer, int size );
 
 /**
  * @brief  list all modules under xlog context
@@ -170,7 +170,7 @@ XLOG_PUBLIC(int) xlog_version( char *buffer, int size );
  *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int options );
+XLOG_PUBLIC( void ) xlog_list_modules( const xlog_t *context, int options );
 
 
 
@@ -180,7 +180,7 @@ XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int options );
  * @return pointer to printer
  *
  */
-XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void );
+XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_default( void );
 
 /**
  * @brief  set default printer
@@ -190,7 +190,7 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_default( void );
  * @return pointer to default printer.
  *
  */
-XLOG_PUBLIC(xlog_printer_t *) xlog_printer_set_default( const xlog_printer_t *printer );
+XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( const xlog_printer_t *printer );
 
 /**
  * @brief  create dynamic printer
@@ -199,7 +199,7 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_set_default( const xlog_printer_t *pr
  * @return pointer to printer
  *
  */
-XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... );
+XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... );
 
 /**
  * @brief  destory created printer
@@ -210,7 +210,7 @@ XLOG_PUBLIC(xlog_printer_t *) xlog_printer_create( int options, ... );
  * @note   you MUST call to destory printer dynamically created.
  *
  */
-XLOG_PUBLIC(int) xlog_printer_destory( xlog_printer_t *printer );
+XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer );
 
 
 
@@ -223,8 +223,8 @@ XLOG_PUBLIC(int) xlog_printer_destory( xlog_printer_t *printer );
  * @return length of logging.
  *
  */
-XLOG_PUBLIC(int) xlog_output_rawlog(
-    xlog_printer_t *printer, xlog_t *context, const char * prefix, const char *suffix,
+XLOG_PUBLIC( int ) xlog_output_rawlog(
+    xlog_printer_t *printer, xlog_t *context, const char *prefix, const char *suffix,
     const char *format, ...
 );
 
@@ -238,7 +238,7 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  * @return length of logging.
  *
  */
-XLOG_PUBLIC(int) xlog_output_fmtlog(
+XLOG_PUBLIC( int ) xlog_output_fmtlog(
     xlog_printer_t *printer,
     xlog_module_t *module, int level,
     const char *file, const char *func, long int line,

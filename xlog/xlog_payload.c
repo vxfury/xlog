@@ -25,7 +25,7 @@
  * @return pointer to `xlog_payload_t`, NULL if failed to allocate memory.
  *
  */
-XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *brief, int options, ... )
+XLOG_PUBLIC( xlog_payload_t * ) xlog_payload_create( unsigned int id, const char *brief, int options, ... )
 {
 	xlog_payload_t *payload = NULL;
 	int align = 0, reserved = 0;
@@ -121,7 +121,7 @@ XLOG_PUBLIC(xlog_payload_t *) xlog_payload_create( unsigned int id, const char *
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
+XLOG_PUBLIC( int ) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 {
 	if(
 	    payload == NULL
@@ -144,15 +144,15 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 		new_size = XLOG_ALIGN_UP( new_size, ( 0x1 << XLOG_PAYLOAD_GET_ALIGN_BITS( ( *payload )->options ) ) );
 	}
 	
-	xlog_payload_t *temp = (xlog_payload_t *)XLOG_REALLOC( ( *payload ), new_size );
+	xlog_payload_t *temp = ( xlog_payload_t * )XLOG_REALLOC( ( *payload ), new_size );
 	if( temp == NULL ) {
 		return ENOMEM;
 	}
 	*payload = temp;
 	( *payload )->length = new_size - sizeof( xlog_payload_t ) - reserved;
 	__XLOG_TRACE(
-		"Payload: lenth = %u, offset = %u, reserved = %lu",
-		(*payload)->length, (*payload)->offset, XLOG_PAYLOAD_GET_RESERVED( (*payload)->options )
+	    "Payload: lenth = %u, offset = %u, reserved = %lu",
+	    ( *payload )->length, ( *payload )->offset, XLOG_PAYLOAD_GET_RESERVED( ( *payload )->options )
 	);
 	
 	return 0;
@@ -165,7 +165,7 @@ XLOG_PUBLIC(int) xlog_payload_resize( xlog_payload_t **payload, size_t size )
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_destory( xlog_payload_t **payload )
+XLOG_PUBLIC( int ) xlog_payload_destory( xlog_payload_t **payload )
 {
 	if(
 	    payload == NULL
@@ -194,7 +194,7 @@ XLOG_PUBLIC(int) xlog_payload_destory( xlog_payload_t **payload )
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC(void *) xlog_payload_data_vptr( const xlog_payload_t *payload )
+XLOG_PUBLIC( void * ) xlog_payload_data_vptr( const xlog_payload_t *payload )
 {
 	XLOG_ASSERT( payload );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -221,7 +221,7 @@ XLOG_PUBLIC(void *) xlog_payload_data_vptr( const xlog_payload_t *payload )
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char *text )
+XLOG_PUBLIC( int ) xlog_payload_append_text( xlog_payload_t **payload, const char *text )
 {
 	if(
 	    payload == NULL
@@ -272,7 +272,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text( xlog_payload_t **payload, const char 
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_append_text_va_list( xlog_payload_t **payload, const char *format, va_list ap )
+XLOG_PUBLIC( int ) xlog_payload_append_text_va_list( xlog_payload_t **payload, const char *format, va_list ap )
 {
 	if(
 	    payload == NULL
@@ -334,7 +334,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va_list( xlog_payload_t **payload, con
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_append_text_va( xlog_payload_t **payload, const char *format, ... )
+XLOG_PUBLIC( int ) xlog_payload_append_text_va( xlog_payload_t **payload, const char *format, ... )
 {
 	if(
 	    payload == NULL
@@ -350,12 +350,12 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va( xlog_payload_t **payload, const ch
 		return EINVAL;
 	}
 	#endif
-
+	
 	va_list ap;
 	va_start( ap, format );
 	int rv = xlog_payload_append_text_va_list( payload, format, ap );
 	va_end( ap );
-
+	
 	return rv;
 }
 
@@ -367,7 +367,7 @@ XLOG_PUBLIC(int) xlog_payload_append_text_va( xlog_payload_t **payload, const ch
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC(int) xlog_payload_append_binary( xlog_payload_t **payload, const void *vptr, size_t size )
+XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const void *vptr, size_t size )
 {
 	if(
 	    payload == NULL
@@ -416,8 +416,8 @@ XLOG_PUBLIC(int) xlog_payload_append_binary( xlog_payload_t **payload, const voi
  * @return length of printed payload data
  *
  */
-XLOG_PUBLIC(int) xlog_payload_print_TEXT(
-	const xlog_payload_t *payload, xlog_printer_t *printer
+XLOG_PUBLIC( int ) xlog_payload_print_TEXT(
+    const xlog_payload_t *payload, xlog_printer_t *printer
 )
 {
 	XLOG_ASSERT( payload );
@@ -430,17 +430,17 @@ XLOG_PUBLIC(int) xlog_payload_print_TEXT(
 	}
 	#endif
 	
-	return printer->append( printer, (const char *)xlog_payload_data_vptr( payload ) );
+	return printer->append( printer, ( const char * )xlog_payload_data_vptr( payload ) );
 }
 
 static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg )
 {
-	xlog_printer_t *printer = (xlog_printer_t *)arg;
-
+	xlog_printer_t *printer = ( xlog_printer_t * )arg;
+	
 	char buffer[128];
 	snprintf(
-		buffer, sizeof( buffer ),
-		"%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline
+	    buffer, sizeof( buffer ),
+	    "%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline
 	);
 	printer->append( printer, buffer );
 }
@@ -460,7 +460,7 @@ static int hexdump_memory_readline( const void *addr, off_t offset, void *buffer
  * @return length of printed payload data
  *
  */
-XLOG_PUBLIC(int) xlog_payload_print_BINARY(
+XLOG_PUBLIC( int ) xlog_payload_print_BINARY(
     const xlog_payload_t *payload, xlog_printer_t *printer
 )
 {
@@ -472,7 +472,7 @@ XLOG_PUBLIC(int) xlog_payload_print_BINARY(
 		return 0;
 	}
 	#endif
-
+	
 	hexdump_options_t options = {
 		.start = 0,
 		.end = -1,

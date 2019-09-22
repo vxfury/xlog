@@ -16,17 +16,17 @@ static unsigned long random_integer( void )
 			fd = -1;
 		}
 		
-		srand( (unsigned int)seed );
+		srand( ( unsigned int )seed );
 		initialized = true;
 	}
 	
 	return rand();
 }
 
-int main(int argc, char **argv)
+int main( int argc, char **argv )
 {
-	(void)argc;
-	(void)argv;
+	( void )argc;
+	( void )argv;
 	
 	xlog_payload_t *payload = xlog_payload_create(
 	    XLOG_PAYLOAD_ID_BINARY, "Binary",

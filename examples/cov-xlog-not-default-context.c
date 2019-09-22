@@ -28,7 +28,7 @@ static unsigned long random_integer( void )
 			fd = -1;
 		}
 		
-		srand( (unsigned int)seed );
+		srand( ( unsigned int )seed );
 		initialized = true;
 	}
 	
@@ -128,10 +128,10 @@ static int xlog_test_init( void )
 		g_net = xlog_module_open( "net", XLOG_LEVEL_INFO, ROOT_MODULE );
 		g_net_http = xlog_module_open( "/net/http", XLOG_LEVEL_INFO, ROOT_MODULE );
 		g_net_dhcp = xlog_module_open( "dhcp", XLOG_LEVEL_DEBUG, g_net );
-		fprintf(stderr, "level now is %d\n", g_net_dhcp->level );
+		fprintf( stderr, "level now is %d\n", g_net_dhcp->level );
 		xlog_module_t *g_net_dhcp_cpy = xlog_module_open( "/net/dhcp", XLOG_LEVEL_VERBOSE, ROOT_MODULE );
 		assert( g_net_dhcp == g_net_dhcp_cpy );
-		fprintf(stderr, "level after reopen is %d\n", g_net_dhcp->level );
+		fprintf( stderr, "level after reopen is %d\n", g_net_dhcp->level );
 	}
 	
 	{
@@ -146,9 +146,9 @@ static int xlog_test_init( void )
 	{
 		char buffer[TEST_BUFFER_SIZE] = { 0 };
 		for( int i = 0; i < sizeof( buffer ); ++ i ) {
-			buffer[i] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[random_integer() % (10 + 26 * 2)];
+			buffer[i] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[random_integer() % ( 10 + 26 * 2 )];
 		}
-		buffer[sizeof(buffer) - 1] = '\0';
+		buffer[sizeof( buffer ) - 1] = '\0';
 		
 		log_r( "raw log output test: %s\n", buffer );
 		

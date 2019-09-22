@@ -154,8 +154,10 @@ static inline void xlog_list_move( xlog_list_t *list, xlog_list_t *head )
  * @list: the entry to move
  * @head: the head that will follow our entry
  */
-static inline void xlog_list_move_tail( xlog_list_t *list,
-    xlog_list_t *head )
+static inline void xlog_list_move_tail(
+	xlog_list_t *list,
+    xlog_list_t *head
+)
 {
 	__xlog_list_del_entry( list );
 	xlog_list_add_tail( list, head );
@@ -166,8 +168,10 @@ static inline void xlog_list_move_tail( xlog_list_t *list,
  * @list: the entry to test
  * @head: the head of the list
  */
-static inline int xlog_list_is_last( const xlog_list_t *list,
-    const xlog_list_t *head )
+static inline int xlog_list_is_last(
+	const xlog_list_t *list,
+    const xlog_list_t *head
+)
 {
 	return list->next == head;
 }
@@ -223,8 +227,10 @@ static inline int xlog_list_is_singular( const xlog_list_t *head )
 	return !xlog_list_empty( head ) && ( head->next == head->prev );
 }
 
-static inline void __xlog_list_cut_position( xlog_list_t *list,
-    xlog_list_t *head, xlog_list_t *entry )
+static inline void __xlog_list_cut_position(
+	xlog_list_t *list,
+    xlog_list_t *head, xlog_list_t *entry
+)
 {
 	xlog_list_t *new_first = entry->next;
 	list->next = head->next;
@@ -249,14 +255,17 @@ static inline void __xlog_list_cut_position( xlog_list_t *list,
  * losing its data.
  *
  */
-static inline void xlog_list_cut_position( xlog_list_t *list,
-    xlog_list_t *head, xlog_list_t *entry )
+static inline void xlog_list_cut_position(
+	xlog_list_t *list,
+    xlog_list_t *head, xlog_list_t *entry
+)
 {
 	if ( xlog_list_empty( head ) ) {
 		return;
 	}
 	if ( xlog_list_is_singular( head ) &&
-	    ( head->next != entry && head != entry ) ) {
+	    ( head->next != entry && head != entry )
+	) {
 		return;
 	}
 	if ( entry == head ) {
@@ -266,9 +275,10 @@ static inline void xlog_list_cut_position( xlog_list_t *list,
 	}
 }
 
-static inline void __xlog_list_splice( const xlog_list_t *list,
-    xlog_list_t *prev,
-    xlog_list_t *next )
+static inline void __xlog_list_splice(
+	const xlog_list_t *list,
+    xlog_list_t *prev, xlog_list_t *next
+)
 {
 	xlog_list_t *first = list->next;
 	xlog_list_t *last = list->prev;
@@ -285,8 +295,10 @@ static inline void __xlog_list_splice( const xlog_list_t *list,
  * @list: the new list to add.
  * @head: the place to add it in the first list.
  */
-static inline void xlog_list_splice( const xlog_list_t *list,
-    xlog_list_t *head )
+static inline void xlog_list_splice(
+	const xlog_list_t *list,
+    xlog_list_t *head
+)
 {
 	if ( !xlog_list_empty( list ) ) {
 		__xlog_list_splice( list, head, head->next );
@@ -298,8 +310,10 @@ static inline void xlog_list_splice( const xlog_list_t *list,
  * @list: the new list to add.
  * @head: the place to add it in the first list.
  */
-static inline void xlog_list_splice_tail( xlog_list_t *list,
-    xlog_list_t *head )
+static inline void xlog_list_splice_tail(
+	xlog_list_t *list,
+    xlog_list_t *head
+)
 {
 	if ( !xlog_list_empty( list ) ) {
 		__xlog_list_splice( list, head->prev, head );
@@ -313,8 +327,10 @@ static inline void xlog_list_splice_tail( xlog_list_t *list,
  *
  * The list at @list is reinitialised
  */
-static inline void xlog_list_splice_init( xlog_list_t *list,
-    xlog_list_t *head )
+static inline void xlog_list_splice_init(
+	xlog_list_t *list,
+    xlog_list_t *head
+)
 {
 	if ( !xlog_list_empty( list ) ) {
 		__xlog_list_splice( list, head, head->next );
@@ -330,8 +346,9 @@ static inline void xlog_list_splice_init( xlog_list_t *list,
  * Each of the lists is a queue.
  * The list at @list is reinitialised
  */
-static inline void xlog_list_splice_tail_init( xlog_list_t *list,
-    xlog_list_t *head )
+static inline void xlog_list_splice_tail_init(
+	xlog_list_t *list, xlog_list_t *head
+)
 {
 	if ( !xlog_list_empty( list ) ) {
 		__xlog_list_splice( list, head->prev, head );

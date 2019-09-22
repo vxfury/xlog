@@ -31,18 +31,18 @@ static xlog_t *__default_context = NULL;
 #define XLOG_LEVEL_DEFAULT_ATTR(LEVEL) \
 	[XLOG_LEVEL_##LEVEL] = { \
 		.format = XLOG_DEFAULT_FORMAT_##LEVEL, \
-		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS(LEVEL), \
-		.class_suffix = XLOG_TAG_SUFFIX_LOG_CLASS(LEVEL), \
-		.body_prefix  = XLOG_TAG_PREFIX_LOG_BODY(LEVEL), \
-		.body_suffix  = XLOG_TAG_PREFIX_LOG_BODY(LEVEL), \
+		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS( LEVEL ), \
+		.class_suffix = XLOG_TAG_SUFFIX_LOG_CLASS( LEVEL ), \
+		.body_prefix  = XLOG_TAG_PREFIX_LOG_BODY( LEVEL ), \
+		.body_suffix  = XLOG_TAG_PREFIX_LOG_BODY( LEVEL ), \
 	}
 static const xlog_level_attr_t xlog_default_attributes[] = {
-	XLOG_LEVEL_DEFAULT_ATTR(FATAL),
-	XLOG_LEVEL_DEFAULT_ATTR(ERROR),
-	XLOG_LEVEL_DEFAULT_ATTR(WARN),
-	XLOG_LEVEL_DEFAULT_ATTR(INFO),
-	XLOG_LEVEL_DEFAULT_ATTR(DEBUG),
-	XLOG_LEVEL_DEFAULT_ATTR(VERBOSE),
+	XLOG_LEVEL_DEFAULT_ATTR( FATAL ),
+	XLOG_LEVEL_DEFAULT_ATTR( ERROR ),
+	XLOG_LEVEL_DEFAULT_ATTR( WARN ),
+	XLOG_LEVEL_DEFAULT_ATTR( INFO ),
+	XLOG_LEVEL_DEFAULT_ATTR( DEBUG ),
+	XLOG_LEVEL_DEFAULT_ATTR( VERBOSE ),
 };
 
 /** reverse version of strncpy */
@@ -151,7 +151,7 @@ static int __xlog_rmdir_r( const char *dir )
 }
 
 /** short name of level, return "#" if not legal level */
-static const char * __xlog_level_short_name( int level )
+static const char *__xlog_level_short_name( int level )
 {
 	static const char *lvl_tags[] = {
 		[XLOG_LEVEL_FATAL]   = XLOG_TAG_LEVEL_FATAL,
@@ -179,9 +179,9 @@ static bool __xlog_format_been_enabled( const xlog_module_t *module, int level, 
 		xlog_t *context = xlog_module_context( module );
 		
 		if(
-			context
-			&& ( context->options & XLOG_CONTEXT_OALIVE )
-			&& ( context->attributes[level].format & format )
+		    context
+		    && ( context->options & XLOG_CONTEXT_OALIVE )
+		    && ( context->attributes[level].format & format )
 		) {
 			return true;
 		}
@@ -199,7 +199,7 @@ static inline xlog_module_t *__xlog_module_lookup( const char *name, const xlog_
 	XLOG_ASSERT( root_tree );
 	const xlog_tree_t *te_node = root_tree->child;
 	while( te_node ) {
-		xlog_module_t *module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( te_node );
+		xlog_module_t *module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( te_node );
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 		if( module->magic != XLOG_MAGIC_MODULE ) {
 			XLOG_TRACE( "Runtime error: may be module has been closed." );
@@ -218,7 +218,7 @@ static inline xlog_module_t *__xlog_module_lookup( const char *name, const xlog_
 /** create module under parent, NO '/' in name */
 static inline xlog_module_t *__xlog_module_open( const char *name, int level, xlog_module_t *parent )
 {
-	xlog_tree_t *te_parent = parent ? (xlog_tree_t *)XLOG_MODULE_TO_NODE( parent ) : NULL;
+	xlog_tree_t *te_parent = parent ? ( xlog_tree_t * )XLOG_MODULE_TO_NODE( parent ) : NULL;
 	xlog_module_t *module = parent ? __xlog_module_lookup( name, te_parent ) : NULL;
 	if( module ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -233,7 +233,7 @@ static inline xlog_module_t *__xlog_module_open( const char *name, int level, xl
 	
 	xlog_tree_t *te_module = xlog_tree_create( sizeof( xlog_module_t ) );
 	if( te_module ) {
-		module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( te_module );
+		module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( te_module );
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 		module->magic = XLOG_MAGIC_MODULE;
 		#endif
@@ -263,7 +263,7 @@ static inline void __xlog_module_destory_hook( xlog_tree_t *node )
 		}
 		XLOG_MODULE_FROM_NODE( node )->magic = 0;
 		#endif
-		xlog_module_t *module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( node );
+		xlog_module_t *module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( node );
 		XLOG_FREE( module->name );
 		XLOG_STATS_FINI( &module->stats );
 		pthread_mutex_destroy( &module->lock );
@@ -281,7 +281,7 @@ static inline void __xlog_module_destory_hook( xlog_tree_t *node )
  * @return pointer to `xlog_module_t`, NULL if failed to create module.
  *
  */
-XLOG_PUBLIC(xlog_module_t *) xlog_module_open( const char *name, int level, xlog_module_t *parent )
+XLOG_PUBLIC( xlog_module_t * ) xlog_module_open( const char *name, int level, xlog_module_t *parent )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( parent && parent->magic != XLOG_MAGIC_MODULE ) {
@@ -341,7 +341,7 @@ int xlog_module_close( xlog_module_t *module )
 			return EINVAL;
 		}
 		#endif
-		xlog_tree_t *te_module = (xlog_tree_t *)XLOG_MODULE_TO_NODE( module );
+		xlog_tree_t *te_module = ( xlog_tree_t * )XLOG_MODULE_TO_NODE( module );
 		xlog_tree_destory_with_hook( te_module, __xlog_module_destory_hook );
 	} else {
 		XLOG_TRACE( "Module given is NULL." );
@@ -359,7 +359,7 @@ int xlog_module_close( xlog_module_t *module )
  * @return pointer to `xlog_module_t`, NULL if failed.
  *
  */
-XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, const char *name )
+XLOG_PUBLIC( xlog_module_t * ) xlog_module_lookup( const xlog_module_t *root, const char *name )
 {
 	XLOG_ASSERT( name );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -389,7 +389,7 @@ XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, cons
 	
 	ptr = strtok_r( __name, delim, &saveptr );
 	while( ptr != NULL && __root != NULL ) {
-		xlog_module_t *__module = __xlog_module_lookup( ptr, (const xlog_tree_t *)XLOG_MODULE_TO_NODE( __root ) );
+		xlog_module_t *__module = __xlog_module_lookup( ptr, ( const xlog_tree_t * )XLOG_MODULE_TO_NODE( __root ) );
 		if( __module ) {
 			XLOG_TRACE( "Parent Module found, continue to search deeper." );
 			__root = __module;
@@ -397,11 +397,11 @@ XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, cons
 		} else {
 			XLOG_TRACE( "Parent Module mismatch, continue to search next." );
 			module = NULL;
-			xlog_tree_t *__node = ((xlog_tree_t *)XLOG_MODULE_TO_NODE( __root ))->next;
+			xlog_tree_t *__node = ( ( xlog_tree_t * )XLOG_MODULE_TO_NODE( __root ) )->next;
 			if( __node == NULL ) {
 				break;
 			}
-			__root = (const xlog_module_t *)XLOG_MODULE_FROM_NODE( __node );
+			__root = ( const xlog_module_t * )XLOG_MODULE_FROM_NODE( __node );
 		}
 		ptr = strtok_r( NULL, delim, &saveptr );
 	}
@@ -418,7 +418,7 @@ XLOG_PUBLIC(xlog_module_t *) xlog_module_lookup( const xlog_module_t *root, cons
  * @return xlog context. NULL if failed to get xlog context.
  *
  */
-XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module )
+XLOG_PUBLIC( xlog_t * ) xlog_module_context( const xlog_module_t *module )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( module && module->magic != XLOG_MAGIC_MODULE ) {
@@ -440,7 +440,7 @@ XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module )
 		return NULL;
 		#endif
 	} else {
-		return (xlog_t *)module->context;
+		return ( xlog_t * )module->context;
 	}
 }
 
@@ -451,7 +451,7 @@ XLOG_PUBLIC(xlog_t *) xlog_module_context( const xlog_module_t *module )
  * @return output level.
  *
  */
-XLOG_PUBLIC(int) xlog_module_level_limit( const xlog_module_t *module )
+XLOG_PUBLIC( int ) xlog_module_level_limit( const xlog_module_t *module )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( module && module->magic != XLOG_MAGIC_MODULE ) {
@@ -466,8 +466,8 @@ XLOG_PUBLIC(int) xlog_module_level_limit( const xlog_module_t *module )
 			XLOG_TRACE( "Log in this level will be dropped." );
 			level = cur->level;
 		}
-		xlog_tree_t *__node = xlog_tree_parent( (const xlog_tree_t *)XLOG_MODULE_TO_NODE( cur ) );
-		cur = __node ? (const xlog_module_t *)XLOG_MODULE_FROM_NODE( __node ) : NULL;
+		xlog_tree_t *__node = xlog_tree_parent( ( const xlog_tree_t * )XLOG_MODULE_TO_NODE( cur ) );
+		cur = __node ? ( const xlog_module_t * )XLOG_MODULE_FROM_NODE( __node ) : NULL;
 	}
 	
 	return level;
@@ -481,7 +481,7 @@ XLOG_PUBLIC(int) xlog_module_level_limit( const xlog_module_t *module )
  * @return module name. full name if buffer given.
  *
  */
-XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog_module_t *module )
+XLOG_PUBLIC( const char * ) xlog_module_name( char *buffer, int length, const xlog_module_t *module )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( module && module->magic != XLOG_MAGIC_MODULE ) {
@@ -504,8 +504,8 @@ XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog
 			} else {
 				XLOG_TRACE( "Name of current module is NULL, pay attention to it." );
 			}
-			xlog_tree_t *__node = xlog_tree_parent( (const xlog_tree_t *)XLOG_MODULE_TO_NODE( cur ) );
-			cur = __node ? (const xlog_module_t *)XLOG_MODULE_FROM_NODE( __node ) : NULL;
+			xlog_tree_t *__node = xlog_tree_parent( ( const xlog_tree_t * )XLOG_MODULE_TO_NODE( cur ) );
+			cur = __node ? ( const xlog_module_t * )XLOG_MODULE_FROM_NODE( __node ) : NULL;
 		}
 		memcpy( buffer, ptr + 1, ptr - buffer );
 		
@@ -514,7 +514,7 @@ XLOG_PUBLIC(const char *) xlog_module_name( char *buffer, int length, const xlog
 }
 
 /** get node dir of module */
-static const char * __xlog_module_node_dir( char *buffer, int length, const xlog_module_t *module )
+static const char *__xlog_module_node_dir( char *buffer, int length, const xlog_module_t *module )
 {
 	xlog_t *context = xlog_module_context( module );
 	if( context == NULL || context->savepath == NULL ) {
@@ -536,7 +536,7 @@ static const char * __xlog_module_node_dir( char *buffer, int length, const xlog
  *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int options )
+XLOG_PUBLIC( void ) xlog_module_list_submodules( const xlog_module_t *module, int options )
 {
 	if( module == NULL ) {
 		XLOG_TRACE( "Invalid module" );
@@ -548,7 +548,7 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
 		return;
 	}
 	#endif
-	xlog_tree_t *child = ((xlog_tree_t *)XLOG_MODULE_TO_NODE( module ))->child;
+	xlog_tree_t *child = ( ( xlog_tree_t * )XLOG_MODULE_TO_NODE( module ) )->child;
 	if( child == NULL ) {
 		return;
 	}
@@ -557,12 +557,13 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
 	char modulepath[XLOG_LIMIT_MODULE_PATH];
 	
 	while( child ) {
-		__module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( child );
+		__module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( child );
 		
 		// Feature(Hidden modules): don't show module whose name start with dot[.]
 		if(
-			__module->name[0] == '.' && !(options & XLOG_LIST_OALL)
+		    __module->name[0] == '.' && !( options & XLOG_LIST_OALL )
 		) {
+			XLOG_TRACE( "Hiddent module[%s] won't be printed to session.", __module->name );
 			continue;
 		}
 		
@@ -577,7 +578,6 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
 		}
 		
 		if( show ) {
-			
 			if( options & XLOG_LIST_OWITH_TAG ) {
 				log_r(
 				    "[%s]%c %s\n"
@@ -605,7 +605,7 @@ XLOG_PUBLIC(void) xlog_module_list_submodules( const xlog_module_t *module, int 
  * @return error code.
  *
  */
-XLOG_PUBLIC(int) xlog_module_set_level( xlog_module_t *module, int level, int flags )
+XLOG_PUBLIC( int ) xlog_module_set_level( xlog_module_t *module, int level, int flags )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( module && module->magic != XLOG_MAGIC_MODULE ) {
@@ -641,16 +641,16 @@ XLOG_PUBLIC(int) xlog_module_set_level( xlog_module_t *module, int level, int fl
 	xlog_module_t *__module = NULL;
 	
 	if( flags & XLOG_LEVEL_ORECURSIVE ) {
-		__node = ((xlog_tree_t *)XLOG_MODULE_TO_NODE( module ))->child;
+		__node = ( ( xlog_tree_t * )XLOG_MODULE_TO_NODE( module ) )->child;
 		while( __node ) {
-			__module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( __node );
+			__module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node );
 			__module->level = level;
 			if( context && ( context->options & XLOG_CONTEXT_OAUTO_DUMP ) ) {
 				xlog_module_dump_to( __module, NULL );
 			}
 			
 			if( __node->child ) {
-				xlog_module_set_level( (xlog_module_t *)XLOG_MODULE_FROM_NODE( __node->child ), level, flags & ( ~ XLOG_LEVEL_OFORCE ) );
+				xlog_module_set_level( ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node->child ), level, flags & ( ~ XLOG_LEVEL_OFORCE ) );
 			}
 			
 			__node = __node->next;
@@ -661,9 +661,9 @@ XLOG_PUBLIC(int) xlog_module_set_level( xlog_module_t *module, int level, int fl
 	}
 	
 	if( flags & XLOG_LEVEL_OFORCE ) {
-		__node = xlog_tree_parent( (const xlog_tree_t *)XLOG_MODULE_TO_NODE( module ) );
+		__node = xlog_tree_parent( ( const xlog_tree_t * )XLOG_MODULE_TO_NODE( module ) );
 		while( __node ) {
-			__module = (xlog_module_t *)XLOG_MODULE_FROM_NODE( __node );
+			__module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node );
 			if( XLOG_IF_LOWER_LEVEL( __module->level, level ) ) {
 				__module->level = level;
 				if( context && ( context->options & XLOG_CONTEXT_OAUTO_DUMP ) ) {
@@ -694,7 +694,7 @@ typedef struct {
  * @return error code.
  *
  */
-XLOG_PUBLIC(int) xlog_module_dump_to( const xlog_module_t *module, const char *savepath )
+XLOG_PUBLIC( int ) xlog_module_dump_to( const xlog_module_t *module, const char *savepath )
 {
 	if( module == NULL ) {
 		return EINVAL;
@@ -770,7 +770,7 @@ XLOG_PUBLIC(int) xlog_module_dump_to( const xlog_module_t *module, const char *s
  * @return error code.
  *
  */
-XLOG_PUBLIC(int) xlog_module_load_from( xlog_module_t *module, const char *loadpath )
+XLOG_PUBLIC( int ) xlog_module_load_from( xlog_module_t *module, const char *loadpath )
 {
 	if( module == NULL ) {
 		return EINVAL;
@@ -832,7 +832,7 @@ XLOG_PUBLIC(int) xlog_module_load_from( xlog_module_t *module, const char *loadp
 
 #include <dirent.h>
 
-static int __traverse_dir_recursive( const char *path, int (*hook)( const char *, void * ), void *arg )
+static int __traverse_dir_recursive( const char *path, int ( *hook )( const char *, void * ), void *arg )
 {
 	XLOG_ASSERT( path );
 	XLOG_ASSERT( hook );
@@ -848,8 +848,8 @@ static int __traverse_dir_recursive( const char *path, int (*hook)( const char *
 	char childpath[XLOG_LIMIT_NODE_PATH] = { 0 };
 	while( ( entry = readdir( dp ) ) != NULL ) {
 		if(
-			strcmp( entry->d_name, "." ) == 0
-			|| strcmp( entry->d_name, ".." ) == 0
+		    strcmp( entry->d_name, "." ) == 0
+		    || strcmp( entry->d_name, ".." ) == 0
 		) {
 			continue;
 		}
@@ -892,8 +892,8 @@ static int __traverse_dir_recursive( const char *path, int (*hook)( const char *
 
 static int __hook_load_from_file( const char *path, void *arg )
 {
-	xlog_module_t *root = (xlog_module_t *)arg;
-	xlog_t *context = (xlog_t *)root->context;
+	xlog_module_t *root = ( xlog_module_t * )arg;
+	xlog_t *context = ( xlog_t * )root->context;
 	XLOG_TRACE( "path = %s, dir = %s", path, path + strlen( context->savepath ) );
 	xlog_module_t *module = xlog_module_open( path + strlen( context->savepath ), XLOG_LEVEL_INFO, root );
 	if( module ) {
@@ -934,7 +934,7 @@ static int __xlog_load_modules( xlog_t *context )
  * @return pointer to `xlog_t`, NULL if failed to create context.
  *
  */
-XLOG_PUBLIC(xlog_t *) xlog_open( const char *savepath, int option )
+XLOG_PUBLIC( xlog_t * ) xlog_open( const char *savepath, int option )
 {
 	xlog_t *context = NULL;
 	context = ( xlog_t * )XLOG_MALLOC( sizeof( xlog_t ) );
@@ -1005,7 +1005,7 @@ XLOG_PUBLIC(xlog_t *) xlog_open( const char *savepath, int option )
  * @return error code.
  *
  */
-XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option )
+XLOG_PUBLIC( int ) xlog_close( xlog_t *context, int option )
 {
 	if( context ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -1046,7 +1046,7 @@ XLOG_PUBLIC(int) xlog_close( xlog_t *context, int option )
  *         options, print options
  *
  */
-XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int options )
+XLOG_PUBLIC( void ) xlog_list_modules( const xlog_t *context, int options )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
@@ -1081,7 +1081,7 @@ XLOG_PUBLIC(void) xlog_list_modules( const xlog_t *context, int options )
  * @return version code[MSB...8 major, 7...4 minor, 3...0 revision]
  *
  */
-XLOG_PUBLIC(int) xlog_version( char *buffer, int size )
+XLOG_PUBLIC( int ) xlog_version( char *buffer, int size )
 {
 	#if (defined XLOG_VERSION_WITH_BUILDDATE)
 	#define DATE_YEAR ( ( ( ( __DATE__[7] - '0' ) * 10 + ( __DATE__[8] - '0' ) ) *10 \
@@ -1129,8 +1129,8 @@ XLOG_PUBLIC(int) xlog_version( char *buffer, int size )
  * @return length of logging.
  *
  */
-XLOG_PUBLIC(int) xlog_output_rawlog(
-    xlog_printer_t *printer, xlog_t *context, const char * prefix, const char *suffix,
+XLOG_PUBLIC( int ) xlog_output_rawlog(
+    xlog_printer_t *printer, xlog_t *context, const char *prefix, const char *suffix,
     const char *format, ...
 )
 {
@@ -1153,7 +1153,7 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
 	#endif
 	
 	/** global setting in xlog */
-	if( context && !(context->options & XLOG_CONTEXT_OALIVE) ) {
+	if( context && !( context->options & XLOG_CONTEXT_OALIVE ) ) {
 		__XLOG_TRACE( "Dropped by context." );
 		return 0;
 	}
@@ -1165,9 +1165,9 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
 			xlog_payload_append_text( &payload, prefix );
 		}
 		va_list ap;
-		va_start(ap, format);
+		va_start( ap, format );
 		xlog_payload_append_text_va_list( &payload, format, ap );
-		va_end(ap);
+		va_end( ap );
 		if( suffix ) {
 			xlog_payload_append_text( &payload, suffix );
 		}
@@ -1190,8 +1190,8 @@ XLOG_PUBLIC(int) xlog_output_rawlog(
  * @return length of logging.
  *
  */
-XLOG_PUBLIC(int) xlog_output_fmtlog(
-	xlog_printer_t *printer,
+XLOG_PUBLIC( int ) xlog_output_fmtlog(
+    xlog_printer_t *printer,
     xlog_module_t *module, int level,
     const char *file, const char *func, long int line,
     const char *format, ...
@@ -1201,7 +1201,7 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( printer && printer->magic != XLOG_MAGIC_PRINTER ) {
 		XLOG_TRACE( "Runtime error: may be printer has been closed. magic = 0x%X.", printer->magic );
-		// return 0;
+		return 0;
 	}
 	if( module && module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
@@ -1239,8 +1239,8 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 	
 	/** global setting in xlog */
 	if(
-		module && context
-	    && ( !(context->options & XLOG_CONTEXT_OALIVE))
+	    module && context
+	    && ( !( context->options & XLOG_CONTEXT_OALIVE ) )
 	) {
 		XLOG_STATS_UPDATE( &context->stats, REQUEST, DROPPED, 1 );
 		XLOG_TRACE( "Dropped by context." );
@@ -1272,13 +1272,13 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 		struct tm tm;
 		localtime_r( &tv.tv_sec, &tm );
 		snprintf(
-	        buffer, sizeof(buffer),
-	        XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME,
-	        tm.tm_mon + 1, tm.tm_mday,
-	        tm.tm_hour, tm.tm_min, tm.tm_sec, ( int )( ( tv.tv_usec + 500 ) / 1000 )
-	    );
-	    xlog_payload_append_text( &payload, buffer );
-	    #else
+		    buffer, sizeof( buffer ),
+		    XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME,
+		    tm.tm_mon + 1, tm.tm_mday,
+		    tm.tm_hour, tm.tm_min, tm.tm_sec, ( int )( ( tv.tv_usec + 500 ) / 1000 )
+		);
+		xlog_payload_append_text( &payload, buffer );
+		#else
 		#error No implementation for this system.
 		#endif
 	}
@@ -1288,8 +1288,8 @@ XLOG_PUBLIC(int) xlog_output_fmtlog(
 		char taskname[XLOG_LIMIT_THREAD_NAME];
 		XLOG_GET_THREAD_NAME( taskname );
 		xlog_payload_append_text_va(
-			&payload, XLOG_TAG_PREFIX_LOG_TASK "%d/%d %s" XLOG_TAG_SUFFIX_LOG_TASK,
-			getppid(), getpid(), taskname
+		    &payload, XLOG_TAG_PREFIX_LOG_TASK "%d/%d %s" XLOG_TAG_SUFFIX_LOG_TASK,
+		    getppid(), getpid(), taskname
 		);
 	}
 	
