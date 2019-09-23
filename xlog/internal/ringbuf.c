@@ -13,15 +13,12 @@
 #pragma GCC diagnostic ignored "-Wshorten-64-to-32"
 #endif
 
-static unsigned int ringbuf_offset_next_n( ringbuf_t* rb, int offset, int n )
-{
-	assert( ( offset >= 0 ) && ( offset <= rb->capacity ) );
-	return ( offset + n ) % ( rb->capacity + 1 );
-}
-
 ringbuf_t *ringbuf_create( unsigned int capacity )
 {
-	ringbuf_t *rb = XLOG_MALLOC( sizeof( ringbuf_t ) + capacity + 1 /* for detecting the full condition. */ );
+	/* One byte used for detecting the full condition. */
+	/* Align is applied 'cause the capacity usually very large for better performance */
+	size_t size = XLOG_ALIGN_UP( sizeof( ringbuf_t ) + capacity + 1, 64 );
+	ringbuf_t *rb = (ringbuf_t *)XLOG_MALLOC( size );
 	if( rb ) {
 		rb->capacity = capacity;
 		rb->rd_offset = 0;
@@ -36,7 +33,6 @@ ringbuf_t *ringbuf_create( unsigned int capacity )
 int ringbuf_destory( ringbuf_t *rb )
 {
 	if( rb ) {
-		__XLOG_TRACE( "Destory ring-buffer" );
 		pthread_mutex_destroy( &rb->mutex );
 		pthread_cond_destroy( &rb->cond_data_in );
 		pthread_cond_destroy( &rb->cond_data_out );
@@ -46,7 +42,13 @@ int ringbuf_destory( ringbuf_t *rb )
 	return 0;
 }
 
-static unsigned int __ringbuf_size_free( ringbuf_t *rb )
+static unsigned int __offset_next_n( ringbuf_t* rb, int offset, int n )
+{
+	assert( ( offset >= 0 ) && ( offset <= rb->capacity ) );
+	return ( offset + n ) % ( rb->capacity + 1 );
+}
+
+static unsigned int __size_free( ringbuf_t *rb )
 {
 	assert( rb );
 	unsigned int bytes_free = 0;
@@ -59,7 +61,7 @@ static unsigned int __ringbuf_size_free( ringbuf_t *rb )
 	return bytes_free;
 }
 
-static unsigned int __ringbuf_size_used( ringbuf_t *rb )
+static unsigned int __size_used( ringbuf_t *rb )
 {
 	assert( rb );
 	unsigned int bytes_used = 0;
@@ -78,18 +80,18 @@ int ringbuf_copy_into_nonspec( ringbuf_t *rb, const void *vptr, unsigned int siz
 	unsigned int left_size = size;
 	while( left_size > 0 ) {
 		pthread_mutex_lock( &rb->mutex );
-		while( __ringbuf_size_free(rb) == 0 ) {
+		while( __size_free(rb) == 0 ) {
 			pthread_cond_wait( &rb->cond_data_out, &rb->mutex );
 		}
-		unsigned int copy_size = XLOG_MIN( left_size, __ringbuf_size_free(rb) );
-		unsigned int next_wr = ringbuf_offset_next_n( rb, rb->wr_offset, copy_size );
+		unsigned int copy_size = XLOG_MIN( left_size, __size_free(rb) );
+		unsigned int next_wr = __offset_next_n( rb, rb->wr_offset, copy_size );
 		unsigned int non_overflow_size = XLOG_MIN( copy_size, rb->capacity + 1 - rb->wr_offset );
 		memcpy( rb->data + rb->wr_offset, vptr, non_overflow_size );
 		if( non_overflow_size < copy_size ) {
 			memcpy( rb->data, (char *)vptr + non_overflow_size, copy_size - non_overflow_size );
 		}
 		left_size -= copy_size;
-		__XLOG_TRACE( "INTO: free/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_wr = %u", __ringbuf_size_free( rb ), rb->capacity, non_overflow_size, copy_size, next_wr );
+		__XLOG_TRACE( "INTO: free/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_wr = %u", __size_free( rb ), rb->capacity, non_overflow_size, copy_size, next_wr );
 		rb->wr_offset = next_wr;
 		pthread_cond_broadcast( &rb->cond_data_in );
 		pthread_mutex_unlock( &rb->mutex );
@@ -101,18 +103,22 @@ int ringbuf_copy_into_nonspec( ringbuf_t *rb, const void *vptr, unsigned int siz
 int ringbuf_copy_into( ringbuf_t *rb, const void *vptr, unsigned int size )
 {
 	assert( rb );
+	if( size > ( rb->capacity >> 1 ) ) {
+		__XLOG_TRACE( "Buffer required cann't be satisfied by pre-created ring-buffer." );
+		return EINVAL;
+	}
 	pthread_mutex_lock( &rb->mutex );
-	while( __ringbuf_size_free(rb) < size ) {
+	while( __size_free(rb) < size ) {
 		pthread_cond_wait( &rb->cond_data_out, &rb->mutex );
 	}
-	unsigned int copy_size = XLOG_MIN( size, __ringbuf_size_free(rb) );
-	unsigned int next_wr = ringbuf_offset_next_n( rb, rb->wr_offset, copy_size );
+	unsigned int copy_size = XLOG_MIN( size, __size_free(rb) );
+	unsigned int next_wr = __offset_next_n( rb, rb->wr_offset, copy_size );
 	unsigned int non_overflow_size = XLOG_MIN( copy_size, rb->capacity + 1 - rb->wr_offset );
 	memcpy( rb->data + rb->wr_offset, vptr, non_overflow_size );
 	if( non_overflow_size < copy_size ) {
 		memcpy( rb->data, (char *)vptr + non_overflow_size, copy_size - non_overflow_size );
 	}
-	__XLOG_TRACE( "INTO: free/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_wr = %u", __ringbuf_size_free( rb ), rb->capacity, non_overflow_size, copy_size, next_wr );
+	__XLOG_TRACE( "INTO: free/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_wr = %u", __size_free( rb ), rb->capacity, non_overflow_size, copy_size, next_wr );
 	rb->wr_offset = next_wr;
 	pthread_cond_broadcast( &rb->cond_data_in );
 	pthread_mutex_unlock( &rb->mutex );
@@ -124,19 +130,19 @@ int ringbuf_copy_from( ringbuf_t *rb, void *vptr, unsigned int size, bool no_wai
 {
 	pthread_mutex_lock( &rb->mutex );
 	if( no_wait ) {
-		if( __ringbuf_size_used(rb) == 0 ) {
+		if( __size_used(rb) == 0 ) {
 			pthread_mutex_unlock( &rb->mutex );
 			return 0;
 		}
 	} else {
-		while( __ringbuf_size_used(rb) == 0 ) {
+		while( __size_used(rb) == 0 ) {
 			pthread_cond_wait( &rb->cond_data_in, &rb->mutex );
 		}
 	}
 	
-	unsigned int bytes_used = __ringbuf_size_used( rb );
+	unsigned int bytes_used = __size_used( rb );
 	unsigned int length = XLOG_MIN( bytes_used, size );
-	unsigned int next_rd = ringbuf_offset_next_n( rb, rb->rd_offset, length );
+	unsigned int next_rd = __offset_next_n( rb, rb->rd_offset, length );
 	unsigned int non_overflow_size = XLOG_MIN( length, rb->capacity + 1 - rb->rd_offset );
 	memcpy( vptr, rb->data + rb->rd_offset, non_overflow_size );
 	if( non_overflow_size < length ) {
