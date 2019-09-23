@@ -59,8 +59,7 @@ set(
 	internal/basic-file-printer.c
 	internal/daily-file-printer.c
 	internal/rotating-file-printer.c
-	
-	internal/ringbuf/ringbuf.c
+	internal/ringbuf.c
 	internal/ringbuf-printer.c
 )
 

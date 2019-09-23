@@ -406,7 +406,7 @@ int main( int argc, char **argv )
 	xlog_test_init();
 	xlog_test_set_level();
 	// xlog_test_multi_thread( 10 );
-	// xlog_bench_rate( 5 );
+	xlog_bench_rate( 5 );
 	
 	#if 0
 	BENCH_START();
@@ -420,6 +420,13 @@ int main( int argc, char **argv )
 	xlog_close( xlog_module_context( ROOT_MODULE ), 0 );
 	
 	xlog_printer_destory( g_printer );
+	
+	char temp[32];
+	char buffer[64] = "message";
+	for( int i = 0; i < sizeof( buffer ); ++ i ) {
+		buffer[i] = 'a' + random_integer() % 26;
+	}
+	buffer[sizeof( buffer ) - 1] = '\0';
 	
 	return 0;
 }

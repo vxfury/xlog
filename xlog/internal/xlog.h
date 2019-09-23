@@ -36,7 +36,7 @@ int xlog_printer_destory_rotating_file( xlog_printer_t *printer );
 xlog_printer_t *xlog_printer_create_daily_file( const char *file );
 int xlog_printer_destory_daily_file( xlog_printer_t *printer );
 
-xlog_printer_t *xlog_printer_create_ringbuf( const char *file );
+xlog_printer_t *xlog_printer_create_ringbuf( size_t capacity );
 int xlog_printer_destory_ringbuf( xlog_printer_t *printer );
 
 #ifdef __cplusplus

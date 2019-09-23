@@ -2,7 +2,7 @@
 #include <xlog/xlog_helper.h>
 
 #include "internal/xlog.h"
-#include "ringbuf/ringbuf.h"
+#include "internal/ringbuf.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wzero-length-array"
@@ -13,23 +13,56 @@
 #pragma GCC diagnostic ignored "-Wshorten-64-to-32"
 #endif
 
+#undef __XLOG_TRACE
+#define __XLOG_TRACE(...) // xlog_output_rawlog( xlog_printer_create( XLOG_PRINTER_STDERR ), NULL, "TRACE: ", "\r\n", __VA_ARGS__ )
+
 struct __ringbuf_printer_context {
-	pthread_mutex_t mutex;
 	pthread_t thread_consumer;
-	ringbuf_t ringbuf;
+	bool force_exit;
+	ringbuf_t *rbuff;
+	#if (defined XLOG_FEATURE_ENABLE_STATS) && (defined XLOG_FEATURE_ENABLE_STATS_PRINTER)
+	xlog_stats_t stats;
+	#endif
 };
 
-static struct __ringbuf_printer_context *__ringbuf_create_context( size_t capacity )
+static void *ringbuf_consumer_main( void *arg )
 {
-	struct __ringbuf_printer_context *context = ( struct __ringbuf_printer_context * )XLOG_MALLOC( sizeof( struct __ringbuf_printer_context ) );
-	if( context ) {
-		context->ringbuf = ringbuf_new( capacity );
-		if( context->ringbuf == NULL ) {
-			XLOG_FREE( context );
-			
+	unsigned char buffer[2048];
+	struct __ringbuf_printer_context *context = (struct __ringbuf_printer_context *)arg;
+	
+	if( NULL == context ) {
+		return NULL;
+	}
+	
+	bool idle_show = false;
+	while( true ) {
+		int length = ringbuf_copy_from( context->rbuff , buffer, sizeof( buffer ) - 1, true );
+		if( length > 0 ) {
+			__XLOG_TRACE( "consumer-READ: length = %d\n", length );
+			buffer[length] = '\0';
+			fprintf( stdout, "%.*s", length, buffer );
+			XLOG_STATS_UPDATE( &context->stats, BYTE, OUTPUT, length);
+			idle_show = true;
+		} else if( context->force_exit ) {
+			fprintf(stderr, "INFO: force exit\n" );
 			return NULL;
+		} else {
+			if( idle_show ) {
+				__XLOG_TRACE( "Consumer IDLE." );
+				idle_show = false;
+			}
 		}
-		pthread_mutex_init( &context->mutex, NULL );
+	}
+	
+	/* NOTREACHED */
+	return NULL;
+}
+
+static struct __ringbuf_printer_context *__ringbuf_create_context( unsigned int capacity )
+{
+	struct __ringbuf_printer_context *context = ( struct __ringbuf_printer_context * )XLOG_MALLOC( sizeof( struct __ringbuf_printer_context ) + capacity );
+	if( context ) {
+		context->rbuff = ringbuf_create( capacity );
 	}
 	
 	return context;
@@ -38,7 +71,12 @@ static struct __ringbuf_printer_context *__ringbuf_create_context( size_t capaci
 static int __ringbuf_destory_context( struct __ringbuf_printer_context *context )
 {
 	if( context ) {
-		ringbuf_free( &context->ringbuf );
+		pthread_mutex_lock( &context->rbuff->mutex );
+		context->force_exit = true;
+		pthread_mutex_unlock( &context->rbuff->mutex );
+		pthread_join( context->thread_consumer, NULL );
+		
+		ringbuf_destory( context->rbuff );
 		XLOG_FREE( context );
 	}
 	
@@ -48,9 +86,7 @@ static int __ringbuf_destory_context( struct __ringbuf_printer_context *context 
 static int __ringbuf_append( xlog_printer_t *printer, const char *text )
 {
 	struct __ringbuf_printer_context *_ctx = ( struct __ringbuf_printer_context * )printer->context;
-	pthread_mutex_lock( &_ctx->mutex );
-	ringbuf_memcpy_into( _ctx->ringbuf , text, strlen( text ) );
-	pthread_mutex_unlock( &_ctx->mutex );
+	ringbuf_copy_into( _ctx->rbuff, text, strlen( text ) );
 	return 0;
 }
 
@@ -59,34 +95,10 @@ static int __ringbuf_control( xlog_printer_t *printer UNUSED, int option UNUSED,
 	return 0;
 }
 
-static void *ringbuf_consumer_main( void *arg )
-{
-	static char buffer[2048];
-	struct __ringbuf_printer_context *context = (struct __ringbuf_printer_context *)arg;
-	
-	if( NULL == context ) {
-		return NULL;
-	}
-	
-	for( ;; ) {
-		pthread_mutex_lock( &context->mutex );
-		if( !ringbuf_is_empty( context->ringbuf ) ) {
-			int length = XLOG_MIN( 2048, ringbuf_bytes_used( context->ringbuf ) );
-			ringbuf_memcpy_from( ( void * )buffer, context->ringbuf, length );
-			XLOG_STATS_UPDATE( &context->stats, BYTE, OUTPUT, length);
-			fprintf( stdout, "%.*s", length, buffer );
-		}
-		pthread_mutex_unlock( &context->mutex );
-	}
-	
-	/* NOTREACHED */
-	return NULL;
-}
-
-xlog_printer_t *xlog_printer_create_ringbuf( const char *file )
+xlog_printer_t *xlog_printer_create_ringbuf( size_t capacity )
 {
 	xlog_printer_t *printer = NULL;
-	struct __ringbuf_printer_context *_prt_ctx = __ringbuf_create_context( file );
+	struct __ringbuf_printer_context *_prt_ctx = __ringbuf_create_context( capacity );
 	if( _prt_ctx ) {
 		printer = ( xlog_printer_t * )XLOG_MALLOC( sizeof( xlog_printer_t ) );
 		if( printer == NULL ) {
@@ -94,6 +106,7 @@ xlog_printer_t *xlog_printer_create_ringbuf( const char *file )
 			_prt_ctx = NULL;
 			return NULL;
 		}
+		printer->options = XLOG_PRINTER_TYPE_OPT( XLOG_PRINTER_RINGBUF );
 		printer->context = ( void * )_prt_ctx;
 		printer->append = __ringbuf_append;
 		printer->control = __ringbuf_control;
@@ -119,11 +132,9 @@ int xlog_printer_destory_ringbuf( xlog_printer_t *printer )
 		return EINVAL;
 	}
 	#endif
-	pthread_join( ( ( struct __ringbuf_printer_context * )printer->context )->thread_consumer, NULL );
 	__ringbuf_destory_context( ( struct __ringbuf_printer_context * )printer->context );
 	printer->context = NULL;
 	XLOG_FREE( printer );
 	
 	return 0;
 }
-

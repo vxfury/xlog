@@ -33,12 +33,13 @@ static struct __basic_file_printer_context *__basic_file_create_context( const c
 			
 			return NULL;
 		}
-		context->fd = open( context->filename, O_WRONLY );
+		context->fd = open( context->filename, O_WRONLY | O_CREAT, 0644 );
 		if( context->fd < 0 ) {
+			__XLOG_TRACE( "Failed to open file(%s), 'cause %s.", context->filename, strerror( errno ) );
 			XLOG_FREE( context->filename );
 			XLOG_FREE( context );
 			
-			return 0;
+			return NULL;
 		}
 	}
 	
@@ -80,10 +81,12 @@ xlog_printer_t *xlog_printer_create_basic_file( const char *file )
 	if( _prt_ctx ) {
 		printer = ( xlog_printer_t * )XLOG_MALLOC( sizeof( xlog_printer_t ) );
 		if( printer == NULL ) {
+			__XLOG_TRACE( "Out of memory." );
 			__basic_file_destory_context( _prt_ctx );
 			_prt_ctx = NULL;
 			return NULL;
 		}
+		printer->options = XLOG_PRINTER_TYPE_OPT( XLOG_PRINTER_FILES_BASIC );
 		printer->context = ( void * )_prt_ctx;
 		printer->append = __basic_file_append;
 		printer->control = __basic_file_control;
