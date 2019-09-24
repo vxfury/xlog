@@ -9,6 +9,29 @@ High performance Extensible logging library designed for log formating and dynam
 
 ![image](https://github.com/vxfury/xlog/blob/master/doc/example.jpg)
 
+## How to build
+``` shell
+git clone https://github.com/vxfury/xlog.git
+cd xlog && mkdir build && cd build
+cmake .. && make && make instal
+```
+
+## How to use
+```C
+#include <xlog/xlog.h>
+static xlog_module_t *_module_xxx = NULL;
+#define XLOG_MODULE _module_xxx
+
+int xxx_init( ... )
+{
+    _module_xxx = xlog_modulel_open( "/parent/to/xxx", XLOG_LEVEL_INFO, NULL );
+    log_i( "xxx_init: module create" );
+    // ...
+}
+
+// for more usage, please refer to codes under examples/
+```
+
 ## Command Line Interface
 
 ``` C
