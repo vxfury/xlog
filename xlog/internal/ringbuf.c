@@ -23,14 +23,22 @@ ringbuf_t *ringbuf_create( unsigned int capacity )
 {
 	/* One byte used for detecting the full condition. */
 	/* Align is applied 'cause the capacity usually very large for better performance */
-	size_t size = XLOG_ALIGN_UP( sizeof( ringbuf_t ) + capacity + 1, 64 );
-	ringbuf_t *rb = (ringbuf_t *)XLOG_MALLOC( size );
+	ringbuf_t *rb = (ringbuf_t *)XLOG_MALLOC( sizeof( ringbuf_t ) );
 	if( rb ) {
-		rb->capacity = size - sizeof( ringbuf_t ) - 1;
+		size_t size = XLOG_ALIGN_UP( capacity + 1, 64 );
+		rb->data = (char *)XLOG_MALLOC( size );
+		if( rb->data == NULL ) {
+			__XLOG_TRACE( "Failed to allocate memory." );
+			XLOG_FREE( rb );
+			return NULL;
+		}
+		rb->capacity = size - 1;
 		rb->rd_offset = 0;
 		rb->wr_offset = 0;
+		
 		pthread_mutex_init( &rb->mutex, NULL );
 		pthread_cond_init( &rb->cond_data_out, NULL );
+		pthread_cond_init( &rb->cond_data_in, NULL );
 	}
 	
 	return rb;

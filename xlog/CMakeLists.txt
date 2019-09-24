@@ -13,9 +13,7 @@ option(XLOG_FEATURE_ENABLE_COLOR "Enable colorful logging" ON)
 option(XLOG_FEATURE_ENABLE_STATS "Enable statistics" OFF)
 option(XLOG_FEATURE_ENABLE_STATS_PRINTER "Enable statistics for printer(s)" ON)
 option(XLOG_FEATURE_ENABLE_STATS_MODULE "Enable statistics for module(s)" ON)
-
 option(XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT "Create default context if XLOG_CONTEXT is NULL" ON)
-option(XLOG_FEATURE_ENABLE_DEFAULT_PRINTER "Use default printer if given printer is NULL" ON)
 
 option(XLOG_VERSION_WITH_BUILDDATE "Append build-date to version" OFF)
 

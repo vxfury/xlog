@@ -1144,13 +1144,9 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
 		return 0;
 	}
 	#endif
-	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_PRINTER)
 	if( printer == NULL ) {
 		printer = xlog_printer_default();
 	}
-	#else
-	XLOG_ASSERT( printer );
-	#endif
 	
 	/** global setting in xlog */
 	if( context && !( context->options & XLOG_CONTEXT_OALIVE ) ) {
@@ -1197,17 +1193,8 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
     const char *format, ...
 )
 {
+	XLOG_ASSERT( module );
 	xlog_t *context = xlog_module_context( module );
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( printer && printer->magic != XLOG_MAGIC_PRINTER ) {
-		XLOG_TRACE( "Runtime error: may be printer has been closed. magic = 0x%X.", printer->magic );
-		return 0;
-	}
-	if( module && module->magic != XLOG_MAGIC_MODULE ) {
-		XLOG_TRACE( "Runtime error: may be module has been closed." );
-		return 0;
-	}
-	#endif
 	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
 	if( context == NULL ) {
 		if( __default_context == NULL ) {
@@ -1224,23 +1211,32 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	#else
 	XLOG_ASSERT( context );
 	#endif
-	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_PRINTER)
+	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
+		XLOG_TRACE( "Runtime error: may be context has been closed." );
+		return 0;
+	}
+	if( printer && printer->magic != XLOG_MAGIC_PRINTER ) {
+		XLOG_TRACE( "Runtime error: may be printer has been closed." );
+		return 0;
+	}
+	if( module && module->magic != XLOG_MAGIC_MODULE ) {
+		XLOG_TRACE( "Runtime error: may be module has been closed." );
+		return 0;
+	}
+	#endif
 	if( printer == NULL ) {
 		XLOG_TRACE( "Output via defualt printer." );
 		printer = xlog_printer_default();
 	}
-	#else
-	XLOG_ASSERT( printer );
-	#endif
-	XLOG_ASSERT( module );
 	
 	XLOG_STATS_UPDATE( &context->stats, REQUEST, INPUT, 1 );
 	XLOG_STATS_UPDATE( &module->stats, REQUEST, INPUT, 1 );
 	
 	/** global setting in xlog */
 	if(
-	    module && context
-	    && ( !( context->options & XLOG_CONTEXT_OALIVE ) )
+	    module
+	    && context && ( !( context->options & XLOG_CONTEXT_OALIVE ) )
 	) {
 		XLOG_STATS_UPDATE( &context->stats, REQUEST, DROPPED, 1 );
 		XLOG_TRACE( "Dropped by context." );
@@ -1275,7 +1271,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		    buffer, sizeof( buffer ),
 		    XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME,
 		    tm.tm_mon + 1, tm.tm_mday,
-		    tm.tm_hour, tm.tm_min, tm.tm_sec, ( int )( ( tv.tv_usec + 500 ) / 1000 )
+		    tm.tm_hour, tm.tm_min, tm.tm_sec, ( int )( ( ( tv.tv_usec + 500 ) / 1000 ) % 1000 )
 		);
 		xlog_payload_append_text( &payload, buffer );
 		#else

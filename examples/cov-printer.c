@@ -58,6 +58,28 @@ static int xlog_test_multi_thread( int nthread )
 	return 0;
 }
 
+static unsigned long random_integer( void )
+{
+	static bool initialized = false;
+	if( !initialized ) {
+		unsigned long seed;
+		
+		int fd = open( "/dev/urandom", O_RDONLY );
+		if( fd < 0 || read( fd, &seed, sizeof( seed ) ) < 0 ) {
+			seed = time( NULL );
+		}
+		if( fd >= 0 ) {
+			close( fd );
+			fd = -1;
+		}
+		
+		srand( ( unsigned int )seed );
+		initialized = true;
+	}
+	
+	return rand();
+}
+
 int main( int argc, char **argv )
 {
 	( void )argc;
@@ -65,19 +87,77 @@ int main( int argc, char **argv )
 	
 	g_mod = xlog_module_open( "/net", XLOG_LEVEL_DEBUG, NULL );
 	
+	#define BENCH_BUFFER_SIZE 64
 	unsigned int count_limit = 10;
-	unsigned int time_limit = 5;
+	unsigned int time_limit = 1;
+	
+	unsigned int index = 0;
+	struct {
+		const char *brief;
+		unsigned int count;
+	} bench_result[10];
+	
+	char buffer[BENCH_BUFFER_SIZE];
+	for( int i = 0; i < sizeof( buffer ); ++ i ) {
+		buffer[i] = 'a' + random_integer() % 26;
+	}
+	buffer[sizeof( buffer ) - 1] = '\0';
+	
+	{
+		time_t st = time( NULL );
+		unsigned int i = 0;
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			char *temp = ( char * )malloc( 2048 );
+			if( temp ) {
+				xlog_time_t now;
+				#if ((defined __linux__) || (defined __FreeBSD__) || (defined __APPLE__) || (defined __unix__))
+				struct timeval tv;
+				struct timezone tz;
+				gettimeofday( &tv, &tz );
+				now.tv.tv_sec = tv.tv_sec;
+				now.tv.tv_usec = tv.tv_usec;
+				now.tz.tz_minuteswest = tz.tz_minuteswest;
+				now.tz.tz_dsttime = tz.tz_dsttime;
+				#else
+				#error No implementation for this system.
+				#endif
+				time_t tv_sec = now.tv.tv_sec;
+				struct tm *p = localtime( &tv_sec );
+				snprintf(
+				    temp, 2048,
+				    XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME XLOG_TAG_PREFIX_LOG_CLASS( WARN ) "%s" XLOG_TAG_SUFFIX_LOG_CLASS( WARN ) "%s",
+				    p->tm_mon + 1, p->tm_mday,
+				    p->tm_hour, p->tm_min, p->tm_sec, ( int )( now.tv.tv_usec / 1000 ),
+				    "/net",
+				    buffer
+				);
+				#ifndef XLOG_BENCH_NO_OUTPUT
+				printf( "%s\n", temp );
+				#endif
+				free( temp );
+				i ++;
+			}
+		}
+		
+		bench_result[index].brief = "BASE";
+		bench_result[index].count = i / time_limit;
+		index ++;
+	}
+	
 	#if 1
 	{
 		g_printer = xlog_printer_create( XLOG_PRINTER_STDERR );
 		time_t st = time( NULL );
 		unsigned int i = 0;
 		while( time( NULL ) - st < time_limit && i < count_limit ) {
-			log_w( "test info(STDER): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+			log_w( "%s", buffer );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count(STDER) = %u\n", i/time_limit );
+		
+		bench_result[index].brief = "STDERR";
+		bench_result[index].count = i / time_limit;
+		index ++;
 	}
 	#endif
 	
@@ -87,11 +167,14 @@ int main( int argc, char **argv )
 		time_t st = time( NULL );
 		unsigned int i = 0;
 		while( time( NULL ) - st < time_limit && i < count_limit ) {
-			log_w( "test info(STDOT): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+			log_w( "%s", buffer );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count(STDOT) = %u\n", i/time_limit );
+		
+		bench_result[index].brief = "STDOUT";
+		bench_result[index].count = i / time_limit;
+		index ++;
 	}
 	#endif
 	
@@ -101,11 +184,14 @@ int main( int argc, char **argv )
 		time_t st = time( NULL );
 		unsigned int i = 0;
 		while( time( NULL ) - st < time_limit && i < count_limit ) {
-			log_w( "test info(ROTAT): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+			log_w( "%s", buffer );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count(ROTAT) = %u\n", i/time_limit );
+		
+		bench_result[index].brief = "ROTATING-FILE";
+		bench_result[index].count = i / time_limit;
+		index ++;
 	}
 	#endif
 	
@@ -115,11 +201,14 @@ int main( int argc, char **argv )
 		time_t st = time( NULL );
 		unsigned int i = 0;
 		while( time( NULL ) - st < time_limit && i < count_limit ) {
-			log_w( "test info(BASIC): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+			log_w( "%s", buffer );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count(BASIC) = %u\n", i/time_limit );
+		
+		bench_result[index].brief = "BASIC-FILE";
+		bench_result[index].count = i / time_limit;
+		index ++;
 	}
 	#endif
 	
@@ -129,11 +218,14 @@ int main( int argc, char **argv )
 		time_t st = time( NULL );
 		unsigned int i = 0;
 		while( time( NULL ) - st < time_limit && i < count_limit ) {
-			log_w( "test info(DAILY): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+			log_w( "%s", buffer );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count(DAILY) = %u\n", i/time_limit );
+		
+		bench_result[index].brief = "DAILY-FILE";
+		bench_result[index].count = i / time_limit;
+		index ++;
 	}
 	#endif
 	
@@ -143,15 +235,23 @@ int main( int argc, char **argv )
 		time_t st = time( NULL );
 		unsigned int i = 0;
 		while( time( NULL ) - st < time_limit && i < count_limit ) {
-			log_w( "test info(RBUFF): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+			log_w( "%s", buffer );
 			i ++;
 		}
-		xlog_test_multi_thread( 10 );
 		
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count(RBUFF) = %u\n", i/time_limit );
+		
+		bench_result[index].brief = "RING-BUFFER";
+		bench_result[index].count = i / time_limit;
+		index ++;
 	}
 	#endif
+	
+	xlog_test_multi_thread( 10 );
+	
+	for( int i = 0; i < index; i ++ ) {
+		fprintf(stderr, "%16s: %8u(%.3f)\n", bench_result[i].brief, bench_result[i].count, (double)bench_result[i].count / (double)bench_result[0].count );
+	}
 	
 	return 0;
 }

@@ -18,7 +18,7 @@ typedef struct __ringbuf {
 	
 	unsigned int capacity; /* capacity = size - 1, one byte for detecting the full condition. */
 	unsigned int rd_offset, wr_offset;
-	char data[0];
+	char *data;
 } ringbuf_t;
 
 /* @brief  create ring-buffer

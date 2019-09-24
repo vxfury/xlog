@@ -44,7 +44,7 @@ static void *ringbuf_consumer_main( void *arg )
 			XLOG_STATS_UPDATE( &context->stats, BYTE, OUTPUT, length);
 			idle_show = true;
 		} else if( context->force_exit ) {
-			fprintf(stdout, "INFO: force exit\n" );
+			__XLOG_TRACE( "Force exit." )
 			return NULL;
 		} else {
 			if( idle_show ) {
