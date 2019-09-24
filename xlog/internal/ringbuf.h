@@ -1,7 +1,11 @@
 #ifndef __INTERNAL_RINGBUF_H
 #define __INTERNAL_RINGBUF_H
 
-#include <pthread.h>
+#include <xlog/xlog_config.h>
+
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wzero-length-array"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
