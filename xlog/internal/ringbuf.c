@@ -13,6 +13,12 @@
 #pragma GCC diagnostic ignored "-Wshorten-64-to-32"
 #endif
 
+/* @brief  create ring-buffer
+ * @param  capacity, capacity of ring-buffer
+ * @return pointer to ring-buffer; NULL if failed to allocate memory
+ * @note   1. Align will be applied automatically
+ *         2. One byte additional for detecting the full condition
+ **/
 ringbuf_t *ringbuf_create( unsigned int capacity )
 {
 	/* One byte used for detecting the full condition. */
@@ -20,7 +26,7 @@ ringbuf_t *ringbuf_create( unsigned int capacity )
 	size_t size = XLOG_ALIGN_UP( sizeof( ringbuf_t ) + capacity + 1, 64 );
 	ringbuf_t *rb = (ringbuf_t *)XLOG_MALLOC( size );
 	if( rb ) {
-		rb->capacity = capacity;
+		rb->capacity = size - sizeof( ringbuf_t ) - 1;
 		rb->rd_offset = 0;
 		rb->wr_offset = 0;
 		pthread_mutex_init( &rb->mutex, NULL );
@@ -30,6 +36,10 @@ ringbuf_t *ringbuf_create( unsigned int capacity )
 	return rb;
 }
 
+/* @brief  destory ring-buffer
+ * @param  rb, pointer to ring-buffer
+ * @return error code(always zero for this interface)
+ **/
 int ringbuf_destory( ringbuf_t *rb )
 {
 	if( rb ) {
@@ -42,13 +52,15 @@ int ringbuf_destory( ringbuf_t *rb )
 	return 0;
 }
 
-static unsigned int __offset_next_n( ringbuf_t* rb, int offset, int n )
+/* offset to next n bytes */
+static unsigned int __offset_next_n( const ringbuf_t* rb, int offset, int n )
 {
 	assert( ( offset >= 0 ) && ( offset <= rb->capacity ) );
 	return ( offset + n ) % ( rb->capacity + 1 );
 }
 
-static unsigned int __size_free( ringbuf_t *rb )
+/* get free size */
+static unsigned int __size_free( const ringbuf_t *rb )
 {
 	assert( rb );
 	unsigned int bytes_free = 0;
@@ -61,7 +73,8 @@ static unsigned int __size_free( ringbuf_t *rb )
 	return bytes_free;
 }
 
-static unsigned int __size_used( ringbuf_t *rb )
+/* get used size  */
+static unsigned int __size_used( const ringbuf_t *rb )
 {
 	assert( rb );
 	unsigned int bytes_used = 0;
@@ -74,6 +87,13 @@ static unsigned int __size_used( ringbuf_t *rb )
 	return bytes_used;
 }
 
+/* @brief  copy data to ring-buffer
+ * @param  rb, pointer to ring-buffer(Non-NULL required)
+ *         vptr/size, data to copy into
+ * @return error code(always zero for this interface)
+ * @note   1. data given may be separated into several fragments
+ *         2. but NO LIMIT on size of data
+ **/
 int ringbuf_copy_into_nonspec( ringbuf_t *rb, const void *vptr, unsigned int size )
 {
 	assert( rb );
@@ -100,6 +120,11 @@ int ringbuf_copy_into_nonspec( ringbuf_t *rb, const void *vptr, unsigned int siz
 	return 0;
 }
 
+/* @brief  copy data to ring-buffer
+ * @param  rb, pointer to ring-buffer(Non-NULL required)
+ *         vptr/size, data to copy into ring-buffer
+ * @return error code(EINVAL if size of data larger than half of the capacity)
+ **/
 int ringbuf_copy_into( ringbuf_t *rb, const void *vptr, unsigned int size )
 {
 	assert( rb );
@@ -126,6 +151,12 @@ int ringbuf_copy_into( ringbuf_t *rb, const void *vptr, unsigned int size )
 	return 0;
 }
 
+/* @brief  copy data from ring-buffer
+ * @param  rb, pointer to ring-buffer(Non-NULL required)
+ *         vptr/size, buffer to save copied data
+ *         no_wait, true to return immediately when there is no data in ring-buffer
+ * @return length of copied data
+ **/
 int ringbuf_copy_from( ringbuf_t *rb, void *vptr, unsigned int size, bool no_wait )
 {
 	pthread_mutex_lock( &rb->mutex );
@@ -156,228 +187,27 @@ int ringbuf_copy_from( ringbuf_t *rb, void *vptr, unsigned int size, bool no_wai
 	return length;
 }
 
-#if 0
-#ifndef MIN
-#define MIN(a, b) ((a) <= (b) ? (a) : (b))
-#endif
-
-typedef struct ringbuf_t {
-	pthread_mutex_t mutex;
-	pthread_cond_t  cond_data_out;
-	pthread_cond_t  cond_data_in;
-	
-	uint8_t *buf;
-	uint8_t *head, *tail;
-	size_t capacity;
-} ringbuf_t;
-
-ringbuf_t* ringbuf_new( size_t capacity );
-void ringbuf_free( ringbuf_t* *rb );
-void ringbuf_reset( ringbuf_t* rb );
-size_t ringbuf_bytes_free( const struct ringbuf_t* *rb );
-size_t ringbuf_bytes_used( const struct ringbuf_t* *rb );
-int ringbuf_is_full( const struct ringbuf_t* *rb );
-int ringbuf_is_empty( const struct ringbuf_t* *rb );
-const void *ringbuf_tail( const struct ringbuf_t* *rb );
-const void *ringbuf_head( const struct ringbuf_t* *rb );
-size_t ringbuf_findchr( const struct ringbuf_t* *rb, int c, size_t offset );
-size_t ringbuf_memset( ringbuf_t* dst, int c, size_t len );
-void *ringbuf_memcpy_into( ringbuf_t* dst, const void *src, size_t count );
-void *ringbuf_memcpy_from( void *dst, ringbuf_t* src, size_t count );
-
-ringbuf_t* ringbuf_new( size_t capacity )
+/* @brief  Locate the first occurrence of character c in ring-buffer
+ * @param  rb, pointer to ring-buffer(Non-NULL required)
+ *         c, character to locate
+ *         offset, satrt offset to find character
+ * @return offset of the character from the ring-buffer's tail pointer
+ * @note   non-thread-safe
+ **/
+unsigned int ringbuf_findchr( const ringbuf_t *rb, int c, unsigned int offset )
 {
-	ringbuf_t* rb = malloc( sizeof( struct ringbuf_t* ) );
-	if( rb ) {
-		/* One byte is used for detecting the full condition. */
-		rb->capacity = capacity;
-		rb->buf = malloc( capacity + 1 );
-		if( rb->buf ) {
-			ringbuf_reset( rb );
-		} else {
-			free( rb );
-			return 0;
-		}
-	}
-	return rb;
-}
-
-void ringbuf_free( ringbuf_t* *rb )
-{
-	assert( rb && *rb );
-	free( ( *rb )->buf );
-	free( *rb );
-	*rb = 0;
-}
-
-void ringbuf_reset( ringbuf_t* rb )
-{
-	rb->head = rb->tail = rb->buf;
-}
-
-/*
- * Return a pointer to one-past-the-end of the ring buffer's
- * contiguous buffer. You shouldn't normally need to use this function
- * unless you're writing a new ringbuf_* function.
- */
-static const uint8_t *ringbuf_end( const struct ringbuf_t* *rb )
-{
-	return rb->buf + rb->capacity + 1;
-}
-
-size_t ringbuf_bytes_free( const struct ringbuf_t* *rb )
-{
-	if( rb->head >= rb->tail ) {
-		return rb->capacity - (size_t)( rb->head - rb->tail );
-	} else {
-		return (size_t)(rb->tail - rb->head) - 1;
-	}
-}
-
-size_t ringbuf_bytes_used( const struct ringbuf_t* *rb )
-{
-	return rb->capacity - ringbuf_bytes_free( rb );
-}
-
-int ringbuf_is_full( const struct ringbuf_t* *rb )
-{
-	return ringbuf_bytes_free( rb ) == 0;
-}
-
-int ringbuf_is_empty( const struct ringbuf_t* *rb )
-{
-	return ringbuf_bytes_free( rb ) == rb->capacity;
-}
-
-const void *ringbuf_tail( const struct ringbuf_t* *rb )
-{
-	return rb->tail;
-}
-
-const void *ringbuf_head( const struct ringbuf_t* *rb )
-{
-	return rb->head;
-}
-
-/*
- * Given a ring buffer rb and a pointer to a location within its
- * contiguous buffer, return the a pointer to the next logical
- * location in the ring buffer.
- */
-static uint8_t *ringbuf_nextp( ringbuf_t* rb, const uint8_t *p )
-{
-	/*
-	 * The assert guarantees the expression (++p - rb->buf) is
-	 * non-negative; therefore, the modulus operation is safe and
-	 * portable.
-	 */
-	assert( ( p >= rb->buf ) && ( p < ringbuf_end( rb ) ) );
-	return rb->buf + ( ( ++p - rb->buf ) % ( rb->capacity + 1 ) );
-}
-
-size_t ringbuf_findchr( const struct ringbuf_t* *rb, int c, size_t offset )
-{
-	const uint8_t *bufend = ringbuf_end( rb );
-	size_t bytes_used = ringbuf_bytes_used( rb );
+	assert( rb );
+	unsigned int bytes_used = __size_used( rb );
 	if( offset >= bytes_used ) {
 		return bytes_used;
 	}
 	
-	const uint8_t *start = rb->buf +
-	    ( ( (size_t)( rb->tail - rb->buf ) + offset ) % ( rb->capacity + 1 ) );
-	assert( bufend > start );
-	size_t n = MIN( bufend - start, bytes_used - offset );
-	const uint8_t *found = memchr( start, c, n );
+	const char *start = rb->data + __offset_next_n( rb , rb->rd_offset, offset );
+	unsigned int n = XLOG_MIN( bytes_used - offset, rb->capacity + 1 - rb->rd_offset );
+	const char *found = memchr( start, c, n );
 	if( found ) {
 		return offset + ( found - start );
 	} else {
 		return ringbuf_findchr( rb, c, offset + n );
 	}
 }
-
-size_t ringbuf_memset( ringbuf_t* dst, int c, size_t len )
-{
-	const uint8_t *bufend = ringbuf_end( dst );
-	size_t nwritten = 0;
-	size_t count = MIN( len, dst->capacity + 1 );
-	int overflow = count > ringbuf_bytes_free( dst );
-	
-	while( nwritten != count ) {
-	
-		/* don't copy beyond the end of the buffer */
-		assert( bufend > dst->head );
-		size_t n = MIN( bufend - dst->head, count - nwritten );
-		memset( dst->head, c, n );
-		dst->head += n;
-		nwritten += n;
-		
-		/* wrap? */
-		if( dst->head == bufend ) {
-			dst->head = dst->buf;
-		}
-	}
-	
-	if( overflow ) {
-		dst->tail = ringbuf_nextp( dst, dst->head );
-		assert( ringbuf_is_full( dst ) );
-	}
-	
-	return nwritten;
-}
-
-void *ringbuf_memcpy_into( ringbuf_t* dst, const void *src, size_t count )
-{
-	const uint8_t *u8src = src;
-	const uint8_t *bufend = ringbuf_end( dst );
-	int overflow = count > ringbuf_bytes_free( dst );
-	size_t nread = 0;
-	
-	while( nread != count ) {
-		/* don't copy beyond the end of the buffer */
-		assert( bufend > dst->head );
-		size_t n = MIN( bufend - dst->head, count - nread );
-		memcpy( dst->head, u8src + nread, n );
-		dst->head += n;
-		nread += n;
-		
-		/* wrap? */
-		if( dst->head == bufend ) {
-			dst->head = dst->buf;
-		}
-	}
-	
-	if( overflow ) {
-		dst->tail = ringbuf_nextp( dst, dst->head );
-		assert( ringbuf_is_full( dst ) );
-	}
-	
-	return dst->head;
-}
-
-void *ringbuf_memcpy_from( void *dst, ringbuf_t* src, size_t count )
-{
-	size_t bytes_used = ringbuf_bytes_used( src );
-	if( count > bytes_used ) {
-		return 0;
-	}
-	
-	uint8_t *u8dst = dst;
-	const uint8_t *bufend = ringbuf_end( src );
-	size_t nwritten = 0;
-	while( nwritten != count ) {
-		assert( bufend > src->tail );
-		size_t n = MIN( bufend - src->tail, count - nwritten );
-		memcpy( u8dst + nwritten, src->tail, n );
-		src->tail += n;
-		nwritten += n;
-		
-		/* wrap ? */
-		if( src->tail == bufend ) {
-			src->tail = src->buf;
-		}
-	}
-	
-	assert( count + ringbuf_bytes_used( src ) == bytes_used );
-	return src->tail;
-}
-#endif

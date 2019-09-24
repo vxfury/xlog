@@ -21,11 +21,52 @@ typedef struct __ringbuf {
 	char data[0];
 } ringbuf_t;
 
+/* @brief  create ring-buffer
+ * @param  capacity, capacity of ring-buffer
+ * @return pointer to ring-buffer; NULL if failed to allocate memory
+ * @note   1. Align will be applied automatically
+ *         2. One byte additional for detecting the full condition
+ **/
 ringbuf_t *ringbuf_create( unsigned int capacity );
+
+/* @brief  destory ring-buffer
+ * @param  rb, pointer to ring-buffer
+ * @return error code(always zero for this interface)
+ **/
 int ringbuf_destory( ringbuf_t *rb );
+
+/* @brief  copy data to ring-buffer
+ * @param  rb, pointer to ring-buffer(Non-NULL required)
+ *         vptr/size, data to copy into
+ * @return error code(always zero for this interface)
+ * @note   1. data given may be separated into several fragments
+ *         2. but NO LIMIT on size of data
+ **/
 int ringbuf_copy_into_nonspec( ringbuf_t *rb, const void *vptr, unsigned int size );
+
+/* @brief  copy data to ring-buffer
+ * @param  rb, pointer to ring-buffer(Non-NULL required)
+ *         vptr/size, data to copy into ring-buffer
+ * @return error code(EINVAL if size of data larger than half of the capacity)
+ **/
 int ringbuf_copy_into( ringbuf_t *rb, const void *vptr, unsigned int size );
+
+/* @brief  copy data from ring-buffer
+ * @param  rb, pointer to ring-buffer(Non-NULL required)
+ *         vptr/size, buffer to save copied data
+ *         no_wait, true to return immediately when there is no data in ring-buffer
+ * @return length of copied data
+ **/
 int ringbuf_copy_from( ringbuf_t *rb, void *vptr, unsigned int size, bool no_wait );
+
+/* @brief  Locate the first occurrence of character c in ring-buffer
+ * @param  rb, pointer to ring-buffer(Non-NULL required)
+ *         c, character to locate
+ *         offset, satrt offset to find character
+ * @return offset of the character from the ring-buffer's tail pointer
+ * @note   non-thread-safe
+ **/
+unsigned int ringbuf_findchr( const ringbuf_t *rb, int c, unsigned int offset );
 
 #ifdef __cplusplus
 }
