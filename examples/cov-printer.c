@@ -65,32 +65,33 @@ int main( int argc, char **argv )
 	
 	g_mod = xlog_module_open( "/net", XLOG_LEVEL_DEBUG, NULL );
 	
-	unsigned int count_limit = 10;
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT );
-		time_t st = time( NULL );
-		unsigned int i = 0;
-		while( time( NULL ) - st < 5 && i < count_limit ) {
-			log_w( "test info(STDOUT): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
-			i ++;
-		}
-		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count = %u\n", i );
-	}
-	#endif
-	
+	unsigned int count_limit = 10000000;
+	unsigned int time_limit = 5;
 	#if 1
 	{
 		g_printer = xlog_printer_create( XLOG_PRINTER_STDERR );
 		time_t st = time( NULL );
 		unsigned int i = 0;
-		while( time( NULL ) - st < 5 && i < count_limit ) {
-			log_w( "test info(STDERR): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "test info(STDER): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count = %u\n", i );
+		fprintf(stderr, "count(STDER) = %u\n", i/time_limit );
+	}
+	#endif
+	
+	#if 1
+	{
+		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT );
+		time_t st = time( NULL );
+		unsigned int i = 0;
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "test info(STDOT): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+			i ++;
+		}
+		xlog_printer_destory( g_printer );
+		fprintf(stderr, "count(STDOT) = %u\n", i/time_limit );
 	}
 	#endif
 	
@@ -99,12 +100,12 @@ int main( int argc, char **argv )
 		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "rotating.txt", 1024 * 8, 16 );
 		time_t st = time( NULL );
 		unsigned int i = 0;
-		while( time( NULL ) - st < 5 && i < count_limit ) {
-			log_w( "test info(ROTATING): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "test info(ROTAT): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count = %u\n", i );
+		fprintf(stderr, "count(ROTAT) = %u\n", i/time_limit );
 	}
 	#endif
 	
@@ -113,12 +114,12 @@ int main( int argc, char **argv )
 		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "basic-file.txt" );
 		time_t st = time( NULL );
 		unsigned int i = 0;
-		while( time( NULL ) - st < 5 && i < count_limit ) {
-			log_w( "test info(BFILE): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "test info(BASIC): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count = %u\n", i );
+		fprintf(stderr, "count(BASIC) = %u\n", i/time_limit );
 	}
 	#endif
 	
@@ -127,12 +128,12 @@ int main( int argc, char **argv )
 		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "daily-file.txt" );
 		time_t st = time( NULL );
 		unsigned int i = 0;
-		while( time( NULL ) - st < 5 && i < count_limit ) {
-			log_w( "test info(BFILE): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "test info(DAILY): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count = %u\n", i );
+		fprintf(stderr, "count(DAILY) = %u\n", i/time_limit );
 	}
 	#endif
 	
@@ -141,14 +142,14 @@ int main( int argc, char **argv )
 		g_printer = xlog_printer_create( XLOG_PRINTER_RINGBUF, 1024 * 1024 * 8 );
 		time_t st = time( NULL );
 		unsigned int i = 0;
-		while( time( NULL ) - st < 5 && i < count_limit ) {
-			log_w( "test info(BFILE): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "test info(RBUFF): upoggjqjaxtmvejcbdyiluqzcogqxbftwuzqwelfywgwmxwghezcwgxlbbyrrmf" );
 			i ++;
 		}
 		xlog_test_multi_thread( 10 );
 		
 		xlog_printer_destory( g_printer );
-		fprintf(stderr, "count = %u\n", i );
+		fprintf(stderr, "count(RBUFF) = %u\n", i/time_limit );
 	}
 	#endif
 	
