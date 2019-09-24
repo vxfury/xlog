@@ -204,7 +204,7 @@ unsigned int ringbuf_findchr( const ringbuf_t *rb, int c, unsigned int offset )
 	
 	const char *start = rb->data + __offset_next_n( rb , rb->rd_offset, offset );
 	unsigned int n = XLOG_MIN( bytes_used - offset, rb->capacity + 1 - rb->rd_offset );
-	const char *found = memchr( start, c, n );
+	const char *found = (const char *)memchr( start, c, n );
 	if( found ) {
 		return offset + ( found - start );
 	} else {
