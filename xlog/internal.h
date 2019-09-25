@@ -17,9 +17,9 @@
 #define STRING(x)	#x
 #define XSTRING(x)	STRING(x)
 /* trace for xlog-printer, xlog-payload and xlog_output_rawlog */
-#define __XLOG_TRACE(...) fprintf( stderr, "TRACE: <" __FILE__ ":" XSTRING(__LINE__) "> " ), fprintf( stderr, __VA_ARGS__ ), fprintf( stderr, "\r\n" )
+#define __XLOG_TRACE(...) // fprintf( stderr, "TRACE: <" __FILE__ ":" XSTRING(__LINE__) "> " ), fprintf( stderr, __VA_ARGS__ ), fprintf( stderr, "\r\n" )
 /* trace for others exclude targets of __XLOG_TRACE */
-#define XLOG_TRACE(...)	xlog_output_rawlog( xlog_printer_create( XLOG_PRINTER_STDERR ), NULL, "TRACE: <" __FILE__ ":" XSTRING(__LINE__) "> ", "\r\n", __VA_ARGS__ )
+#define XLOG_TRACE(...)	// xlog_output_rawlog( xlog_printer_create( XLOG_PRINTER_STDERR ), NULL, "TRACE: <" __FILE__ ":" XSTRING(__LINE__) "> ", "\r\n", __VA_ARGS__ )
 
 #ifdef __cplusplus
 extern "C" {
