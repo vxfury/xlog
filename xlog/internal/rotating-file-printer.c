@@ -131,7 +131,11 @@ static int rotating_file_append( xlog_printer_t *printer, const char *text )
 		size_t size = strlen( text );
 		_ctx->current_bytes += size;
 		XLOG_STATS_UPDATE( &( ( struct __rotating_file_printer_context * )printer->context )->stats, BYTE, OUTPUT, size );
+		#ifndef XLOG_BENCH_NO_OUTPUT
 		return write( fd, text, size );
+		#else
+		return size;
+		#endif
 	}
 	return 0;
 }

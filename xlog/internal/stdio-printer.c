@@ -30,10 +30,14 @@ stderr_printer_context = {
 
 static int __stdxxx_append( xlog_printer_t *printer, const char *text )
 {
+	#ifndef XLOG_BENCH_NO_OUTPUT
 	return fprintf(
 	    XLOG_PRINTER_TYPE_GET(printer->options) == XLOG_PRINTER_STDOUT ? stdout : stderr,
 	    "%s", text
 	);
+	#else
+	return strlen( text );
+	#endif
 }
 
 static int __stdxxx_optctl( xlog_printer_t *printer, int option, void *vptr, size_t size )

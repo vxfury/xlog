@@ -40,7 +40,9 @@ static void *ringbuf_consumer_main( void *arg )
 		if( length > 0 ) {
 			__XLOG_TRACE( "consumer-READ: length = %d\n", length );
 			buffer[length] = '\0';
+			#ifndef XLOG_BENCH_NO_OUTPUT
 			fprintf( stdout, "%.*s", length, buffer );
+			#endif
 			XLOG_STATS_UPDATE( &context->stats, BYTE, OUTPUT, length);
 			idle_show = true;
 		} else if( context->force_exit ) {

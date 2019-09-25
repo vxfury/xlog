@@ -64,7 +64,11 @@ static int __basic_file_append( xlog_printer_t *printer, const char *text )
 	if( fd >= 0 ) {
 		size_t size = strlen( text );
 		XLOG_STATS_UPDATE( &( ( struct __basic_file_printer_context * )printer->context )->stats, BYTE, OUTPUT, size );
+		#ifndef XLOG_BENCH_NO_OUTPUT
 		return write( fd, text, size );
+		#else
+		return size;
+		#endif
 	}
 	return 0;
 }
