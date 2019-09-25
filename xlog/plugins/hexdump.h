@@ -1,5 +1,5 @@
-#ifndef __INTERNAL_HEXDUMP_H
-#define __INTERNAL_HEXDUMP_H
+#ifndef __HEXDUMP_H
+#define __HEXDUMP_H
 
 #include <inttypes.h>
 #include <stdbool.h>
@@ -43,6 +43,7 @@ int __hexdump(
     void ( *printline )( uintmax_t, const char *, void * ), void *arg
 );
 
+#if 0
 void hexdump_memory( const void *addr, size_t size, hexdump_options_t *options );
 
 void hexdump_file( const char *file, const hexdump_options_t *options );
@@ -54,5 +55,6 @@ void hexdump_file( const char *file, const hexdump_options_t *options );
 int hexdump_parse_range( const char *str, hexdump_options_t *options );
 
 int hexdump_shell_main( int argc, char **argv );
+#endif
 
 #endif

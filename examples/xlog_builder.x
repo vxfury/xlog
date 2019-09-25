@@ -1,6 +1,6 @@
 #include <xlog/xlog.h>
 
-#include "internal/xlog.h"
+#include "xlog.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wpedantic"

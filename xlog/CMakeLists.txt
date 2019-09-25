@@ -28,14 +28,8 @@ include_directories(
 	# current and subdirectories
 	.
 	
-	# top module
-	
 	# third-parties and dependencies
-	
-	# application
 	${CMAKE_SOURCE_DIR}/include
-	
-	# nonstandard
 )
 
 # headers
@@ -50,15 +44,15 @@ set(
 	xlog_payload.c
 	xlog_printer.c
 	
-	internal/xlog_tree.c
-	internal/xlog_hexdump.c
+	plugins/family_tree.c
+	plugins/ringbuf.c
+	plugins/hexdump.c
 	
-	internal/stdio-printer.c
-	internal/basic-file-printer.c
-	internal/daily-file-printer.c
-	internal/rotating-file-printer.c
-	internal/ringbuf.c
-	internal/ringbuf-printer.c
+	printers/direct-stdio.c
+	printers/file-basic.c
+	printers/file-daily.c
+	printers/file-rotating.c
+	printers/ringbuf-stdout.c
 )
 
 configure_file(

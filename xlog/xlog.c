@@ -1,9 +1,8 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
-#include "internal/xlog.h"
-#include "internal/xlog_tree.h"
-#include "internal/xlog_hexdump.h"
+#include "internal.h"
+#include "plugins/family_tree.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wpedantic"
@@ -21,8 +20,8 @@
 #define XLOG_PERM_MODULE_DIR		0740
 #define XLOG_PERM_MODULE_NODE		0640
 
-#define XLOG_MODULE_FROM_NODE(node)	((xlog_module_t *)XLOG_TREE_DATA( node ))
-#define XLOG_MODULE_TO_NODE(module) ((xlog_tree_t *)XLOG_TREE_NODE( module ))
+#define XLOG_MODULE_FROM_NODE(node)	((xlog_module_t *)FAMILY_TREE_DATA( node ))
+#define XLOG_MODULE_TO_NODE(module) ((family_tree_t *)FAMILY_TREE_NODE( module ))
 
 #if (defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
 static xlog_t *__default_context = NULL;
@@ -214,11 +213,11 @@ static bool __xlog_format_been_enabled( const xlog_module_t *module, int level, 
 }
 
 /** lookup module in root tree, for checking if module existed */
-static inline xlog_module_t *__xlog_module_lookup( const char *name, const xlog_tree_t *root_tree )
+static inline xlog_module_t *__xlog_module_lookup( const char *name, const family_tree_t *root_tree )
 {
 	XLOG_ASSERT( name );
 	XLOG_ASSERT( root_tree );
-	const xlog_tree_t *te_node = root_tree->child;
+	const family_tree_t *te_node = root_tree->child;
 	while( te_node ) {
 		xlog_module_t *module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( te_node );
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -239,7 +238,7 @@ static inline xlog_module_t *__xlog_module_lookup( const char *name, const xlog_
 /** create module under parent, NO '/' in name */
 static inline xlog_module_t *__xlog_module_open( const char *name, int level, xlog_module_t *parent )
 {
-	xlog_tree_t *te_parent = parent ? ( xlog_tree_t * )XLOG_MODULE_TO_NODE( parent ) : NULL;
+	family_tree_t *te_parent = parent ? ( family_tree_t * )XLOG_MODULE_TO_NODE( parent ) : NULL;
 	xlog_module_t *module = parent ? __xlog_module_lookup( name, te_parent ) : NULL;
 	if( module ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -252,7 +251,7 @@ static inline xlog_module_t *__xlog_module_open( const char *name, int level, xl
 		return module;
 	}
 	
-	xlog_tree_t *te_module = xlog_tree_create( sizeof( xlog_module_t ) );
+	family_tree_t *te_module = family_tree_create( sizeof( xlog_module_t ) );
 	if( te_module ) {
 		module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( te_module );
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -264,7 +263,7 @@ static inline xlog_module_t *__xlog_module_open( const char *name, int level, xl
 		module->context = parent ? parent->context : NULL;
 		XLOG_STATS_INIT( &module->stats, XLOG_STATS_MODULE_OPTION );
 		if( te_parent ) {
-			xlog_tree_set_parent( te_module, te_parent );
+			family_tree_set_parent( te_module, te_parent );
 		}
 	} else {
 		XLOG_TRACE( "Failed to create tree node: %s", strerror( errno ) );
@@ -274,7 +273,7 @@ static inline xlog_module_t *__xlog_module_open( const char *name, int level, xl
 }
 
 /** hook to destory lock before close module */
-static inline void __xlog_module_destory_hook( xlog_tree_t *node )
+static inline void __xlog_module_destory_hook( family_tree_t *node )
 {
 	if( node ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -362,8 +361,8 @@ int xlog_module_close( xlog_module_t *module )
 			return EINVAL;
 		}
 		#endif
-		xlog_tree_t *te_module = ( xlog_tree_t * )XLOG_MODULE_TO_NODE( module );
-		xlog_tree_destory_with_hook( te_module, __xlog_module_destory_hook );
+		family_tree_t *te_module = ( family_tree_t * )XLOG_MODULE_TO_NODE( module );
+		family_tree_destory_with_hook( te_module, __xlog_module_destory_hook );
 	} else {
 		XLOG_TRACE( "Module given is NULL." );
 		return EINVAL;
@@ -410,7 +409,7 @@ XLOG_PUBLIC( xlog_module_t * ) xlog_module_lookup( const xlog_module_t *root, co
 	
 	ptr = strtok_r( __name, delim, &saveptr );
 	while( ptr != NULL && __root != NULL ) {
-		xlog_module_t *__module = __xlog_module_lookup( ptr, ( const xlog_tree_t * )XLOG_MODULE_TO_NODE( __root ) );
+		xlog_module_t *__module = __xlog_module_lookup( ptr, ( const family_tree_t * )XLOG_MODULE_TO_NODE( __root ) );
 		if( __module ) {
 			XLOG_TRACE( "Parent Module found, continue to search deeper." );
 			__root = __module;
@@ -418,7 +417,7 @@ XLOG_PUBLIC( xlog_module_t * ) xlog_module_lookup( const xlog_module_t *root, co
 		} else {
 			XLOG_TRACE( "Parent Module mismatch, continue to search next." );
 			module = NULL;
-			xlog_tree_t *__node = ( ( xlog_tree_t * )XLOG_MODULE_TO_NODE( __root ) )->next;
+			family_tree_t *__node = ( ( family_tree_t * )XLOG_MODULE_TO_NODE( __root ) )->next;
 			if( __node == NULL ) {
 				break;
 			}
@@ -487,7 +486,7 @@ XLOG_PUBLIC( int ) xlog_module_level_limit( const xlog_module_t *module )
 			XLOG_TRACE( "Log in this level will be dropped." );
 			level = cur->level;
 		}
-		xlog_tree_t *__node = xlog_tree_parent( ( const xlog_tree_t * )XLOG_MODULE_TO_NODE( cur ) );
+		family_tree_t *__node = family_tree_parent( ( const family_tree_t * )XLOG_MODULE_TO_NODE( cur ) );
 		cur = __node ? ( const xlog_module_t * )XLOG_MODULE_FROM_NODE( __node ) : NULL;
 	}
 	
@@ -525,7 +524,7 @@ XLOG_PUBLIC( const char * ) xlog_module_name( char *buffer, int length, const xl
 			} else {
 				XLOG_TRACE( "Name of current module is NULL, pay attention to it." );
 			}
-			xlog_tree_t *__node = xlog_tree_parent( ( const xlog_tree_t * )XLOG_MODULE_TO_NODE( cur ) );
+			family_tree_t *__node = family_tree_parent( ( const family_tree_t * )XLOG_MODULE_TO_NODE( cur ) );
 			cur = __node ? ( const xlog_module_t * )XLOG_MODULE_FROM_NODE( __node ) : NULL;
 		}
 		memcpy( buffer, ptr + 1, ptr - buffer );
@@ -569,7 +568,7 @@ XLOG_PUBLIC( void ) xlog_module_list_submodules( const xlog_module_t *module, in
 		return;
 	}
 	#endif
-	xlog_tree_t *child = ( ( xlog_tree_t * )XLOG_MODULE_TO_NODE( module ) )->child;
+	family_tree_t *child = ( ( family_tree_t * )XLOG_MODULE_TO_NODE( module ) )->child;
 	if( child == NULL ) {
 		return;
 	}
@@ -658,11 +657,11 @@ XLOG_PUBLIC( int ) xlog_module_set_level( xlog_module_t *module, int level, int 
 	} else {
 		return -1;
 	}
-	xlog_tree_t *__node = NULL;
+	family_tree_t *__node = NULL;
 	xlog_module_t *__module = NULL;
 	
 	if( flags & XLOG_LEVEL_ORECURSIVE ) {
-		__node = ( ( xlog_tree_t * )XLOG_MODULE_TO_NODE( module ) )->child;
+		__node = ( ( family_tree_t * )XLOG_MODULE_TO_NODE( module ) )->child;
 		while( __node ) {
 			__module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node );
 			__module->level = level;
@@ -682,7 +681,7 @@ XLOG_PUBLIC( int ) xlog_module_set_level( xlog_module_t *module, int level, int 
 	}
 	
 	if( flags & XLOG_LEVEL_OFORCE ) {
-		__node = xlog_tree_parent( ( const xlog_tree_t * )XLOG_MODULE_TO_NODE( module ) );
+		__node = family_tree_parent( ( const family_tree_t * )XLOG_MODULE_TO_NODE( module ) );
 		while( __node ) {
 			__module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node );
 			if( XLOG_IF_LOWER_LEVEL( __module->level, level ) ) {
@@ -691,7 +690,7 @@ XLOG_PUBLIC( int ) xlog_module_set_level( xlog_module_t *module, int level, int 
 					xlog_module_dump_to( __module, NULL );
 				}
 			}
-			__node = xlog_tree_parent( __node );
+			__node = family_tree_parent( __node );
 		}
 	}
 	

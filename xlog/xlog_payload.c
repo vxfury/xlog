@@ -1,9 +1,8 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
-#include "internal/xlog.h"
-#include "internal/xlog_tree.h"
-#include "internal/xlog_hexdump.h"
+#include "internal.h"
+#include "plugins/hexdump.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wzero-length-array"

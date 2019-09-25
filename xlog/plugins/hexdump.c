@@ -1,5 +1,5 @@
 #include <xlog/xlog_config.h>
-#include "internal/xlog_hexdump.h"
+#include "plugins/hexdump.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wpedantic"

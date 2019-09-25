@@ -1,5 +1,5 @@
-#ifndef __INTERNAL_RINGBUF_H
-#define __INTERNAL_RINGBUF_H
+#ifndef __RINGBUF_H
+#define __RINGBUF_H
 
 #include <xlog/xlog_config.h>
 

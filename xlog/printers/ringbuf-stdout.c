@@ -1,8 +1,8 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
-#include "internal/xlog.h"
-#include "internal/ringbuf.h"
+#include "internal.h"
+#include "plugins/ringbuf.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wzero-length-array"

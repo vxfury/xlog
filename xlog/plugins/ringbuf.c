@@ -1,7 +1,7 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
-#include "xlog.h"
+#include "internal.h"
 #include "ringbuf.h"
 
 #ifdef __GNUC__
