@@ -28,20 +28,44 @@ int main( int argc, char **argv )
 	( void )argc;
 	( void )argv;
 	
-	xlog_payload_t *payload = xlog_payload_create(
-	    XLOG_PAYLOAD_ID_BINARY, "Binary",
-	    XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN | XLOG_PAYLOAD_OBINARY,
-	    1024, 32
-	);
-	
-	unsigned long buff[512];
-	for( int i = 0; i < sizeof( buff ) / sizeof( *buff ); i ++ ) {
-		buff[i] = random_integer();
+	{
+		xlog_payload_t *payload = xlog_payload_create(
+		    XLOG_PAYLOAD_ID_BINARY, "Binary",
+		    XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN | XLOG_PAYLOAD_OBINARY,
+		    1024, 32
+		);
+		
+		unsigned long buff[2048];
+		for( int i = 0; i < sizeof( buff ) / sizeof( *buff ); i ++ ) {
+			buff[i] = random_integer();
+		}
+		
+		xlog_payload_append_binary( &payload, buff, sizeof( buff ) );
+		xlog_payload_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+		xlog_payload_destory( &payload );
 	}
 	
-	xlog_payload_append_binary( &payload, buff, sizeof( buff ) );
-	xlog_payload_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
-	xlog_payload_destory( &payload );
+	{
+		char buffer[1024];
+		xlog_payload_t *payload = xlog_payload_create(
+		    XLOG_PAYLOAD_ID_BINARY, "Binary",
+		    XLOG_PAYLOAD_OFIXED | XLOG_PAYLOAD_OBINARY,
+		    buffer, sizeof( buffer )
+		);
+		
+		if( payload ) {
+			unsigned long buff[128];
+			for( int i = 0; i < sizeof( buff ) / sizeof( *buff ); i ++ ) {
+				buff[i] = random_integer();
+			}
+			
+			xlog_payload_append_binary( &payload, buff, sizeof( buff ) );
+			xlog_payload_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+			xlog_payload_destory( &payload );
+		} else {
+			log_r( "failed to create payload\n" );
+		}
+	}
 	
 	return 0;
 }

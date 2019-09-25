@@ -92,6 +92,9 @@ XLOG_PUBLIC( xlog_payload_t * ) xlog_payload_create( unsigned int id, const char
 			if( NULL == payload ) {
 				return NULL;
 			}
+			#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+			payload->magic = XLOG_MAGIC_PAYLOAD;
+			#endif
 			
 			payload->id = id;
 			#ifdef XLOG_PAYLOAD_ENABLE_DYNAMIC_BRIEF_INFO
@@ -376,6 +379,7 @@ XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const v
 	
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( ( *payload )->magic != XLOG_MAGIC_PAYLOAD ) {
+		__XLOG_TRACE( "Runtime error: maybe payload given has been destoryed." );
 		return EINVAL;
 	}
 	#endif
@@ -398,6 +402,8 @@ XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const v
 		__XLOG_TRACE( "test" );
 		
 		return rv;
+	} else {
+		__XLOG_TRACE( "Overflow, terminate appending." );
 	}
 	
 	return EINVAL;
@@ -464,6 +470,7 @@ XLOG_PUBLIC( int ) xlog_payload_print_BINARY(
 	
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( payload->magic != XLOG_MAGIC_PAYLOAD ) {
+		__XLOG_TRACE( "Runtime error: maybe payload has been destoryed." );
 		return 0;
 	}
 	#endif
@@ -479,7 +486,7 @@ XLOG_PUBLIC( int ) xlog_payload_print_BINARY(
 	if( printer->optctl ) {
 		printer->optctl( printer, XLOG_PRINTER_CTRL_LOCK, NULL, 0 );
 	}
-	int length = __hexdump( payload->data, &options, hexdump_memory_readline, hexdump_printline, printer );
+	int length = __hexdump( xlog_payload_data_vptr( payload ), &options, hexdump_memory_readline, hexdump_printline, printer );
 	if( printer->optctl ) {
 		printer->optctl( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL, 0 );
 	}
