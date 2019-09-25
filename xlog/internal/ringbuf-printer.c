@@ -102,7 +102,7 @@ static int __ringbuf_optctl( xlog_printer_t *printer UNUSED, int option, void *v
 			return -1;
 		}
 	}
-	return -1;
+	return 0;
 }
 
 xlog_printer_t *xlog_printer_create_ringbuf( size_t capacity )

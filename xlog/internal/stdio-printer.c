@@ -55,7 +55,7 @@ static int __stdxxx_optctl( xlog_printer_t *printer, int option, void *vptr, siz
 			return -1;
 		}
 	}
-	return -1;
+	return 0;
 }
 
 xlog_printer_t stdout_printer = {
