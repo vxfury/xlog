@@ -68,6 +68,15 @@ if(ENABLE_COVERAGE_CHECK)
 endif()
 redefine_file_macro(cov-not-default-context)
 
+# cov-shell
+set(SOURCES examples/cov-shell.c)
+add_executable(cov-shell ${SOURCES})
+target_link_libraries(cov-shell xlog)
+if(ENABLE_COVERAGE_CHECK)
+	target_link_libraries(cov-shell gcov)
+endif()
+redefine_file_macro(cov-shell)
+
 
 # demo-xlog
 set(SOURCES examples/demo-xlog.c)

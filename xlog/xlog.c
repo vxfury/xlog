@@ -584,6 +584,7 @@ XLOG_PUBLIC( void ) xlog_module_list_submodules( const xlog_module_t *module, in
 		    __module->name[0] == '.' && !( options & XLOG_LIST_OALL )
 		) {
 			XLOG_TRACE( "Hiddent module[%s] won't be printed to session.", __module->name );
+			child = child->next;
 			continue;
 		}
 		
