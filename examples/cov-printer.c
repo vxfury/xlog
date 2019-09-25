@@ -88,7 +88,7 @@ int main( int argc, char **argv )
 	g_mod = xlog_module_open( "/net", XLOG_LEVEL_DEBUG, NULL );
 	
 	#define BENCH_BUFFER_SIZE 64
-	unsigned int count_limit = 10000000;
+	unsigned int count_limit = 10;
 	unsigned int time_limit = 1;
 	
 	unsigned int index = 0;

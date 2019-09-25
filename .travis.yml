@@ -4,9 +4,8 @@ script:
  - mkdir build && cd build && rm -rf ./*
  - cmake -DENABLE_COVERAGE_CHECK=ON .. && make
  - mkdir logs && ./bin/demo-xlog > /dev/null
- - ./bin/cov-payload > /dev/null
+ - ./bin/cov-printer > /dev/null && ./bin/cov-payload > /dev/null
  - ./bin/cov-not-default-context && ./bin/cov-not-default-context
- - cmake -DXLOG_BENCH_NO_OUTPUT=ON .. && make && ./bin/cov-printer
  - cd ..
 
 after_success:
