@@ -272,10 +272,10 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 ## TODO
 1. ~~Support Hidden modules(name start with dot[.]), will not show with --list option default.~~
 2. ~~Determine whether colorful or not with multiple objects, such as context, printer, module and so on.~~
-3. Much more printers: ~~daily file, ring-buffer,~~ async mode.
-4. Multi-language documents : Chinese, English, Japanese, etc. on the way.
-5. Bench demos and develop examples;
-6. Plugin support: allow (un)install/(dis)active plugin package.
-7. Log builder, filter support.
+3. ~~Much more printers: stdout/stderr, basic file, daily file, rotating files, ring-buffer.~~
+4. Log filter; async output; no-copy buffering.
+5. Multi-language documents : Chinese, English, Japanese, etc. on the way.
+6. Bench demos and develop examples;
+7. Plugin support: allow (un)install/(dis)active plugin package.
 8. Log Assitent: Timeline-based logging aggregationa.
 9. Protobuf and High-Performance socket framework for log transmission.
