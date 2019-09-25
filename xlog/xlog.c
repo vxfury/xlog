@@ -28,21 +28,42 @@
 static xlog_t *__default_context = NULL;
 #endif
 
-#define XLOG_LEVEL_DEFAULT_ATTR(LEVEL) \
+#define XLOG_LEVEL_ATTR_DEFAULT(LEVEL) \
 	[XLOG_LEVEL_##LEVEL] = { \
 		.format = XLOG_DEFAULT_FORMAT_##LEVEL, \
-		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS( LEVEL ), \
+		.time_prefix = XLOG_TAG_PREFIX_LOG_TIME,\
+		.time_suffix = XLOG_TAG_SUFFIX_LOG_TIME,\
+		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS( WARN ), \
 		.class_suffix = XLOG_TAG_SUFFIX_LOG_CLASS( LEVEL ), \
 		.body_prefix  = XLOG_TAG_PREFIX_LOG_BODY( LEVEL ), \
 		.body_suffix  = XLOG_TAG_PREFIX_LOG_BODY( LEVEL ), \
 	}
-static const xlog_level_attr_t xlog_default_attributes[] = {
-	XLOG_LEVEL_DEFAULT_ATTR( FATAL ),
-	XLOG_LEVEL_DEFAULT_ATTR( ERROR ),
-	XLOG_LEVEL_DEFAULT_ATTR( WARN ),
-	XLOG_LEVEL_DEFAULT_ATTR( INFO ),
-	XLOG_LEVEL_DEFAULT_ATTR( DEBUG ),
-	XLOG_LEVEL_DEFAULT_ATTR( VERBOSE ),
+static const xlog_level_attr_t _level_attributes_default[] = {
+	XLOG_LEVEL_ATTR_DEFAULT( FATAL ),
+	XLOG_LEVEL_ATTR_DEFAULT( ERROR ),
+	XLOG_LEVEL_ATTR_DEFAULT( WARN ),
+	XLOG_LEVEL_ATTR_DEFAULT( INFO ),
+	XLOG_LEVEL_ATTR_DEFAULT( DEBUG ),
+	XLOG_LEVEL_ATTR_DEFAULT( VERBOSE ),
+};
+
+#define XLOG_LEVEL_ATTR_NONE(LEVEL) \
+	[XLOG_LEVEL_##LEVEL] = { \
+		.format = XLOG_DEFAULT_FORMAT_##LEVEL, \
+		.time_prefix = XLOG_TAG_PREFIX_LOG_TIME_NONE,\
+		.time_suffix = XLOG_TAG_SUFFIX_LOG_TIME_NONE,\
+		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS_NONE( WARN ), \
+		.class_suffix = XLOG_TAG_SUFFIX_LOG_CLASS_NONE( LEVEL ), \
+		.body_prefix  = XLOG_TAG_PREFIX_LOG_BODY_NONE( LEVEL ), \
+		.body_suffix  = XLOG_TAG_PREFIX_LOG_BODY_NONE( LEVEL ), \
+	}
+static const xlog_level_attr_t _level_attributes_none[] = {
+	XLOG_LEVEL_ATTR_NONE( FATAL ),
+	XLOG_LEVEL_ATTR_NONE( ERROR ),
+	XLOG_LEVEL_ATTR_NONE( WARN ),
+	XLOG_LEVEL_ATTR_NONE( INFO ),
+	XLOG_LEVEL_ATTR_NONE( DEBUG ),
+	XLOG_LEVEL_ATTR_NONE( VERBOSE ),
 };
 
 /** reverse version of strncpy */
@@ -961,7 +982,7 @@ XLOG_PUBLIC( xlog_t * ) xlog_open( const char *savepath, int option )
 				XLOG_TRACE( "Auto dump enabled 'cause savepath is NOT NULL." );
 				context->options |= XLOG_CONTEXT_OAUTO_DUMP;
 			}
-			memcpy( context->attributes, &xlog_default_attributes, sizeof( context->attributes ) );
+			memcpy( context->attributes, &_level_attributes_default, sizeof( context->attributes ) );
 			
 			/** NOTE: create files to save configurations */
 			if( savepath ) {
@@ -1195,8 +1216,8 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 {
 	XLOG_ASSERT( module );
 	xlog_t *context = xlog_module_context( module );
-	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
 	if( context == NULL ) {
+		#if (defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
 		if( __default_context == NULL ) {
 			XLOG_TRACE( "Create default context." );
 			__default_context = xlog_open( NULL, 0 );
@@ -1207,10 +1228,10 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		}
 		XLOG_TRACE( "Redirected to default context." );
 		context = __default_context;
+		#else
+		return 0;
+		#endif
 	}
-	#else
-	XLOG_ASSERT( context );
-	#endif
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
 		XLOG_TRACE( "Runtime error: may be context has been closed." );
@@ -1250,6 +1271,16 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		return 0;
 	}
 	
+	const xlog_level_attr_t *level_attributes = _level_attributes_none;
+	if( printer->optctl ) {
+		int optval;
+		if(
+		   printer->optctl( printer, XLOG_PRINTER_CTRL_GABICLR, &optval, sizeof( int ) ) == 0
+		   && optval
+		) {
+			level_attributes = context->attributes;
+		}
+	}
 	xlog_payload_t *payload = xlog_payload_create(
 		XLOG_PAYLOAD_ID_AUTO, "Log",
 		XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN | XLOG_PAYLOAD_OTEXT, XLOG_DEFAULT_PAYLOAD_SIZE, 16
@@ -1268,10 +1299,12 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		struct tm tm;
 		localtime_r( &tv.tv_sec, &tm );
 		snprintf(
-		    buffer, sizeof( buffer ),
-		    XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME,
-		    tm.tm_mon + 1, tm.tm_mday,
-		    tm.tm_hour, tm.tm_min, tm.tm_sec, ( int )( ( ( tv.tv_usec + 500 ) / 1000 ) % 1000 )
+			buffer, sizeof( buffer ),
+			"%s%02d/%02d %02d:%02d:%02d.%03d%s"
+			, level_attributes[level].time_prefix
+			, tm.tm_mon + 1, tm.tm_mday
+			, tm.tm_hour, tm.tm_min, tm.tm_sec, ( int )( ( ( tv.tv_usec + 500 ) / 1000 ) % 1000 )
+			, level_attributes[level].time_suffix
 		);
 		xlog_payload_append_text( &payload, buffer );
 		#else
@@ -1292,11 +1325,11 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	/* package class(level and module path) */
 	if( module && __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLEVEL | XLOG_FORMAT_OMODULE ) ) {
 		char modulename[XLOG_LIMIT_MODULE_PATH] = { 0 };
-		xlog_payload_append_text( &payload, context->attributes[level].class_prefix );
+		xlog_payload_append_text( &payload, level_attributes[level].class_prefix );
 		if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OMODULE ) ) {
 			xlog_payload_append_text( &payload, xlog_module_name( modulename, XLOG_LIMIT_MODULE_PATH, module ) );
 		}
-		xlog_payload_append_text( &payload, context->attributes[level].class_suffix );
+		xlog_payload_append_text( &payload, level_attributes[level].class_suffix );
 	}
 	
 	/* package source location */
@@ -1330,11 +1363,11 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	va_list ap;
 	va_start( ap, format );
 	if( context && ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
-		xlog_payload_append_text( &payload, context->attributes[level].body_prefix );
+		xlog_payload_append_text( &payload, level_attributes[level].body_prefix );
 	}
 	xlog_payload_append_text_va_list( &payload, format, ap );
 	if( context && ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
-		xlog_payload_append_text( &payload, context->attributes[level].body_suffix );
+		xlog_payload_append_text( &payload, level_attributes[level].body_suffix );
 	}
 	va_end( ap );
 	xlog_payload_append_text( &payload, XLOG_STYLE_NEWLINE );

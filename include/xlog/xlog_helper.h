@@ -246,14 +246,17 @@ typedef struct __xlog_printer {
 	void *context;
 	int options;
 	int ( *append )( struct __xlog_printer *printer, const char *text );
-	int ( *control )( struct __xlog_printer *printer, int option, void *vptr );
+	int ( *optctl )( struct __xlog_printer *printer, int option, void *vptr, size_t size );
 } xlog_printer_t;
 
 typedef struct xlog_level_attr_tag {
 	int format;
+	const char *time_prefix;
+	const char *time_suffix;
 	const char *class_prefix;
 	const char *class_suffix;
-	const char *body_prefix, *body_suffix;
+	const char *body_prefix;
+	const char *body_suffix;
 } xlog_level_attr_t;
 
 typedef struct {
@@ -276,6 +279,7 @@ typedef struct {
 #define XLOG_PRINTER_CTRL_UNLOCK	1
 #define XLOG_PRINTER_CTRL_FLUSH		2
 #define XLOG_PRINTER_CTRL_NOBUFF	3
+#define XLOG_PRINTER_CTRL_GABICLR	4
 
 /** printer for xlog */
 #define XLOG_PRINTER_TYPE_OPT(type)		BITS_MASK_K(0, 4, type)

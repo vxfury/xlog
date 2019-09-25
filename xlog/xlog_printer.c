@@ -51,7 +51,7 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( const xlog_printer_t *
 	}
 	#endif
 	
-	if( printer->append && printer->control ) {
+	if( printer->append ) {
 		__XLOG_TRACE( "Default printer has changed." );
 		__default_printer = ( xlog_printer_t * )printer;
 	}

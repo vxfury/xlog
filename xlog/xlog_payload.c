@@ -481,9 +481,13 @@ XLOG_PUBLIC( int ) xlog_payload_print_BINARY(
 		.use_formatting = false,
 	};
 	options.end = options.start + payload->offset;
-	printer->control( printer, XLOG_PRINTER_CTRL_LOCK, NULL );
+	if( printer->optctl ) {
+		printer->optctl( printer, XLOG_PRINTER_CTRL_LOCK, NULL, 0 );
+	}
 	int length = __hexdump( payload->data, &options, hexdump_memory_readline, hexdump_printline, printer );
-	printer->control( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL );
+	if( printer->optctl ) {
+		printer->optctl( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL, 0 );
+	}
 	
 	return length;
 }

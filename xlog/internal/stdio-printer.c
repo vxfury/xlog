@@ -36,7 +36,7 @@ static int __stdxxx_append( xlog_printer_t *printer, const char *text )
 	);
 }
 
-static int __stdxxx_control( xlog_printer_t *printer, int option, void *vptr UNUSED )
+static int __stdxxx_optctl( xlog_printer_t *printer, int option, void *vptr, size_t size )
 {
 	struct __stdio_printer_context *context = ( struct __stdio_printer_context * )printer->context;
 	switch( option ) {
@@ -46,11 +46,16 @@ static int __stdxxx_control( xlog_printer_t *printer, int option, void *vptr UNU
 		case XLOG_PRINTER_CTRL_UNLOCK: {
 			pthread_mutex_unlock( &context->lock );
 		} break;
+		case XLOG_PRINTER_CTRL_GABICLR: {
+			if( size == sizeof( int ) && vptr ) {
+				*((int *)vptr) = 1;
+			}
+		} break;
 		default: {
 			return -1;
 		}
 	}
-	return 0;
+	return -1;
 }
 
 xlog_printer_t stdout_printer = {
@@ -59,8 +64,8 @@ xlog_printer_t stdout_printer = {
 	#endif
 	.context = ( void * ) &stdout_printer_context,
 	.options = XLOG_PRINTER_STDOUT,
-	.append  = __stdxxx_append,
-	.control = __stdxxx_control,
+	.append = __stdxxx_append,
+	.optctl = __stdxxx_optctl,
 },
 stderr_printer = {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -69,5 +74,5 @@ stderr_printer = {
 	.context = ( void * ) &stderr_printer_context,
 	.options = XLOG_PRINTER_STDERR,
 	.append  = __stdxxx_append,
-	.control = __stdxxx_control,
+	.optctl = __stdxxx_optctl,
 };

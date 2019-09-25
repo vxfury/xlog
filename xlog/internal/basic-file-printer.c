@@ -69,11 +69,6 @@ static int __basic_file_append( xlog_printer_t *printer, const char *text )
 	return 0;
 }
 
-static int __basic_file_control( xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED )
-{
-	return 0;
-}
-
 xlog_printer_t *xlog_printer_create_basic_file( const char *file )
 {
 	xlog_printer_t *printer = NULL;
@@ -89,7 +84,7 @@ xlog_printer_t *xlog_printer_create_basic_file( const char *file )
 		printer->options = XLOG_PRINTER_TYPE_OPT( XLOG_PRINTER_FILES_BASIC );
 		printer->context = ( void * )_prt_ctx;
 		printer->append = __basic_file_append;
-		printer->control = __basic_file_control;
+		printer->optctl = NULL;
 	}
 	
 	return printer;

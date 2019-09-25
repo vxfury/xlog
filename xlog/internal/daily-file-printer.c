@@ -151,11 +151,6 @@ static int daily_file_append( xlog_printer_t *printer, const char *text )
 	return 0;
 }
 
-static int daily_file_control( xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED )
-{
-	return 0;
-}
-
 xlog_printer_t *xlog_printer_create_daily_file( const char *file )
 {
 	xlog_printer_t *printer = NULL;
@@ -171,7 +166,7 @@ xlog_printer_t *xlog_printer_create_daily_file( const char *file )
 		printer->context = ( void * )_prt_ctx;
 		printer->options = XLOG_PRINTER_FILES_DAILY;
 		printer->append = daily_file_append;
-		printer->control = daily_file_control;
+		printer->optctl = NULL;
 	}
 	
 	return printer;

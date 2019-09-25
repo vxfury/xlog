@@ -202,13 +202,17 @@ static int xlog_payload_list_print( void *context, xlog_printer_t *printer )
 	int length = 0;
 	xlog_list_t *head = ( xlog_list_t * )context;
 	xlog_list_t *pos = NULL;
-	printer->control( printer, XLOG_PRINTER_CTRL_LOCK, NULL );
+	if( printer->optctl ) {
+		printer->optctl( printer, XLOG_PRINTER_CTRL_LOCK, NULL, 0 );
+	}
 	xlog_list_for_each_prev( pos, head ) {
 		length += xlog_payload_print(
 			pos->payload, printer
 		);
 	}
-	printer->control( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL );
+	if( printer->optctl ) {
+		printer->optctl( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL, 0 );
+	}
 	return length;
 }
 

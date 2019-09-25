@@ -30,8 +30,8 @@
 #pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
-unsigned long random_integer( void );
-int shell_make_args( char *, int *, char **, int );
+static unsigned long random_integer( void );
+static int shell_make_args( char *, int *, char **, int );
 
 /*
 sys
@@ -78,20 +78,6 @@ static struct {
 	.log_items = 0,
 	.log_bytes = 0,
 };
-
-#define BENCH_START() { gettimeofday( &bench_stats.bench_tv_start, NULL ); }
-#define BENCH_RECORD(bytes) { pthread_mutex_lock( &bench_stats.lock ); bench_stats.log_items ++; bench_stats.log_bytes += bytes; pthread_mutex_unlock( &bench_stats.lock ); }
-#define BENCH_STATS() { \
-	gettimeofday( &bench_stats.bench_tv_end, NULL ); \
-	unsigned long tv_msec = 1000 * ( bench_stats.bench_tv_end.tv_sec - bench_stats.bench_tv_start.tv_sec ) \
-	    + ( bench_stats.bench_tv_end.tv_usec - bench_stats.bench_tv_start.tv_usec ) / 1000; \
-	fprintf(stderr, "time elapse: %lu ms, logging: %zu bytes, %zu items\n", tv_msec, bench_stats.log_bytes, bench_stats.log_items ); \
-}
-
-/*
-static xlog_module_t *g_sys = xlog_module_open
-#define XLOG_MODULE g_sys
-*/
 
 static int xlog_test_init( void )
 {
@@ -188,74 +174,7 @@ static int xlog_test_init( void )
 	return 0;
 }
 
-/** BENCH/DEMO: multi-thread */
-static void *xlog_test_thread( void *arg )
-{
-	#define TEST_LOG_INTERVAL (10)
-	#define TEST_LOG_TIMECTL (random() % TEST_LOG_INTERVAL)
-	int i = 5000; // random() % 1000;
-	char name[16];
-	snprintf( name, sizeof( name ), "thread-%d", ( int )( intptr_t )arg );
-	XLOG_SET_THREAD_NAME( name );
-	
-	int len = 0;
-	while( ( i -- ) > 0 ) {
-		len = log_v( "verbose: use to trace variables, usually you won't use this level." );
-		BENCH_RECORD( len );
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_d( "debug: keep silent in release edition." );
-		BENCH_RECORD( len );
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_i(
-		    "info: part of the products, just like those words on the interactive interface.\n"
-		    "Feedback of current system status and/or action, so make sure it's significative and intelligible.\n"
-		    "Usaully meaningful event information, such as user login/logout, program startup/exit event, request event, etc."
-		);
-		BENCH_RECORD( len );
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_w(
-		    "warn: running status that is not expected but can continue to process, so you'd better check and fix it.\n"
-		    "Usaully it's owing to improper calling of interface, such as a program invoking an interface that is about to expire, improper parameters, etc."
-		);
-		BENCH_RECORD( len );
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_e( "error: runing time error, current process is terminated." );
-		BENCH_RECORD( len );
-		usleep( TEST_LOG_TIMECTL );
-		
-		len = log_f( "fatal: the service/system is not online now." );
-		BENCH_RECORD( len );
-		usleep( TEST_LOG_TIMECTL );
-	}
-	
-	return NULL;
-}
-
-static int xlog_test_multi_thread( int nthread )
-{
-	pthread_t *threads = ( pthread_t * )alloca( sizeof( pthread_t ) * nthread );
-	if( threads == NULL ) {
-		return -1;
-	}
-	
-	BENCH_START();
-	for( int i = 0; i < nthread; i ++ ) {
-		pthread_create( threads + i, NULL, xlog_test_thread, ( void * )( uintptr_t )i );
-	}
-	
-	for( int i = 0; i < nthread; i ++ ) {
-		pthread_join( threads[i], NULL );
-	}
-	BENCH_STATS();
-	
-	return 0;
-}
-
-/** BENCH/DEMO: level control */
+/** DEMO: level control */
 static int xlog_test_set_level( void )
 {
 	{
@@ -324,114 +243,19 @@ static int xlog_test_set_level( void )
 	return 0;
 }
 
-/** BENCH: build rate */
-static int xlog_bench_rate( int bench_time )
-{
-	#define BENCH_BUFFER_SIZE	(64)
-	size_t count1 = 0, count2 = 0;
-	#define BENCH_TIME		bench_time
-	{
-		#undef XLOG_MODULE
-		#define XLOG_MODULE g_net_http
-		char buffer[BENCH_BUFFER_SIZE] = "message";
-		for( int i = 0; i < sizeof( buffer ); ++ i ) {
-			buffer[i] = 'a' + random_integer() % 26;
-		}
-		buffer[sizeof( buffer ) - 1] = '\0';
-		
-		time_t ts = time( NULL );
-		size_t count = 0;
-		while( time( NULL ) - ts <= BENCH_TIME ) {
-			log_w( "%s", buffer );
-			count ++;
-		}
-		count1 = count / BENCH_TIME;
-		fprintf( stderr, "count = %zu\n", count );
-	}
-	
-	{
-		char buffer[BENCH_BUFFER_SIZE] = "message";
-		for( int i = 0; i < sizeof( buffer ); ++ i ) {
-			buffer[i] = 'a' + random_integer() % 26;
-		}
-		buffer[sizeof( buffer ) - 1] = '\0';
-		
-		time_t ts = time( NULL );
-		size_t count = 0;
-		while( time( NULL ) - ts <= BENCH_TIME ) {
-			char *temp = ( char * )malloc( 2048 );
-			if( temp ) {
-				xlog_time_t now;
-				#if ((defined __linux__) || (defined __FreeBSD__) || (defined __APPLE__) || (defined __unix__))
-				struct timeval tv;
-				struct timezone tz;
-				gettimeofday( &tv, &tz );
-				now.tv.tv_sec = tv.tv_sec;
-				now.tv.tv_usec = tv.tv_usec;
-				now.tz.tz_minuteswest = tz.tz_minuteswest;
-				now.tz.tz_dsttime = tz.tz_dsttime;
-				#else
-				#error No implementation for this system.
-				#endif
-				time_t tv_sec = now.tv.tv_sec;
-				struct tm *p = localtime( &tv_sec );
-				snprintf(
-				    temp, 2048,
-				    XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME XLOG_TAG_PREFIX_LOG_CLASS( WARN ) "%s" XLOG_TAG_SUFFIX_LOG_CLASS( WARN ) "%s",
-				    p->tm_mon + 1, p->tm_mday,
-				    p->tm_hour, p->tm_min, p->tm_sec, ( int )( now.tv.tv_usec / 1000 ),
-				    "/net/dhcp",
-				    buffer
-				);
-				#ifndef XLOG_BENCH_NO_OUTPUT
-				printf( "%s\n", temp );
-				#endif
-				free( temp );
-				count ++;
-			}
-		}
-		count2 = count / BENCH_TIME;
-		fprintf( stderr, "count = %zu\n", count );
-	}
-	
-	fprintf( stderr, "count1 = %zu(%f), count2 = %zu\n", count1, ( double )count1 / ( double )count2, count2 );
-	
-	return 0;
-}
-
-char *xlog_path_format( char *buffer, size_t length, const char *path );
-
 int main( int argc, char **argv )
 {
 	xlog_test_init();
 	xlog_test_set_level();
-	// xlog_test_multi_thread( 10 );
-	xlog_bench_rate( 5 );
-	
-	#if 0
-	BENCH_START();
-	for( int i = 0; i < 100000; i ++ ) {
-		int len = log_v( "cwnkewrnervejve jvebe" );
-		BENCH_RECORD( len );
-	}
-	BENCH_STATS();
-	#endif
 	
 	xlog_close( xlog_module_context( ROOT_MODULE ), 0 );
 	
 	xlog_printer_destory( g_printer );
 	
-	char temp[32];
-	char buffer[64] = "message";
-	for( int i = 0; i < sizeof( buffer ); ++ i ) {
-		buffer[i] = 'a' + random_integer() % 26;
-	}
-	buffer[sizeof( buffer ) - 1] = '\0';
-	
 	return 0;
 }
 
-unsigned long random_integer( void )
+static unsigned long random_integer( void )
 {
 	static bool initialized = false;
 	if( !initialized ) {
@@ -453,7 +277,7 @@ unsigned long random_integer( void )
 	return rand();
 }
 
-int shell_make_args( char *cmdline, int *argc_p, char **argv_p, int max_args )
+static int shell_make_args( char *cmdline, int *argc_p, char **argv_p, int max_args )
 {
 	assert( cmdline );
 	

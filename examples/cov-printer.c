@@ -11,7 +11,7 @@ static xlog_module_t *g_mod = NULL;
 /** BENCH/DEMO: multi-thread */
 static void *xlog_test_thread( void *arg )
 {
-	int i = 5; // random() % 1000;
+	int i = 50; // random() % 1000;
 	char name[16];
 	snprintf( name, sizeof( name ), "thread-%d", ( int )( intptr_t )arg );
 	XLOG_SET_THREAD_NAME( name );
@@ -125,7 +125,7 @@ int main( int argc, char **argv )
 				struct tm *p = localtime( &tv_sec );
 				snprintf(
 				    temp, 2048,
-				    XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME XLOG_TAG_PREFIX_LOG_CLASS( WARN ) "%s" XLOG_TAG_SUFFIX_LOG_CLASS( WARN ) "%s",
+				    XLOG_TAG_PREFIX_LOG_TIME_NONE "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME_NONE XLOG_TAG_PREFIX_LOG_CLASS_NONE( WARN ) "%s" XLOG_TAG_SUFFIX_LOG_CLASS_NONE( WARN ) "%s",
 				    p->tm_mon + 1, p->tm_mday,
 				    p->tm_hour, p->tm_min, p->tm_sec, ( int )( now.tv.tv_usec / 1000 ),
 				    "/net",
@@ -143,6 +143,7 @@ int main( int argc, char **argv )
 		bench_result[index].count = i / time_limit;
 		index ++;
 	}
+	fprintf(stderr, "End of BASE\n" );
 	
 	#if 1
 	{
@@ -159,6 +160,7 @@ int main( int argc, char **argv )
 		bench_result[index].count = i / time_limit;
 		index ++;
 	}
+	fprintf(stderr, "End of STDERR\n" );
 	#endif
 	
 	#if 1
@@ -176,6 +178,7 @@ int main( int argc, char **argv )
 		bench_result[index].count = i / time_limit;
 		index ++;
 	}
+	fprintf(stderr, "End of STDOUT\n" );
 	#endif
 	
 	#if 1
@@ -193,6 +196,7 @@ int main( int argc, char **argv )
 		bench_result[index].count = i / time_limit;
 		index ++;
 	}
+	fprintf(stderr, "End of ROTATING-FILE\n" );
 	#endif
 	
 	#if 1
@@ -210,6 +214,7 @@ int main( int argc, char **argv )
 		bench_result[index].count = i / time_limit;
 		index ++;
 	}
+	fprintf(stderr, "End of BASIC-FILE\n" );
 	#endif
 	
 	#if 1
@@ -227,6 +232,7 @@ int main( int argc, char **argv )
 		bench_result[index].count = i / time_limit;
 		index ++;
 	}
+	fprintf(stderr, "End of DAILY-FILE\n" );
 	#endif
 	
 	#if 1
@@ -245,6 +251,7 @@ int main( int argc, char **argv )
 		bench_result[index].count = i / time_limit;
 		index ++;
 	}
+	fprintf(stderr, "End of RING-BUFFER\n" );
 	#endif
 	
 	xlog_test_multi_thread( 10 );

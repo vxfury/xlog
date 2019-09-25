@@ -129,52 +129,83 @@
 #define XLOG_TAG_LEVEL_DEBUG			"D"
 #define XLOG_TAG_LEVEL_VERBOSE			"V"
 
-#ifndef XLOG_FEATURE_ENABLE_COLOR
+/* Non-format prefix & suffix */
+/* prefix and suffix for log-time */
+#define XLOG_TAG_PREFIX_LOG_TIME_NONE			""
+#define XLOG_TAG_SUFFIX_LOG_TIME_NONE			" "
+/* prefix and suffix for log-task */
+#define XLOG_TAG_PREFIX_LOG_TASK_NONE			"["
+#define XLOG_TAG_SUFFIX_LOG_TASK_NONE			"] "
+/* prefix and suffix for log-class */
+#define XLOG_TAG_PREFIX_LOG_CLASS_NONE(LEVEL)	"[" XLOG_TAG_LEVEL_##LEVEL
+#define XLOG_TAG_SUFFIX_LOG_CLASS_NONE(LEVEL)	"] "
+/* prefix and suffix for log-point */
+#define XLOG_TAG_PREFIX_LOG_POINT_NONE			"("
+#define XLOG_TAG_SUFFIX_LOG_POINT_NONE			") "
+/* prefix and suffix for log-body */
+#define XLOG_TAG_PREFIX_LOG_BODY_NONE(LEVEL)	""
+#define XLOG_TAG_SUFFIX_LOG_BODY_NONE(LEVEL)	""
+
+/* CSI-based prefix & suffix */
+#define XLOG_DEFAULT_COLOR_FATAL_CSI			"38;2;255;0;0;1m"
+#define XLOG_DEFAULT_COLOR_ERROR_CSI			"38;2;255;0;0;1m"
+#define XLOG_DEFAULT_COLOR_WARN_CSI				"38;2;255;199;6;1m"
+#define XLOG_DEFAULT_COLOR_INFO_CSI				"38;2;85;255;255m"
+#define XLOG_DEFAULT_COLOR_DEBUG_CSI			"1m"
+#define XLOG_DEFAULT_COLOR_VERBOSE_CSI			"0m"
 
 /* prefix and suffix for log-time */
-#define XLOG_TAG_PREFIX_LOG_TIME			""
-#define XLOG_TAG_SUFFIX_LOG_TIME			" "
+#define XLOG_TAG_PREFIX_LOG_TIME_CSI			"\033[2;3m"
+#define XLOG_TAG_SUFFIX_LOG_TIME_CSI			"\033[0m "
 /* prefix and suffix for log-task */
-#define XLOG_TAG_PREFIX_LOG_TASK			"["
-#define XLOG_TAG_SUFFIX_LOG_TASK			"] "
+#define XLOG_TAG_PREFIX_LOG_TASK_CSI			"["
+#define XLOG_TAG_SUFFIX_LOG_TASK_CSI			"\033[0m] "
 /* prefix and suffix for log-class */
-#define XLOG_TAG_PREFIX_LOG_CLASS(LEVEL)	"[" XLOG_TAG_LEVEL_##LEVEL
-#define XLOG_TAG_SUFFIX_LOG_CLASS(LEVEL)	"] "
+#define XLOG_TAG_PREFIX_LOG_CLASS_CSI(LEVEL)	"[\033[" XLOG_DEFAULT_COLOR_##LEVEL##_CSI XLOG_TAG_LEVEL_##LEVEL
+#define XLOG_TAG_SUFFIX_LOG_CLASS_CSI(LEVEL)	"\033[0m] "
 /* prefix and suffix for log-point */
-#define XLOG_TAG_PREFIX_LOG_POINT			"("
-#define XLOG_TAG_SUFFIX_LOG_POINT			") "
+#define XLOG_TAG_PREFIX_LOG_POINT_CSI			"("
+#define XLOG_TAG_SUFFIX_LOG_POINT_CSI			") "
 /* prefix and suffix for log-body */
-#define XLOG_TAG_PREFIX_LOG_BODY(LEVEL)		""
-#define XLOG_TAG_SUFFIX_LOG_BODY(LEVEL)		""
+#define XLOG_TAG_PREFIX_LOG_BODY_CSI(LEVEL)		"\033[" XLOG_DEFAULT_COLOR_##LEVEL##_CSI
+#define XLOG_TAG_SUFFIX_LOG_BODY_CSI(LEVEL)		"\033[0m"
+
+
+#if !(defined XLOG_FEATURE_ENABLE_COLOR)
+
+/* prefix and suffix for log-time */
+#define XLOG_TAG_PREFIX_LOG_TIME			XLOG_TAG_PREFIX_LOG_TIME_NONE
+#define XLOG_TAG_SUFFIX_LOG_TIME			XLOG_TAG_SUFFIX_LOG_TIME_NONE
+/* prefix and suffix for log-task */
+#define XLOG_TAG_PREFIX_LOG_TASK			XLOG_TAG_PREFIX_LOG_TASK_NONE
+#define XLOG_TAG_SUFFIX_LOG_TASK			XLOG_TAG_SUFFIX_LOG_TASK_NONE
+/* prefix and suffix for log-class */
+#define XLOG_TAG_PREFIX_LOG_CLASS(LEVEL)	XLOG_TAG_PREFIX_LOG_CLASS_NONE(LEVEL)
+#define XLOG_TAG_SUFFIX_LOG_CLASS(LEVEL)	XLOG_TAG_SUFFIX_LOG_CLASS_NONE(LEVEL)
+/* prefix and suffix for log-point */
+#define XLOG_TAG_PREFIX_LOG_POINT			XLOG_TAG_PREFIX_LOG_POINT_NONE
+#define XLOG_TAG_SUFFIX_LOG_POINT			XLOG_TAG_SUFFIX_LOG_POINT_NONE
+/* prefix and suffix for log-body */
+#define XLOG_TAG_PREFIX_LOG_BODY(LEVEL)		XLOG_TAG_PREFIX_LOG_BODY_NONE(LEVEL)
+#define XLOG_TAG_SUFFIX_LOG_BODY(LEVEL)		XLOG_TAG_SUFFIX_LOG_BODY_NONE(LEVEL)
 
 #else
 
-/* CSI supported. for more details, please refer to https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_sequences */
-#define CSI_START							"\033["
-#define CSI_END								"\033[0m"
-
-#define XLOG_DEFAULT_COLOR_FATAL			"38;2;255;0;0;1m"
-#define XLOG_DEFAULT_COLOR_ERROR			"38;2;255;0;0;1m"
-#define XLOG_DEFAULT_COLOR_WARN				"38;2;255;199;6;1m"
-#define XLOG_DEFAULT_COLOR_INFO				"38;2;85;255;255m"
-#define XLOG_DEFAULT_COLOR_DEBUG			"1m"
-#define XLOG_DEFAULT_COLOR_VERBOSE			"0m"
-
 /* prefix and suffix for log-time */
-#define XLOG_TAG_PREFIX_LOG_TIME			CSI_START "2;3m"
-#define XLOG_TAG_SUFFIX_LOG_TIME			CSI_END " "
+#define XLOG_TAG_PREFIX_LOG_TIME			XLOG_TAG_PREFIX_LOG_TIME_CSI
+#define XLOG_TAG_SUFFIX_LOG_TIME			XLOG_TAG_SUFFIX_LOG_TIME_CSI
 /* prefix and suffix for log-task */
-#define XLOG_TAG_PREFIX_LOG_TASK			"["
-#define XLOG_TAG_SUFFIX_LOG_TASK			CSI_END "] "
+#define XLOG_TAG_PREFIX_LOG_TASK			XLOG_TAG_PREFIX_LOG_TASK_CSI
+#define XLOG_TAG_SUFFIX_LOG_TASK			XLOG_TAG_SUFFIX_LOG_TASK_CSI
 /* prefix and suffix for log-class */
-#define XLOG_TAG_PREFIX_LOG_CLASS(LEVEL)	"[" CSI_START XLOG_DEFAULT_COLOR_##LEVEL XLOG_TAG_LEVEL_##LEVEL
-#define XLOG_TAG_SUFFIX_LOG_CLASS(LEVEL)	CSI_END "] "
+#define XLOG_TAG_PREFIX_LOG_CLASS(LEVEL)	XLOG_TAG_PREFIX_LOG_CLASS_CSI(LEVEL)
+#define XLOG_TAG_SUFFIX_LOG_CLASS(LEVEL)	XLOG_TAG_SUFFIX_LOG_CLASS_CSI(LEVEL)
 /* prefix and suffix for log-point */
-#define XLOG_TAG_PREFIX_LOG_POINT			"("
-#define XLOG_TAG_SUFFIX_LOG_POINT			") "
+#define XLOG_TAG_PREFIX_LOG_POINT			XLOG_TAG_PREFIX_LOG_POINT_CSI
+#define XLOG_TAG_SUFFIX_LOG_POINT			XLOG_TAG_SUFFIX_LOG_POINT_CSI
 /* prefix and suffix for log-body */
-#define XLOG_TAG_PREFIX_LOG_BODY(LEVEL)		CSI_START XLOG_DEFAULT_COLOR_##LEVEL
-#define XLOG_TAG_SUFFIX_LOG_BODY(LEVEL)		CSI_END
+#define XLOG_TAG_PREFIX_LOG_BODY(LEVEL)		XLOG_TAG_PREFIX_LOG_BODY_CSI(LEVEL)
+#define XLOG_TAG_SUFFIX_LOG_BODY(LEVEL)		XLOG_TAG_SUFFIX_LOG_BODY_CSI(LEVEL)
 
 #endif
 

@@ -90,9 +90,19 @@ static int __ringbuf_append( xlog_printer_t *printer, const char *text )
 	return 0;
 }
 
-static int __ringbuf_control( xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED )
+static int __ringbuf_optctl( xlog_printer_t *printer UNUSED, int option, void *vptr, size_t size )
 {
-	return 0;
+	switch( option ) {
+		case XLOG_PRINTER_CTRL_GABICLR: {
+			if( size == sizeof( int ) && vptr ) {
+				*((int *)vptr) = 1;
+			}
+		} break;
+		default: {
+			return -1;
+		}
+	}
+	return -1;
 }
 
 xlog_printer_t *xlog_printer_create_ringbuf( size_t capacity )
@@ -109,7 +119,7 @@ xlog_printer_t *xlog_printer_create_ringbuf( size_t capacity )
 		printer->options = XLOG_PRINTER_TYPE_OPT( XLOG_PRINTER_RINGBUF );
 		printer->context = ( void * )_prt_ctx;
 		printer->append = __ringbuf_append;
-		printer->control = __ringbuf_control;
+		printer->optctl = __ringbuf_optctl;
 		
 		if( 0 == pthread_create( &_prt_ctx->thread_consumer, NULL, ringbuf_consumer_main, _prt_ctx ) ) {
 			__XLOG_TRACE( "Successed to start ringbuf consumer thread." );

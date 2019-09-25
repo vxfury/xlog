@@ -136,11 +136,6 @@ static int rotating_file_append( xlog_printer_t *printer, const char *text )
 	return 0;
 }
 
-static int rotating_file_control( xlog_printer_t *printer UNUSED, int option UNUSED, void *vptr UNUSED )
-{
-	return 0;
-}
-
 xlog_printer_t *xlog_printer_create_rotating_file( const char *file, size_t max_size_per_file, size_t max_file_to_ratating )
 {
 	xlog_printer_t *printer = NULL;
@@ -156,7 +151,7 @@ xlog_printer_t *xlog_printer_create_rotating_file( const char *file, size_t max_
 		printer->context = ( void * )_prt_ctx;
 		printer->options = XLOG_PRINTER_FILES_ROTATING;
 		printer->append = rotating_file_append;
-		printer->control = rotating_file_control;
+		printer->optctl = NULL;
 	}
 	
 	return printer;

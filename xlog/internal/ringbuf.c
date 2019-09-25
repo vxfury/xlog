@@ -25,7 +25,7 @@ ringbuf_t *ringbuf_create( unsigned int capacity )
 	/* Align is applied 'cause the capacity usually very large for better performance */
 	ringbuf_t *rb = (ringbuf_t *)XLOG_MALLOC( sizeof( ringbuf_t ) );
 	if( rb ) {
-		size_t size = XLOG_ALIGN_UP( capacity + 1, 64 );
+		size_t size = XLOG_ALIGN_UP( capacity + 1, 1024 );
 		rb->data = (char *)XLOG_MALLOC( size );
 		if( rb->data == NULL ) {
 			__XLOG_TRACE( "Failed to allocate memory." );
@@ -54,6 +54,7 @@ int ringbuf_destory( ringbuf_t *rb )
 		pthread_mutex_destroy( &rb->mutex );
 		pthread_cond_destroy( &rb->cond_data_in );
 		pthread_cond_destroy( &rb->cond_data_out );
+		XLOG_FREE( rb->data );
 		XLOG_FREE( rb );
 	}
 	
