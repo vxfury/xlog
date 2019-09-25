@@ -251,6 +251,7 @@ void xlog_tree_traverse( const xlog_tree_t *tree, void ( *func )( const xlog_tre
 	}
 }
 
+#if 0
 /**
  * @brief  Get degree of the tree
  *
@@ -350,4 +351,4 @@ int xlog_tree_get_sibling_number( const xlog_tree_t *tree )
 	
 	return rv;
 }
-
+#endif
