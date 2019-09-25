@@ -99,17 +99,18 @@ static unsigned int __size_used( const ringbuf_t *rb )
 /* @brief  copy data to ring-buffer
  * @param  rb, pointer to ring-buffer(Non-NULL required)
  *         vptr/size, data to copy into
+ *         block_size, minimal size of block to copy each time
  * @return error code(always zero for this interface)
  * @note   1. data given may be separated into several fragments
  *         2. but NO LIMIT on size of data
  **/
-int ringbuf_copy_into_nonspec( ringbuf_t *rb, const void *vptr, unsigned int size )
+int ringbuf_copy_into_separable( ringbuf_t *rb, const void *vptr, unsigned int size, unsigned int block_size )
 {
 	assert( rb );
 	unsigned int left_size = size;
 	while( left_size > 0 ) {
 		pthread_mutex_lock( &rb->mutex );
-		while( __size_free(rb) == 0 ) {
+		while( __size_free(rb) < block_size ) {
 			pthread_cond_wait( &rb->cond_data_out, &rb->mutex );
 		}
 		unsigned int copy_size = XLOG_MIN( left_size, __size_free(rb) );
@@ -141,21 +142,7 @@ int ringbuf_copy_into( ringbuf_t *rb, const void *vptr, unsigned int size )
 		__XLOG_TRACE( "Buffer required cann't be satisfied by pre-created ring-buffer." );
 		return EINVAL;
 	}
-	pthread_mutex_lock( &rb->mutex );
-	while( __size_free(rb) < size ) {
-		pthread_cond_wait( &rb->cond_data_out, &rb->mutex );
-	}
-	unsigned int copy_size = XLOG_MIN( size, __size_free(rb) );
-	unsigned int next_wr = __offset_next_n( rb, rb->wr_offset, copy_size );
-	unsigned int non_overflow_size = XLOG_MIN( copy_size, rb->capacity + 1 - rb->wr_offset );
-	memcpy( rb->data + rb->wr_offset, vptr, non_overflow_size );
-	if( non_overflow_size < copy_size ) {
-		memcpy( rb->data, (char *)vptr + non_overflow_size, copy_size - non_overflow_size );
-	}
-	__XLOG_TRACE( "INTO: free/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_wr = %u", __size_free( rb ), rb->capacity, non_overflow_size, copy_size, next_wr );
-	rb->wr_offset = next_wr;
-	pthread_cond_broadcast( &rb->cond_data_in );
-	pthread_mutex_unlock( &rb->mutex );
+	ringbuf_copy_into_separable( rb, vptr, size, size );
 	
 	return 0;
 }

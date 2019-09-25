@@ -38,11 +38,12 @@ int ringbuf_destory( ringbuf_t *rb );
 /* @brief  copy data to ring-buffer
  * @param  rb, pointer to ring-buffer(Non-NULL required)
  *         vptr/size, data to copy into
+ *         block_size, minimal size of block to copy each time
  * @return error code(always zero for this interface)
  * @note   1. data given may be separated into several fragments
  *         2. but NO LIMIT on size of data
  **/
-int ringbuf_copy_into_nonspec( ringbuf_t *rb, const void *vptr, unsigned int size );
+int ringbuf_copy_into_separable( ringbuf_t *rb, const void *vptr, unsigned int size, unsigned int block_size );
 
 /* @brief  copy data to ring-buffer
  * @param  rb, pointer to ring-buffer(Non-NULL required)
