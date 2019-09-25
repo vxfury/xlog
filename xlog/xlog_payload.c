@@ -240,7 +240,6 @@ XLOG_PUBLIC( int ) xlog_payload_append_text( xlog_payload_t **payload, const cha
 	size_t textlen = XLOG_PAYLOAD_TEXT_LENGTH( text );
 	if( ( *payload )->offset + textlen < ( *payload )->length ) {
 		char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-		__XLOG_TRACE( "ptr = %p", ptr );
 		memcpy( ptr + ( *payload )->offset, text, textlen );
 		( *payload )->offset += textlen;
 		*( ptr + ( *payload )->offset ) = '\0';
@@ -251,7 +250,7 @@ XLOG_PUBLIC( int ) xlog_payload_append_text( xlog_payload_t **payload, const cha
 		__XLOG_TRACE( "Resize triggered, error = %d.", rv );
 		if( 0 == rv ) {
 			char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-			__XLOG_TRACE( "ptr = %p", ptr );
+
 			memcpy( ptr + ( *payload )->offset, text, textlen );
 			( *payload )->offset += textlen;
 			*( ptr + ( *payload )->offset ) = '\0';
@@ -294,7 +293,6 @@ XLOG_PUBLIC( int ) xlog_payload_append_text_va_list( xlog_payload_t **payload, c
 	
 	if( ( *payload )->offset < ( *payload )->length ) {
 		char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-		__XLOG_TRACE( "ptr = %p", ptr );
 		
 		int len = vsnprintf( ptr + ( *payload )->offset, ( *payload )->length - ( *payload )->offset, format, ap );
 		if( len < 0 ) {
@@ -307,7 +305,6 @@ XLOG_PUBLIC( int ) xlog_payload_append_text_va_list( xlog_payload_t **payload, c
 			__XLOG_TRACE( "Resize triggered, error = %d.", rv );
 			if( 0 == rv ) {
 				ptr = ( char * )xlog_payload_data_vptr( *payload );
-				__XLOG_TRACE( "ptr = %p", ptr );
 				len = vsnprintf( ptr + ( *payload )->offset, ( *payload )->length - ( *payload )->offset, format, ap_bkp );
 				va_end( ap_bkp );
 				( *payload )->offset += len;
@@ -385,7 +382,6 @@ XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const v
 	
 	if( ( *payload )->offset + size <= ( *payload )->length ) {
 		char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-		__XLOG_TRACE( "ptr = %p", ptr );
 		memcpy( ptr + ( *payload )->offset, vptr, size );
 		( *payload )->offset += size;
 		
@@ -395,7 +391,7 @@ XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const v
 		__XLOG_TRACE( "Resize triggered, error = %d.", rv );
 		if( 0 == rv ) {
 			char *ptr = ( char * )xlog_payload_data_vptr( *payload );
-			__XLOG_TRACE( "ptr = %p", ptr );
+
 			memcpy( ptr + ( *payload )->offset, vptr, size );
 			( *payload )->offset += size;
 		}

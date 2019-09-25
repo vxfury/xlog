@@ -32,7 +32,7 @@ static xlog_t *__default_context = NULL;
 		.format = XLOG_DEFAULT_FORMAT_##LEVEL, \
 		.time_prefix = XLOG_TAG_PREFIX_LOG_TIME,\
 		.time_suffix = XLOG_TAG_SUFFIX_LOG_TIME,\
-		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS( WARN ), \
+		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS( LEVEL ), \
 		.class_suffix = XLOG_TAG_SUFFIX_LOG_CLASS( LEVEL ), \
 		.body_prefix  = XLOG_TAG_PREFIX_LOG_BODY( LEVEL ), \
 		.body_suffix  = XLOG_TAG_PREFIX_LOG_BODY( LEVEL ), \
@@ -1213,7 +1213,6 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
     const char *format, ...
 )
 {
-	XLOG_ASSERT( module );
 	xlog_t *context = xlog_module_context( module );
 	if( context == NULL ) {
 		#if (defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
@@ -1231,12 +1230,18 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		return 0;
 		#endif
 	}
+	XLOG_ASSERT( context );
+	if( printer == NULL ) {
+		XLOG_TRACE( "Output via defualt printer." );
+		printer = xlog_printer_default();
+	}
+	XLOG_ASSERT( printer );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( context && context->magic != XLOG_MAGIC_CONTEXT ) {
+	if( context->magic != XLOG_MAGIC_CONTEXT ) {
 		XLOG_TRACE( "Runtime error: may be context has been closed." );
 		return 0;
 	}
-	if( printer && printer->magic != XLOG_MAGIC_PRINTER ) {
+	if( printer->magic != XLOG_MAGIC_PRINTER ) {
 		XLOG_TRACE( "Runtime error: may be printer has been closed." );
 		return 0;
 	}
@@ -1245,19 +1250,14 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		return 0;
 	}
 	#endif
-	if( printer == NULL ) {
-		XLOG_TRACE( "Output via defualt printer." );
-		printer = xlog_printer_default();
-	}
 	
 	XLOG_STATS_UPDATE( &context->stats, REQUEST, INPUT, 1 );
-	XLOG_STATS_UPDATE( &module->stats, REQUEST, INPUT, 1 );
+	if( module ) {
+		XLOG_STATS_UPDATE( &module->stats, REQUEST, INPUT, 1 );
+	}
 	
 	/** global setting in xlog */
-	if(
-	    module
-	    && context && ( !( context->options & XLOG_CONTEXT_OALIVE ) )
-	) {
+	if( !( context->options & XLOG_CONTEXT_OALIVE ) ) {
 		XLOG_STATS_UPDATE( &context->stats, REQUEST, DROPPED, 1 );
 		XLOG_TRACE( "Dropped by context." );
 		return 0;
@@ -1315,6 +1315,9 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OTASK ) ) {
 		char taskname[XLOG_LIMIT_THREAD_NAME];
 		XLOG_GET_THREAD_NAME( taskname );
+		if( taskname[0] == '\0' ) {
+			snprintf( taskname, sizeof( taskname ), "%s", "unnamed-task" );
+		}
 		xlog_payload_append_text_va(
 		    &payload, XLOG_TAG_PREFIX_LOG_TASK "%d/%d %s" XLOG_TAG_SUFFIX_LOG_TASK,
 		    getppid(), getpid(), taskname
@@ -1322,10 +1325,10 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	}
 	
 	/* package class(level and module path) */
-	if( module && __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLEVEL | XLOG_FORMAT_OMODULE ) ) {
+	if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLEVEL | XLOG_FORMAT_OMODULE ) ) {
 		char modulename[XLOG_LIMIT_MODULE_PATH] = { 0 };
 		xlog_payload_append_text( &payload, level_attributes[level].class_prefix );
-		if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OMODULE ) ) {
+		if( module && __xlog_format_been_enabled( module, level, XLOG_FORMAT_OMODULE ) ) {
 			xlog_payload_append_text( &payload, xlog_module_name( modulename, XLOG_LIMIT_MODULE_PATH, module ) );
 		}
 		xlog_payload_append_text( &payload, level_attributes[level].class_suffix );
@@ -1361,22 +1364,25 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	/* package log body */
 	va_list ap;
 	va_start( ap, format );
-	if( context && ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
+	if( ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
 		xlog_payload_append_text( &payload, level_attributes[level].body_prefix );
 	}
 	xlog_payload_append_text_va_list( &payload, format, ap );
-	if( context && ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
+	if( ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
 		xlog_payload_append_text( &payload, level_attributes[level].body_suffix );
 	}
 	va_end( ap );
 	xlog_payload_append_text( &payload, XLOG_STYLE_NEWLINE );
-	
+	if( module ) {
+		XLOG_STATS_UPDATE( &module->stats, BYTE, INPUT, payload->offset );
+	}
 	int length = xlog_payload_print_TEXT( payload, printer );
-	XLOG_STATS_UPDATE( &module->stats, BYTE, INPUT, payload->offset );
 	xlog_payload_destory( &payload );
 	if( length > 0 ) {
 		XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
-		XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
+		if( module ) {
+			XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
+		}
 	}
 	XLOG_TRACE( "Logged length is %d.", length );
 	

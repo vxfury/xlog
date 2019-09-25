@@ -155,6 +155,7 @@ int main( int argc, char **argv )
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
+		g_printer = NULL;
 		
 		bench_result[index].brief = "STDERR";
 		bench_result[index].count = i / time_limit;
@@ -173,6 +174,7 @@ int main( int argc, char **argv )
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
+		g_printer = NULL;
 		
 		bench_result[index].brief = "STDOUT";
 		bench_result[index].count = i / time_limit;
@@ -191,6 +193,7 @@ int main( int argc, char **argv )
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
+		g_printer = NULL;
 		
 		bench_result[index].brief = "ROTATING-FILE";
 		bench_result[index].count = i / time_limit;
@@ -209,6 +212,7 @@ int main( int argc, char **argv )
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
+		g_printer = NULL;
 		
 		bench_result[index].brief = "BASIC-FILE";
 		bench_result[index].count = i / time_limit;
@@ -227,6 +231,7 @@ int main( int argc, char **argv )
 			i ++;
 		}
 		xlog_printer_destory( g_printer );
+		g_printer = NULL;
 		
 		bench_result[index].brief = "DAILY-FILE";
 		bench_result[index].count = i / time_limit;
@@ -246,6 +251,7 @@ int main( int argc, char **argv )
 		}
 		
 		xlog_printer_destory( g_printer );
+		g_printer = NULL;
 		
 		bench_result[index].brief = "RING-BUFFER";
 		bench_result[index].count = i / time_limit;
@@ -258,6 +264,15 @@ int main( int argc, char **argv )
 	
 	for( int i = 0; i < index; i ++ ) {
 		fprintf(stderr, "%16s: %8u(%.3f)\n", bench_result[i].brief, bench_result[i].count, (double)bench_result[i].count / (double)bench_result[0].count );
+	}
+	
+	{
+		#undef XLOG_MODULE
+		#define XLOG_MODULE NULL
+		log_i( "test info" );
+		
+		XLOG_SET_THREAD_NAME( "cov-printer" );
+		log_i( "test info" );
 	}
 	
 	return 0;
