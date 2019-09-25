@@ -34,10 +34,6 @@ struct option {
 #define REQUIRED_ARG    	required_argument
 #define OPTIONAL_ARG    	optional_argument
 
-/* The GETOPT_DATA_INITIALIZER macro is used to initialize a statically-
-   allocated variable of type struct getopt_data.  */
-#define GETOPT_DATA_INITIALIZER	{0,0,0,0,0}
-
 /* The getopt_data structure is for reentrancy. Its members are similar to
    the externally-defined variables.  */
 typedef struct getopt_data {
@@ -45,25 +41,7 @@ typedef struct getopt_data {
 	int optind, opterr, optopt, optwhere;
 } getopt_data;
 
-/* externally-defined variables */
-extern char *optarg;
-extern int optind;
-extern int opterr;
-extern int optopt;
-
 /* function prototypes */
-int getopt( int __argc, char *const __argv[], const char *__optstring );
-
-int getopt_long(
-    int __argc, char *const __argv[], const char *__shortopts,
-    const struct option *__longopts, int *__longind
-);
-
-int getopt_long_only(
-    int __argc, char *const __argv[], const char *__shortopts,
-    const struct option *__longopts, int *__longind
-);
-
 int getopt_r(
     int __argc, char *const __argv[], const char *__optstring,
     struct getopt_data *__data

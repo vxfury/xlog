@@ -22,15 +22,6 @@ typedef enum GETOPT_ORDERING_T {
 	REQUIRE_ORDER
 } GETOPT_ORDERING_T;
 
-/* globally-defined variables */
-char *optarg = 0;
-int optind = 0;
-int opterr = 1;
-int optopt = '?';
-
-/* static variables */
-static int optwhere = 0;
-
 /* functions */
 
 /* reverse_argv_elements:  reverses num elements starting at argv */
@@ -63,28 +54,6 @@ static int is_option( char *argv_element, int only )
 	        ( argv_element == 0 )
 	        || ( argv_element[0] == '-' ) || ( only && argv_element[0] == '+' )
 	    );
-}
-
-/* read_globals: read the values from the globals into a getopt_data
-   structure */
-static void read_globals( struct getopt_data *data )
-{
-	data->optarg = optarg;
-	data->optind = optind;
-	data->opterr = opterr;
-	data->optopt = optopt;
-	data->optwhere = optwhere;
-}
-
-/* write_globals: write the values into the globals from a getopt_data
-   structure */
-static void write_globals( struct getopt_data *data )
-{
-	optarg = data->optarg;
-	optind = data->optind;
-	opterr = data->opterr;
-	optopt = data->optopt;
-	optwhere = data->optwhere;
 }
 
 /* getopt_internal:  the function that does all the dirty work
@@ -342,45 +311,6 @@ static int getopt_internal(
 	} else {
 		return data->optopt;
 	}
-}
-
-int getopt( int argc, char *const argv[], const char *optstring )
-{
-	struct getopt_data data;
-	int r;
-	
-	read_globals( &data );
-	r = getopt_internal( argc, argv, optstring, 0, 0, 0, &data );
-	write_globals( &data );
-	return r;
-}
-
-int getopt_long(
-    int argc, char *const argv[], const char *shortopts,
-    const struct option *longopts, int *longind
-)
-{
-	struct getopt_data data;
-	int r;
-	
-	read_globals( &data );
-	r = getopt_internal( argc, argv, shortopts, longopts, longind, 0, &data );
-	write_globals( &data );
-	return r;
-}
-
-int getopt_long_only(
-    int argc, char *const argv[], const char *shortopts,
-    const struct option *longopts, int *longind
-)
-{
-	struct getopt_data data;
-	int r;
-	
-	read_globals( &data );
-	r = getopt_internal( argc, argv, shortopts, longopts, longind, 1, &data );
-	write_globals( &data );
-	return r;
 }
 
 int getopt_r(
