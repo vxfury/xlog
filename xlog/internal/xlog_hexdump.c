@@ -305,6 +305,7 @@ int __hexdump(
 	return 0;
 }
 
+#if 0
 static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg )
 {
 	( void )arg;
@@ -468,3 +469,4 @@ int hexdump_shell_main( int argc, char **argv )
 	
 	return 0;
 }
+#endif
