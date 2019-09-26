@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <setjmp.h>
 
 /** assert and debug */
 #define XLOG_ASSERT(cond)			assert(cond)

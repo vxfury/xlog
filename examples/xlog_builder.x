@@ -17,7 +17,7 @@
 /** extended logging builder with xlog-payload */
 
 /** create a payload object(TIME) */
-static xlog_payload_t *xlog_payload_create_LOG_TIME( void )
+static autobuf_t *autobuf_create_LOG_TIME( void )
 {
 	xlog_time_t now;
 	#if ((defined __linux__) || (defined __FreeBSD__) || (defined __APPLE__) || (defined __unix__))
@@ -32,69 +32,69 @@ static xlog_payload_t *xlog_payload_create_LOG_TIME( void )
 	#error No implementation for this system.
 	#endif
 
-	xlog_payload_t *payload = xlog_payload_create(XLOG_PAYLOAD_ID_LOG_TIME, "Time", XLOG_PAYLOAD_OBINARY | XLOG_PAYLOAD_OALLOC_ONCE, sizeof( xlog_time_t ));
+	autobuf_t *payload = autobuf_create(PAYLOAD_ID_LOG_TIME, "Time", AUTOBUF_OBINARY | AUTOBUF_OALLOC_ONCE, sizeof( xlog_time_t ));
 	if( payload ) {
-		xlog_payload_append_binary( &payload, &now, sizeof( xlog_time_t ) );
+		autobuf_append_binary( &payload, &now, sizeof( xlog_time_t ) );
 	}
 	return payload;
 }
 
 /** create a payload object(LOG_CLASS) */
-static xlog_payload_t *xlog_payload_create_LOG_CLASS( const char *level, const char *module )
+static autobuf_t *autobuf_create_LOG_CLASS( const char *level, const char *module )
 {
 	XLOG_ASSERT( level );
-	xlog_payload_t *payload = xlog_payload_create(
-		XLOG_PAYLOAD_ID_LOG_CLASS, "Log Class",
-		XLOG_PAYLOAD_OTEXT | XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN,
-		XLOG_PAYLOAD_TEXT_LENGTH( level ) + ( module ? XLOG_PAYLOAD_TEXT_LENGTH( module ) : 0 ) + 15, 16
+	autobuf_t *payload = autobuf_create(
+		PAYLOAD_ID_LOG_CLASS, "Log Class",
+		AUTOBUF_OTEXT | AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN,
+		AUTOBUF_TEXT_LENGTH( level ) + ( module ? AUTOBUF_TEXT_LENGTH( module ) : 0 ) + 15, 16
 	);
 	if( payload ) {
-		xlog_payload_append_text( &payload, XLOG_PREFIX_LOG_CLASS );
-		xlog_payload_append_text( &payload, level );
+		autobuf_append_text( &payload, XLOG_PREFIX_LOG_CLASS );
+		autobuf_append_text( &payload, level );
 		if( module ) {
-			xlog_payload_append_text( &payload, module );
+			autobuf_append_text( &payload, module );
 		}
-		xlog_payload_append_text( &payload, XLOG_SUFFIX_LOG_CLASS );
+		autobuf_append_text( &payload, XLOG_SUFFIX_LOG_CLASS );
 	}
 	return payload;
 }
 
 /** create a payload object(LOC) */
-static xlog_payload_t *xlog_payload_create_LOG_POINT( const char *file, const char *func, int line )
+static autobuf_t *autobuf_create_LOG_POINT( const char *file, const char *func, int line )
 {
-	xlog_payload_t *payload = xlog_payload_create( XLOG_PAYLOAD_ID_LOG_POINT, "Source Location", XLOG_PAYLOAD_OTEXT | XLOG_PAYLOAD_ODYNAMIC, 64 );
+	autobuf_t *payload = autobuf_create( PAYLOAD_ID_LOG_POINT, "Source Location", AUTOBUF_OTEXT | AUTOBUF_ODYNAMIC, 64 );
 	if( payload ) {
-		xlog_payload_append_text( &payload, XLOG_PREFIX_LOG_POINT );
+		autobuf_append_text( &payload, XLOG_PREFIX_LOG_POINT );
 		if( file ) {
-			xlog_payload_append_text( &payload, file );
+			autobuf_append_text( &payload, file );
 		}
 		if( func ) {
 			if( file ) {
-				xlog_payload_append_text( &payload, " " );
+				autobuf_append_text( &payload, " " );
 			}
-			xlog_payload_append_text( &payload, func );
+			autobuf_append_text( &payload, func );
 		}
 		if( line != -1 ) {
 			if( file || func ) {
-				xlog_payload_append_text( &payload, ":" );
+				autobuf_append_text( &payload, ":" );
 			}
 			char buff[12];
 			snprintf( buff, sizeof( buff ), "%d", line );
-			xlog_payload_append_text( &payload, buff );
+			autobuf_append_text( &payload, buff );
 		}
-		xlog_payload_append_text( &payload, XLOG_SUFFIX_LOG_POINT );
+		autobuf_append_text( &payload, XLOG_SUFFIX_LOG_POINT );
 	}
 	return payload;
 }
 
 /** create a payload object(LOG_TASK) */
-static xlog_payload_t *xlog_payload_create_LOG_TASK( void )
+static autobuf_t *autobuf_create_LOG_TASK( void )
 {
-	xlog_payload_t *payload = xlog_payload_create(XLOG_PAYLOAD_ID_LOG_TASK, "Task Info", XLOG_PAYLOAD_OTEXT | XLOG_PAYLOAD_ODYNAMIC, 32);
+	autobuf_t *payload = autobuf_create(PAYLOAD_ID_LOG_TASK, "Task Info", AUTOBUF_OTEXT | AUTOBUF_ODYNAMIC, 32);
 	if( payload ) {
 		char taskname[XLOG_LIMIT_THREAD_NAME];
 		XLOG_GET_THREAD_NAME( taskname );
-		xlog_payload_append_text_va(
+		autobuf_append_text_va(
 			&payload, XLOG_PREFIX_LOG_TASK "%d/%d %s" XLOG_SUFFIX_LOG_TASK,
 			getppid(), getpid(), taskname
 		);
@@ -102,15 +102,15 @@ static xlog_payload_t *xlog_payload_create_LOG_TASK( void )
 	return payload;
 }
 
-static int xlog_payload_print_LOG_TIME(
-    const xlog_payload_t *payload, xlog_printer_t *printer
+static int autobuf_print_LOG_TIME(
+    const autobuf_t *payload, xlog_printer_t *printer
 )
 {
 	XLOG_ASSERT( payload );
-	XLOG_ASSERT( XLOG_PAYLOAD_ID_LOG_TIME == payload->id );
+	XLOG_ASSERT( PAYLOAD_ID_LOG_TIME == payload->id );
 	XLOG_ASSERT( sizeof( xlog_time_t ) == payload->length );
 	
-	xlog_time_t *xtm = ( xlog_time_t * )xlog_payload_data_vptr( payload );
+	xlog_time_t *xtm = ( xlog_time_t * )autobuf_data_vptr( payload );
 	time_t tv_sec = xtm->tv.tv_sec;
 	struct tm *p = localtime( &tv_sec );
 	
@@ -127,26 +127,26 @@ static int xlog_payload_print_LOG_TIME(
 
 static const struct {
 	int id;
-	int (*print)( const xlog_payload_t *, xlog_printer_t * );
+	int (*print)( const autobuf_t *, xlog_printer_t * );
 } payload_print_funcs[] = {
-	{ XLOG_PAYLOAD_ID_AUTO		, NULL },
-	{ XLOG_PAYLOAD_ID_TEXT		, xlog_payload_print_TEXT },
-	{ XLOG_PAYLOAD_ID_BINARY	, xlog_payload_print_BINARY },
-	{ XLOG_PAYLOAD_ID_LOG_TIME	, xlog_payload_print_LOG_TIME },
-	{ XLOG_PAYLOAD_ID_LOG_CLASS	, xlog_payload_print_TEXT },
-	{ XLOG_PAYLOAD_ID_LOG_POINT	, xlog_payload_print_TEXT },
-	{ XLOG_PAYLOAD_ID_LOG_TASK	, xlog_payload_print_TEXT },
-	{ XLOG_PAYLOAD_ID_LOG_BODY	, xlog_payload_print_TEXT },
+	{ PAYLOAD_ID_AUTO		, NULL },
+	{ PAYLOAD_ID_TEXT		, autobuf_print_TEXT },
+	{ PAYLOAD_ID_BINARY	, autobuf_print_BINARY },
+	{ PAYLOAD_ID_LOG_TIME	, autobuf_print_LOG_TIME },
+	{ PAYLOAD_ID_LOG_CLASS	, autobuf_print_TEXT },
+	{ PAYLOAD_ID_LOG_POINT	, autobuf_print_TEXT },
+	{ PAYLOAD_ID_LOG_TASK	, autobuf_print_TEXT },
+	{ PAYLOAD_ID_LOG_BODY	, autobuf_print_TEXT },
 };
 
-static int xlog_payload_print(
-    const xlog_payload_t *payload, xlog_printer_t *printer
+static int autobuf_print(
+    const autobuf_t *payload, xlog_printer_t *printer
 )
 {
 	XLOG_ASSERT( payload );
-	XLOG_ASSERT( payload->id >= XLOG_PAYLOAD_ID_AUTO && payload->id <= XLOG_PAYLOAD_ID_LOG_BODY );
+	XLOG_ASSERT( payload->id >= PAYLOAD_ID_AUTO && payload->id <= PAYLOAD_ID_LOG_BODY );
 	
-	int (*print)( const xlog_payload_t *, xlog_printer_t * ) = payload_print_funcs[payload->id].print;
+	int (*print)( const autobuf_t *, xlog_printer_t * ) = payload_print_funcs[payload->id].print;
 	if(print) {
 		return print( payload, printer );
 	}
@@ -154,12 +154,12 @@ static int xlog_payload_print(
 }
 
 struct xlog_list_tag {
-	xlog_payload_t *payload;
+	autobuf_t *payload;
 	struct xlog_list_tag *next, *prev;
 };
 #include "internal/xlog_list.h"
 
-static void *xlog_payload_list_create( void )
+static void *autobuf_list_create( void )
 {
 	xlog_list_t *context = ( xlog_list_t * )XLOG_MALLOC( sizeof( xlog_list_t ) );
 	
@@ -170,34 +170,34 @@ static void *xlog_payload_list_create( void )
 	return context;
 }
 
-static int xlog_payload_list_append( void *context, const xlog_payload_t *payload )
+static int autobuf_list_append( void *context, const autobuf_t *payload )
 {
 	xlog_list_t *head = ( xlog_list_t * )context;
 	xlog_list_t *entry = (xlog_list_t *)XLOG_MALLOC( sizeof( xlog_list_t ) );
 	if( entry ) {
 		xlog_list_init( entry );
-		entry->payload = ( xlog_payload_t * )payload;
+		entry->payload = ( autobuf_t * )payload;
 		xlog_list_add( entry, head );
 	}
 	
 	return 0;
 }
 
-static void xlog_payload_list_destory( void *context )
+static void autobuf_list_destory( void *context )
 {
 	xlog_list_t *head = ( xlog_list_t * )context;
 	xlog_list_t *cur = head->next, *aux = NULL;
 	
 	while( cur != head ) {
 		aux = cur;
-		xlog_payload_destory( &(aux->payload) );
+		autobuf_destory( &(aux->payload) );
 		cur = aux->next;
 		XLOG_FREE( aux );
 	}
 	XLOG_FREE( head );
 }
 
-static int xlog_payload_list_print( void *context, xlog_printer_t *printer )
+static int autobuf_list_print( void *context, xlog_printer_t *printer )
 {
 	int length = 0;
 	xlog_list_t *head = ( xlog_list_t * )context;
@@ -206,7 +206,7 @@ static int xlog_payload_list_print( void *context, xlog_printer_t *printer )
 		printer->optctl( printer, XLOG_PRINTER_CTRL_LOCK, NULL, 0 );
 	}
 	xlog_list_for_each_prev( pos, head ) {
-		length += xlog_payload_print(
+		length += autobuf_print(
 			pos->payload, printer
 		);
 	}
@@ -225,7 +225,7 @@ static inline void *xlog_build_log_context_va(
 	XLOG_ASSERT( context );
 	XLOG_ASSERT( module );
 
-	void *list = xlog_payload_list_create();
+	void *list = autobuf_list_create();
 	if( NULL == list ) {
 		XLOG_TRACE( "failed to create payload-list." );
 		return NULL;
@@ -246,18 +246,18 @@ static inline void *xlog_build_log_context_va(
 		return NULL;
 	}
 	
-	xlog_payload_t *payload = NULL;
+	autobuf_t *payload = NULL;
 	
 	/* package time */
 	if( xlog_if_format_enabled( module, level, XLOG_FORMAT_OTIME ) ) {
-		payload = xlog_payload_create_LOG_TIME();
-		xlog_payload_list_append( list, payload );
+		payload = autobuf_create_LOG_TIME();
+		autobuf_list_append( list, payload );
 	}
 	
 	/* package task info */
 	if( xlog_if_format_enabled( module, level, XLOG_FORMAT_OTASK ) ) {
-		payload = xlog_payload_create_LOG_TASK();
-		xlog_payload_list_append( list, payload );
+		payload = autobuf_create_LOG_TASK();
+		autobuf_list_append( list, payload );
 	}
 	
 	/* package level and module info */
@@ -268,31 +268,31 @@ static inline void *xlog_build_log_context_va(
 			modulepath = xlog_module_name( modulename, XLOG_LIMIT_MODULE_PATH, module );
 		}
 
-		payload = xlog_payload_create_LOG_CLASS( context->attributes[level].class_prefix, modulepath );
-		xlog_payload_list_append( list, payload );
+		payload = autobuf_create_LOG_CLASS( context->attributes[level].class_prefix, modulepath );
+		autobuf_list_append( list, payload );
 	}
 	
 	/* package file directory and name, function name and line number info */
 	if( xlog_if_format_enabled( module, level, XLOG_FORMAT_OLOCATION ) ) {
-		payload = xlog_payload_create_LOG_POINT(
+		payload = autobuf_create_LOG_POINT(
 			xlog_if_format_enabled( module, level, XLOG_FORMAT_OFILE ) ? file : NULL,
 			xlog_if_format_enabled( module, level, XLOG_FORMAT_OFUNC ) ? func : NULL,
 			xlog_if_format_enabled( module, level, XLOG_FORMAT_OLINE ) ? line : -1
 		);
-		xlog_payload_list_append( list, payload );
+		autobuf_list_append( list, payload );
 	}
 	
 	/* args point to the first variable parameter */
-	payload = xlog_payload_create( XLOG_PAYLOAD_ID_LOG_BODY, "Log Text", XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN, 240, 32 );
+	payload = autobuf_create( PAYLOAD_ID_LOG_BODY, "Log Text", AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN, 240, 32 );
 	if( context && ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
-		xlog_payload_append_text( &payload, context->attributes[level].body_prefix );
+		autobuf_append_text( &payload, context->attributes[level].body_prefix );
 	}
-	xlog_payload_append_text_va_list( &payload, format, args );
+	autobuf_append_text_va_list( &payload, format, args );
 	if( context && ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
-		xlog_payload_append_text( &payload, context->attributes[level].body_suffix );
+		autobuf_append_text( &payload, context->attributes[level].body_suffix );
 	}
-	xlog_payload_append_text( &payload, XLOG_STYLE_NEWLINE );
-	xlog_payload_list_append( list, payload );
+	autobuf_append_text( &payload, XLOG_STYLE_NEWLINE );
+	autobuf_list_append( list, payload );
 	
 	return list;
 }
@@ -327,8 +327,8 @@ int xlog_output(
 	va_end( ap );
 	
 	if( list ) {
-		length = xlog_payload_list_print( list, printer );
-		xlog_payload_list_destory( list );
+		length = autobuf_list_print( list, printer );
+		autobuf_list_destory( list );
 	}
 	
 	return length;

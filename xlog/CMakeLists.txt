@@ -10,9 +10,10 @@ set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT
 # features
 option(XLOG_FEATURE_ENABLE_COLOR "Enable colorful logging" ON)
 
-option(XLOG_FEATURE_ENABLE_STATS "Enable statistics" OFF)
+option(XLOG_FEATURE_ENABLE_STATS "Enable statistics" ON)
 option(XLOG_FEATURE_ENABLE_STATS_PRINTER "Enable statistics for printer(s)" ON)
 option(XLOG_FEATURE_ENABLE_STATS_MODULE "Enable statistics for module(s)" ON)
+
 option(XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT "Create default context if XLOG_CONTEXT is NULL" ON)
 
 option(XLOG_VERSION_WITH_BUILDDATE "Append build-date to version" OFF)
@@ -41,11 +42,11 @@ set(
 	
 	xlog.c
 	xlog_shell.c
-	xlog_payload.c
 	xlog_printer.c
 	
 	plugins/family_tree.c
 	plugins/ringbuf.c
+	plugins/autobuf.c
 	plugins/hexdump.c
 	plugins/getopt.c
 	

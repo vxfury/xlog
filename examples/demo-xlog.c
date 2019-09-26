@@ -19,6 +19,7 @@
 
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
+#include <xlog/xlog_debug.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wsign-compare"
@@ -251,6 +252,9 @@ int main( int argc, char **argv )
 	xlog_close( xlog_module_context( ROOT_MODULE ), 0 );
 	
 	xlog_printer_destory( g_printer );
+	
+	int i = 10;
+	debug( i, i, i, i );
 	
 	return 0;
 }

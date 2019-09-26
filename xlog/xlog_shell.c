@@ -1,11 +1,9 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
-
-#include <setjmp.h>
+#include <xlog/plugins/getopt.h>
+#include <xlog/plugins/hexdump.h>
 
 #include "internal.h"
-#include "plugins/hexdump.h"
-#include "plugins/getopt.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"

@@ -1,4 +1,4 @@
-#include "plugins/hexdump.h"
+#include <xlog/plugins/hexdump.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"

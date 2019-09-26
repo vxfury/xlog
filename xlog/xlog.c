@@ -1,8 +1,10 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
+#include <xlog/plugins/autobuf.h>
+#include <xlog/plugins/family_tree.h>
+
 #include "internal.h"
-#include "plugins/family_tree.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
@@ -1195,20 +1197,20 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
 	}
 	
 	int length = 0;
-	xlog_payload_t *payload = xlog_payload_create( XLOG_PAYLOAD_ID_AUTO, "Log Text", XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN, 240, 64 );
+	autobuf_t *payload = autobuf_create( PAYLOAD_ID_AUTO, "Log Text", AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN, 240, 64 );
 	if( payload ) {
 		if( prefix ) {
-			xlog_payload_append_text( &payload, prefix );
+			autobuf_append_text( &payload, prefix );
 		}
 		va_list ap;
 		va_start( ap, format );
-		xlog_payload_append_text_va_list( &payload, format, ap );
+		autobuf_append_text_va_list( &payload, format, ap );
 		va_end( ap );
 		if( suffix ) {
-			xlog_payload_append_text( &payload, suffix );
+			autobuf_append_text( &payload, suffix );
 		}
-		length = xlog_payload_print_TEXT( payload, printer );
-		xlog_payload_destory( &payload );
+		length = autobuf_print_TEXT( payload, printer );
+		autobuf_destory( &payload );
 	} else {
 		__XLOG_TRACE( "Failed to create payload." );
 	}
@@ -1300,9 +1302,9 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 			level_attributes = context->attributes;
 		}
 	}
-	xlog_payload_t *payload = xlog_payload_create(
-		XLOG_PAYLOAD_ID_AUTO, "Log",
-		XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN | XLOG_PAYLOAD_OTEXT, XLOG_DEFAULT_PAYLOAD_SIZE, 64
+	autobuf_t *payload = autobuf_create(
+		PAYLOAD_ID_AUTO, "Log",
+		AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN | AUTOBUF_OTEXT, XLOG_DEFAULT_PAYLOAD_SIZE, 64
 	);
 	if( payload == NULL ) {
 		XLOG_TRACE( "Failed to create payload." );
@@ -1325,7 +1327,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 			, tm.tm_hour, tm.tm_min, tm.tm_sec, ( int )( ( ( tv.tv_usec + 500 ) / 1000 ) % 1000 )
 			, level_attributes[level].time_suffix
 		);
-		xlog_payload_append_text( &payload, buffer );
+		autobuf_append_text( &payload, buffer );
 		#else
 		#error No implementation for this system.
 		#endif
@@ -1338,7 +1340,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		if( taskname[0] == '\0' ) {
 			snprintf( taskname, sizeof( taskname ), "%s", XLOG_THREAD_UNNAMED );
 		}
-		xlog_payload_append_text_va(
+		autobuf_append_text_va(
 			&payload, XLOG_PREFIX_LOG_TASK "%d/%d %s" XLOG_SUFFIX_LOG_TASK,
 			getppid(), getpid(), taskname
 		);
@@ -1347,11 +1349,11 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	/* package class(level and module path) */
 	if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLEVEL | XLOG_FORMAT_OMODULE ) ) {
 		char modulename[XLOG_LIMIT_MODULE_PATH] = { 0 };
-		xlog_payload_append_text( &payload, level_attributes[level].class_prefix );
+		autobuf_append_text( &payload, level_attributes[level].class_prefix );
 		if( module && __xlog_format_been_enabled( module, level, XLOG_FORMAT_OMODULE ) ) {
-			xlog_payload_append_text( &payload, xlog_module_name( modulename, XLOG_LIMIT_MODULE_PATH, module ) );
+			autobuf_append_text( &payload, xlog_module_name( modulename, XLOG_LIMIT_MODULE_PATH, module ) );
 		}
-		xlog_payload_append_text( &payload, level_attributes[level].class_suffix );
+		autobuf_append_text( &payload, level_attributes[level].class_suffix );
 	}
 	
 	/* package source location */
@@ -1360,44 +1362,44 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		const char *_func = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OFUNC ) ? func : NULL;
 		long _line = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLINE ) ? line : -1;
 		
-		xlog_payload_append_text( &payload, XLOG_PREFIX_LOG_POINT );
+		autobuf_append_text( &payload, XLOG_PREFIX_LOG_POINT );
 		if( _file ) {
-			xlog_payload_append_text( &payload, _file );
+			autobuf_append_text( &payload, _file );
 		}
 		if( _func ) {
 			if( _file ) {
-				xlog_payload_append_text( &payload, " " );
+				autobuf_append_text( &payload, " " );
 			}
-			xlog_payload_append_text( &payload, _func );
+			autobuf_append_text( &payload, _func );
 		}
 		if( _line != -1 ) {
 			if( _file || _func ) {
-				xlog_payload_append_text( &payload, ":" );
+				autobuf_append_text( &payload, ":" );
 			}
 			char buff[12];
 			snprintf( buff, sizeof( buff ), "%ld", _line );
-			xlog_payload_append_text( &payload, buff );
+			autobuf_append_text( &payload, buff );
 		}
-		xlog_payload_append_text( &payload, XLOG_SUFFIX_LOG_POINT );
+		autobuf_append_text( &payload, XLOG_SUFFIX_LOG_POINT );
 	}
 	
 	/* package log body */
 	va_list ap;
 	va_start( ap, format );
 	if( ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
-		xlog_payload_append_text( &payload, level_attributes[level].body_prefix );
+		autobuf_append_text( &payload, level_attributes[level].body_prefix );
 	}
-	xlog_payload_append_text_va_list( &payload, format, ap );
+	autobuf_append_text_va_list( &payload, format, ap );
 	if( ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
-		xlog_payload_append_text( &payload, level_attributes[level].body_suffix );
+		autobuf_append_text( &payload, level_attributes[level].body_suffix );
 	}
 	va_end( ap );
-	xlog_payload_append_text( &payload, XLOG_STYLE_NEWLINE );
+	autobuf_append_text( &payload, XLOG_STYLE_NEWLINE );
 	if( module ) {
 		XLOG_STATS_UPDATE( &module->stats, BYTE, INPUT, payload->offset );
 	}
-	int length = xlog_payload_print_TEXT( payload, printer );
-	xlog_payload_destory( &payload );
+	int length = autobuf_print_TEXT( payload, printer );
+	autobuf_destory( &payload );
 	if( length > 0 ) {
 		XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
 		if( module ) {

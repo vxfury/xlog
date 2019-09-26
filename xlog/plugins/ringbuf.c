@@ -1,4 +1,4 @@
-#include "plugins/ringbuf.h"
+#include <xlog/plugins/ringbuf.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"

@@ -42,14 +42,14 @@ if(ENABLE_COVERAGE_CHECK)
 endif()
 redefine_file_macro(cov-printer)
 
-# cov-payload
-set(SOURCES examples/cov-payload.c)
-add_executable(cov-payload ${SOURCES})
-target_link_libraries(cov-payload xlog)
+# cov-autobuf
+set(SOURCES examples/cov-autobuf.c)
+add_executable(cov-autobuf ${SOURCES})
+target_link_libraries(cov-autobuf xlog)
 if(ENABLE_COVERAGE_CHECK)
-	target_link_libraries(cov-payload gcov)
+	target_link_libraries(cov-autobuf gcov)
 endif()
-redefine_file_macro(cov-payload)
+redefine_file_macro(cov-autobuf)
 
 # cov-xlog-no-default-context
 set(SOURCES examples/cov-not-default-context.c)

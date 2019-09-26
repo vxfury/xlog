@@ -1,4 +1,4 @@
-#include "plugins/family_tree.h"
+#include <xlog/plugins/family_tree.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"

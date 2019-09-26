@@ -1,8 +1,9 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
+#include <xlog/plugins/ringbuf.h>
+
 #include "internal.h"
-#include "plugins/ringbuf.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"

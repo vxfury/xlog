@@ -1,4 +1,4 @@
-#include "plugins/getopt.h"
+#include <xlog/plugins/getopt.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
