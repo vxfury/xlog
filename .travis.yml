@@ -4,7 +4,7 @@ script:
  - mkdir build && cd build && rm -rf ./*
  - cmake -DENABLE_COVERAGE_CHECK=ON .. && make
  - mkdir logs && ./bin/demo-xlog > /dev/null
- - ./bin/cov-printer > /dev/null && ./bin/cov-payload > /dev/null
+ - ./bin/cov-printer > /dev/null && ./bin/cov-autobuf > /dev/null
  - ./bin/cov-not-default-context && ./bin/cov-not-default-context
  - ./bin/cov-shell
  - cd ..
