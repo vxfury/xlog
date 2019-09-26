@@ -1,7 +1,21 @@
 #ifndef __RINGBUF_H
 #define __RINGBUF_H
 
-#include <xlog/xlog_config.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <errno.h>
+#include <assert.h>
+#include <stdbool.h>
+
+/** memory allocation for ring-buffer */
+#define RBUF_MALLOC(nbytes)			((nbytes) == 0 ? NULL : calloc(1, nbytes))
+#define RBUF_REALLOC(ptr, nbytes)	realloc(ptr, nbytes)
+#define RBUF_FREE(ptr)				free(ptr)
+#define RBUF_STRDUP(str)			strdup(str)
+#define RBUF_STRNDUP(str, n)		strndup(str, n)
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"

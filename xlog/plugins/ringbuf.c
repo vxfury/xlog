@@ -1,8 +1,4 @@
-#include <xlog/xlog.h>
-#include <xlog/xlog_helper.h>
-
-#include "internal.h"
-#include "ringbuf.h"
+#include "plugins/ringbuf.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
@@ -14,6 +10,10 @@
 #pragma GCC diagnostic ignored "-Wshorten-64-to-32"
 #endif
 
+#define RBUF_MIN(a, b) ((a) <= (b) ? (a) : (b))
+#define RBUF_ALIGN_UP(size, align) ((align+size-1) & (~(align-1)))
+#define RBUF_TRACE(...)
+
 /* @brief  create ring-buffer
  * @param  capacity, capacity of ring-buffer
  * @return pointer to ring-buffer; NULL if failed to allocate memory
@@ -24,13 +24,13 @@ ringbuf_t *ringbuf_create( unsigned int capacity )
 {
 	/* One byte used for detecting the full condition. */
 	/* Align is applied 'cause the capacity usually very large for better performance */
-	ringbuf_t *rb = (ringbuf_t *)XLOG_MALLOC( sizeof( ringbuf_t ) );
+	ringbuf_t *rb = (ringbuf_t *)RBUF_MALLOC( sizeof( ringbuf_t ) );
 	if( rb ) {
-		size_t size = XLOG_ALIGN_UP( capacity + 1, 1024 );
-		rb->data = (char *)XLOG_MALLOC( size );
+		size_t size = RBUF_ALIGN_UP( capacity + 1, 1024 );
+		rb->data = (char *)RBUF_MALLOC( size );
 		if( rb->data == NULL ) {
-			__XLOG_TRACE( "Failed to allocate memory." );
-			XLOG_FREE( rb );
+			RBUF_TRACE( "Failed to allocate memory." );
+			RBUF_FREE( rb );
 			return NULL;
 		}
 		rb->capacity = size - 1;
@@ -55,8 +55,8 @@ int ringbuf_destory( ringbuf_t *rb )
 		pthread_mutex_destroy( &rb->mutex );
 		pthread_cond_destroy( &rb->cond_data_in );
 		pthread_cond_destroy( &rb->cond_data_out );
-		XLOG_FREE( rb->data );
-		XLOG_FREE( rb );
+		RBUF_FREE( rb->data );
+		RBUF_FREE( rb );
 	}
 	
 	return 0;
@@ -114,15 +114,15 @@ int ringbuf_copy_into_separable( ringbuf_t *rb, const void *vptr, unsigned int s
 		while( __size_free(rb) < block_size ) {
 			pthread_cond_wait( &rb->cond_data_out, &rb->mutex );
 		}
-		unsigned int copy_size = XLOG_MIN( left_size, __size_free(rb) );
+		unsigned int copy_size = RBUF_MIN( left_size, __size_free(rb) );
 		unsigned int next_wr = __offset_next_n( rb, rb->wr_offset, copy_size );
-		unsigned int non_overflow_size = XLOG_MIN( copy_size, rb->capacity + 1 - rb->wr_offset );
+		unsigned int non_overflow_size = RBUF_MIN( copy_size, rb->capacity + 1 - rb->wr_offset );
 		memcpy( rb->data + rb->wr_offset, vptr, non_overflow_size );
 		if( non_overflow_size < copy_size ) {
 			memcpy( rb->data, (char *)vptr + non_overflow_size, copy_size - non_overflow_size );
 		}
 		left_size -= copy_size;
-		__XLOG_TRACE( "INTO: free/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_wr = %u", __size_free( rb ), rb->capacity, non_overflow_size, copy_size, next_wr );
+		RBUF_TRACE( "INTO: free/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_wr = %u", __size_free( rb ), rb->capacity, non_overflow_size, copy_size, next_wr );
 		rb->wr_offset = next_wr;
 		pthread_cond_broadcast( &rb->cond_data_in );
 		pthread_mutex_unlock( &rb->mutex );
@@ -140,7 +140,7 @@ int ringbuf_copy_into( ringbuf_t *rb, const void *vptr, unsigned int size )
 {
 	assert( rb );
 	if( size > ( rb->capacity >> 1 ) ) {
-		__XLOG_TRACE( "Buffer required cann't be satisfied by pre-created ring-buffer." );
+		RBUF_TRACE( "Buffer required cann't be satisfied by pre-created ring-buffer." );
 		return EINVAL;
 	}
 	ringbuf_copy_into_separable( rb, vptr, size, size );
@@ -169,14 +169,14 @@ int ringbuf_copy_from( ringbuf_t *rb, void *vptr, unsigned int size, bool no_wai
 	}
 	
 	unsigned int bytes_used = __size_used( rb );
-	unsigned int length = XLOG_MIN( bytes_used, size );
+	unsigned int length = RBUF_MIN( bytes_used, size );
 	unsigned int next_rd = __offset_next_n( rb, rb->rd_offset, length );
-	unsigned int non_overflow_size = XLOG_MIN( length, rb->capacity + 1 - rb->rd_offset );
+	unsigned int non_overflow_size = RBUF_MIN( length, rb->capacity + 1 - rb->rd_offset );
 	memcpy( vptr, rb->data + rb->rd_offset, non_overflow_size );
 	if( non_overflow_size < length ) {
 		memcpy( (void *)( (char *)vptr + non_overflow_size ), rb->data, length - non_overflow_size );
 	}
-	__XLOG_TRACE( "FROM: used/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_rd = %u", bytes_used, rb->capacity, non_overflow_size, length, next_rd );
+	RBUF_TRACE( "FROM: used/capacity = %u/%u, non-overflow-size/read-length = %u/%u, next_rd = %u", bytes_used, rb->capacity, non_overflow_size, length, next_rd );
 	rb->rd_offset = next_rd;
 	pthread_cond_broadcast( &rb->cond_data_out );
 	pthread_mutex_unlock( &rb->mutex );
@@ -200,7 +200,7 @@ unsigned int ringbuf_findchr( const ringbuf_t *rb, int c, unsigned int offset )
 	}
 	
 	const char *start = rb->data + __offset_next_n( rb , rb->rd_offset, offset );
-	unsigned int n = XLOG_MIN( bytes_used - offset, rb->capacity + 1 - rb->rd_offset );
+	unsigned int n = RBUF_MIN( bytes_used - offset, rb->capacity + 1 - rb->rd_offset );
 	const char *found = (const char *)memchr( start, c, n );
 	if( found ) {
 		return offset + ( found - start );

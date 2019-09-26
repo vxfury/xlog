@@ -2,6 +2,9 @@
 #define GETOPT_H
 
 /* include files needed by this include file */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define no_argument			0
 #define required_argument	1

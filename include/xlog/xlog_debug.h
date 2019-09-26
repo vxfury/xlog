@@ -127,7 +127,7 @@ int printf( const char *restrict format, ... );
 	void *: "%p", \
 	char[sizeof(arg)]: "%s", \
 	default: "<unknown>" \
-	)
+)
 
 /* Print an argument regardless of its type (see __format). */
 #define __print_arg(arg) printf(__format(arg), arg)

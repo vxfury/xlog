@@ -1,4 +1,3 @@
-#include <xlog/xlog_config.h>
 #include "plugins/family_tree.h"
 
 #ifdef __GNUC__

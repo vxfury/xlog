@@ -1,4 +1,3 @@
-#include <xlog/xlog_config.h>
 #include "plugins/hexdump.h"
 
 #ifdef __GNUC__
@@ -14,6 +13,8 @@
 #pragma GCC diagnostic ignored "-Wswitch-enum"
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif
+
+#define HEXD_ASSERT(cond)	assert(cond)
 
 #define HEXD_MIN(X,Y) ((X) < (Y)? (X) : (Y))
 #define HEXD_ARRAY_SIZE(arr)	(sizeof(arr) / sizeof(*arr))
@@ -99,12 +100,12 @@ int __hexdump_iterator(
 	int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ )
 )
 {
-	XLOG_ASSERT( target );
-	XLOG_ASSERT( options );
-	XLOG_ASSERT( readline );
-	XLOG_ASSERT( iterator );
-	XLOG_ASSERT( iterator->line );
-	XLOG_ASSERT( iterator->dumpline && iterator->dumpsize > 0 );
+	HEXD_ASSERT( target );
+	HEXD_ASSERT( options );
+	HEXD_ASSERT( readline );
+	HEXD_ASSERT( iterator );
+	HEXD_ASSERT( iterator->line );
+	HEXD_ASSERT( iterator->dumpline && iterator->dumpsize > 0 );
 	
 	size_t nread = options->end == -1 ? options->columns : HEXD_MIN( options->columns, ( size_t )( options->end - iterator->offset ) );
 	int n = readline( target, iterator->offset, ( void * )iterator->line, nread );
@@ -127,7 +128,7 @@ int __hexdump_iterator(
 				iterator->status = HEXD_DUPLICATE_MORE;
 				break;
 			case HEXD_LAST_LINE:
-				XLOG_ASSERT( 0 );
+				HEXD_ASSERT( 0 );
 			default:
 				iterator->status = HEXD_DUPLICATE;
 				break;
@@ -234,9 +235,9 @@ int __hexdump(
 	void ( *printline )( uintmax_t, const char *, void * ), void *arg
 )
 {
-	XLOG_ASSERT( target );
-	XLOG_ASSERT( options );
-	XLOG_ASSERT( readline );
+	HEXD_ASSERT( target );
+	HEXD_ASSERT( options );
+	HEXD_ASSERT( readline );
 	
 	hexdump_iterator_t iterator = {
 		.offset = options->start,
@@ -356,7 +357,7 @@ static int hexdump_file_readline( const void *target, off_t offset, void *buffer
 
 void hexdump_file( const char *file, const hexdump_options_t *options )
 {
-	XLOG_ASSERT( options );
+	HEXD_ASSERT( options );
 	
 	int fd = open( file, O_RDONLY );
 	if( fd < 0 ) {
@@ -373,8 +374,8 @@ void hexdump_file( const char *file, const hexdump_options_t *options )
  */
 int hexdump_parse_range( const char *str, hexdump_options_t *options )
 {
-	XLOG_ASSERT( str );
-	XLOG_ASSERT( options );
+	HEXD_ASSERT( str );
+	HEXD_ASSERT( options );
 	
 	const char *first = str, *delim = str + strcspn( str, "+-" ), *second = delim + 1;
 	

@@ -1,10 +1,16 @@
 #ifndef __HEXDUMP_H
 #define __HEXDUMP_H
 
-#include <inttypes.h>
-#include <stdbool.h>
+#include <err.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <assert.h>
+#include <stdbool.h>
+#include <inttypes.h>
 
 typedef struct {
 	off_t start, end;

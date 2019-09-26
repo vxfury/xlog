@@ -1,7 +1,9 @@
-#ifndef __INTERNAL_FAMILY_TREE_H
-#define __INTERNAL_FAMILY_TREE_H
+#ifndef __FAMILY_TREE_H
+#define __FAMILY_TREE_H
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #ifdef __cplusplus

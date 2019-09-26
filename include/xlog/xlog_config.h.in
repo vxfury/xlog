@@ -21,7 +21,6 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <pthread.h>
-#include <err.h>
 #include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
