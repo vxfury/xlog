@@ -15,6 +15,7 @@
 #endif
 
 #include <xlog/plugins/bitops.h>
+#include <xlog/plugins/autobuf.h>
 
 /**
  * @brief Instructs the compiler that a specific variable or function is used.
@@ -269,7 +270,6 @@ typedef struct {
 #define XLOG_MAGIC_CONTEXT			XLOG_MAGIC_BUILD('X', 'C', 'T', 'X')
 #define XLOG_MAGIC_MODULE			XLOG_MAGIC_BUILD('X', 'M', 'D', 'L')
 #define XLOG_MAGIC_PRINTER			XLOG_MAGIC_BUILD('X', 'P', 'R', 'T')
-#define XLOG_MAGIC_PAYLOAD			XLOG_MAGIC_BUILD('X', 'P', 'L', 'D')
 #endif
 
 
@@ -293,5 +293,37 @@ typedef struct xlog_time_tag {
 		int tz_dsttime;
 	} __attribute__( ( packed ) ) tz;
 } __attribute__( ( packed ) ) xlog_time_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief  print TEXT compatible autobuf
+ *
+ * @param  autobuf, autobuf object to print
+ *         printer, printer to print the autobuf
+ * @return length of printed autobuf data
+ *
+ */
+XLOG_PUBLIC( int ) payload_print_TEXT(
+	const autobuf_t *autobuf, xlog_printer_t *printer
+);
+
+/**
+ * @brief  print BINARY compatible autobuf
+ *
+ * @param  autobuf, autobuf object to print
+ *         printer, printer to print the autobuf
+ * @return length of printed autobuf data
+ *
+ */
+XLOG_PUBLIC( int ) payload_print_BINARY(
+	const autobuf_t *autobuf, xlog_printer_t *printer
+);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

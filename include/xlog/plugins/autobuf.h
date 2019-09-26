@@ -1,7 +1,16 @@
 #ifndef __AUTOBUF_H
 #define __AUTOBUF_H
 
-#include <xlog/xlog.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <errno.h>
+#include <assert.h>
+#include <stdbool.h>
+
+#include <xlog/plugins/bitops.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wpragmas"
@@ -16,6 +25,14 @@
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif
 
+#ifndef API_PUBLIC
+#if (defined(__GNUC__) || defined(__SUNPRO_CC) || defined (__SUNPRO_C)) && defined(XLOG_API_VISIBILITY)
+#define API_PUBLIC(type)   __attribute__((visibility("default"))) type
+#else
+#define API_PUBLIC(type) type
+#endif
+#endif
+
 /** Autobuf configurations */
 // #define AUTOBUF_ENABLE_DYNAMIC_BRIEF_INFO	/* uncomment to duplicate brief information at it's creation and free it when the autobuf be destroyed */
 
@@ -24,7 +41,10 @@
 #define AUTOBUF_FREE(ptr)			free(ptr)
 #define AUTOBUF_STRDUP(str)			strdup(str)
 #define AUTOBUF_TEXT_LENGTH(text)	strlen(text)
+#define AUTOBUF_ASSERT(cond)		assert(cond)
 #define AUTOBUF_NOREACHED()			assert(0)
+
+#define AUTOBUF_TRACE(...) // fprintf( stderr, "TRACE: <" __FILE__ ":" XSTRING(__LINE__) "> " ), fprintf( stderr, __VA_ARGS__ ), fprintf( stderr, "\r\n" )
 
 #define AUTOBUF_ODYNAMIC			BIT_MASK(0) ///< dynamic allocating and need free beyond life span
 #define AUTOBUF_OFIXED 				BIT_MASK(1) ///< fixed size, alloc once or pre-allocated
@@ -35,9 +55,6 @@
 #define AUTOBUF_OALLOC_ONCE			AUTOBUF_ODYNAMIC | AUTOBUF_OFIXED
 
 typedef struct {
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	int magic;
-	#endif
 	const char  *brief;			///< autobuf brief
 	unsigned int id;			///< autobuf identifier
 	unsigned int options;		///< 0 ~ 7, mode; 8 ~ 11(2^0 ~ 2^15), alignment; 12 ~ 23(0 ~ 2^12 - 1), reserved bytes; 24 ~ 31, reserved for future use
@@ -77,7 +94,7 @@ extern "C" {
  * @return pointer to `autobuf_t`, NULL if failed to allocate memory.
  *
  */
-XLOG_PUBLIC( autobuf_t * ) autobuf_create( unsigned int id, const char *brief, int options, ... );
+API_PUBLIC( autobuf_t * ) autobuf_create( unsigned int id, const char *brief, int options, ... );
 
 /**
  * @brief  resize data field of autobuf object
@@ -87,7 +104,7 @@ XLOG_PUBLIC( autobuf_t * ) autobuf_create( unsigned int id, const char *brief, i
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_resize( autobuf_t **autobuf, size_t size );
+API_PUBLIC( int ) autobuf_resize( autobuf_t **autobuf, size_t size );
 
 /**
  * @brief  destory the autobuf object
@@ -96,7 +113,7 @@ XLOG_PUBLIC( int ) autobuf_resize( autobuf_t **autobuf, size_t size );
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_destory( autobuf_t **autobuf );
+API_PUBLIC( int ) autobuf_destory( autobuf_t **autobuf );
 
 /**
  * @brief  get pointer to data field of autobuf object
@@ -105,7 +122,7 @@ XLOG_PUBLIC( int ) autobuf_destory( autobuf_t **autobuf );
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC( void * ) autobuf_data_vptr( const autobuf_t *autobuf );
+API_PUBLIC( void * ) autobuf_data_vptr( const autobuf_t *autobuf );
 
 /**
  * @brief  append text to a autobuf object
@@ -115,7 +132,7 @@ XLOG_PUBLIC( void * ) autobuf_data_vptr( const autobuf_t *autobuf );
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_append_text( autobuf_t **autobuf, const char *text );
+API_PUBLIC( int ) autobuf_append_text( autobuf_t **autobuf, const char *text );
 
 /**
  * @brief  append text to a autobuf object
@@ -125,7 +142,7 @@ XLOG_PUBLIC( int ) autobuf_append_text( autobuf_t **autobuf, const char *text );
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_append_text_va_list( autobuf_t **autobuf, const char *format, va_list args );
+API_PUBLIC( int ) autobuf_append_text_va_list( autobuf_t **autobuf, const char *format, va_list args );
 
 /**
  * @brief  append text to a autobuf object
@@ -135,7 +152,7 @@ XLOG_PUBLIC( int ) autobuf_append_text_va_list( autobuf_t **autobuf, const char 
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_append_text_va( autobuf_t **autobuf, const char *format, ... );
+API_PUBLIC( int ) autobuf_append_text_va( autobuf_t **autobuf, const char *format, ... );
 
 /**
  * @brief  append binary to a autobuf object
@@ -145,31 +162,7 @@ XLOG_PUBLIC( int ) autobuf_append_text_va( autobuf_t **autobuf, const char *form
  * @return error code(@see XLOG_Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_append_binary( autobuf_t **autobuf, const void *vptr, size_t size );
-
-/**
- * @brief  print TEXT compatible autobuf
- *
- * @param  autobuf, autobuf object to print
- *         printer, printer to print the autobuf
- * @return length of printed autobuf data
- *
- */
-XLOG_PUBLIC( int ) autobuf_print_TEXT(
-	const autobuf_t *autobuf, xlog_printer_t *printer
-);
-
-/**
- * @brief  print BINARY compatible autobuf
- *
- * @param  autobuf, autobuf object to print
- *         printer, printer to print the autobuf
- * @return length of printed autobuf data
- *
- */
-XLOG_PUBLIC( int ) autobuf_print_BINARY(
-	const autobuf_t *autobuf, xlog_printer_t *printer
-);
+API_PUBLIC( int ) autobuf_append_binary( autobuf_t **autobuf, const void *vptr, size_t size );
 
 #ifdef __cplusplus
 }

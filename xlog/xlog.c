@@ -2,6 +2,7 @@
 #include <xlog/xlog_helper.h>
 
 #include <xlog/plugins/autobuf.h>
+#include <xlog/plugins/hexdump.h>
 #include <xlog/plugins/family_tree.h>
 
 #include "internal.h"
@@ -874,8 +875,6 @@ XLOG_PUBLIC( int ) xlog_module_load_from( xlog_module_t *module, const char *loa
 	return errno;
 }
 
-#include <dirent.h>
-
 static int __traverse_dir_recursive( const char *path, int ( *hook )( const char *, void * ), void *arg )
 {
 	XLOG_ASSERT( path );
@@ -1164,6 +1163,77 @@ XLOG_PUBLIC( int ) xlog_version( char *buffer, int size )
 }
 
 /**
+ * @brief  print TEXT compatible autobuf
+ *
+ * @param  autobuf, autobuf object to print
+ *         printer, printer to print the autobuf
+ * @return length of printed autobuf data
+ *
+ */
+XLOG_PUBLIC( int ) payload_print_TEXT(
+	const autobuf_t *autobuf, xlog_printer_t *printer
+)
+{
+	XLOG_ASSERT( autobuf );
+	XLOG_ASSERT( AUTOBUF_TEXT_COMPATIBLE( autobuf->options ) );
+	
+	return printer->append( printer, ( const char * )autobuf_data_vptr( autobuf ) );
+}
+
+static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg )
+{
+	xlog_printer_t *printer = ( xlog_printer_t * )arg;
+	
+	char buffer[128];
+	snprintf(
+		buffer, sizeof( buffer ),
+		"%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline
+	);
+	printer->append( printer, buffer );
+}
+
+static int hexdump_memory_readline( const void *addr, off_t offset, void *buffer, size_t size )
+{
+	memcpy( buffer, ( char * )addr + offset, size );
+	
+	return size;
+}
+
+/**
+ * @brief  print BINARY compatible autobuf
+ *
+ * @param  autobuf, autobuf object to print
+ *         printer, printer to print the autobuf
+ * @return length of printed autobuf data
+ *
+ */
+XLOG_PUBLIC( int ) payload_print_BINARY(
+	const autobuf_t *autobuf, xlog_printer_t *printer
+)
+{
+	XLOG_ASSERT( autobuf );
+	XLOG_ASSERT( printer );
+	
+	hexdump_options_t options = {
+		.start = 0,
+		.end = -1,
+		.columns = 16,
+		.groupsize = 8,
+		.use_formatting = false,
+	};
+	options.end = options.start + autobuf->offset;
+	if( printer->optctl ) {
+		printer->optctl( printer, XLOG_PRINTER_CTRL_LOCK, NULL, 0 );
+	}
+	int length = __hexdump( autobuf_data_vptr( autobuf ), &options, hexdump_memory_readline, hexdump_printline, printer );
+	if( printer->optctl ) {
+		printer->optctl( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL, 0 );
+	}
+	
+	return length;
+}
+
+/**
  * @brief  output raw log
  *
  * @param  printer, printer to output log
@@ -1210,7 +1280,7 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
 		if( suffix ) {
 			autobuf_append_text( &payload, suffix );
 		}
-		length = autobuf_print_TEXT( payload, printer );
+		length = payload_print_TEXT( payload, printer );
 		autobuf_destory( &payload );
 	} else {
 		__XLOG_TRACE( "Failed to create payload." );
@@ -1403,7 +1473,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	if( module ) {
 		XLOG_STATS_UPDATE( &module->stats, BYTE, INPUT, payload->offset );
 	}
-	int length = autobuf_print_TEXT( payload, printer );
+	int length = payload_print_TEXT( payload, printer );
 	autobuf_destory( &payload );
 	if( length > 0 ) {
 		XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );

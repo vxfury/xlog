@@ -1,5 +1,5 @@
 #include <xlog/xlog.h>
-#include <xlog/plugins/autobuf.h>
+#include <xlog/xlog_helper.h>
 
 static unsigned long random_integer( void )
 {
@@ -42,7 +42,7 @@ int main( int argc, char **argv )
 		buff[sizeof( buff ) - 1] = '\0';
 		
 		autobuf_append_text( &payload, buff );
-		autobuf_print_TEXT( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+		payload_print_TEXT( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
 		autobuf_destory( &payload );
 		
 		log_r( "buffer = %s\n", buff );
@@ -61,7 +61,7 @@ int main( int argc, char **argv )
 		}
 		
 		autobuf_append_binary( &payload, buff, sizeof( buff ) );
-		autobuf_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+		payload_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
 		autobuf_destory( &payload );
 	}
 	
@@ -80,7 +80,7 @@ int main( int argc, char **argv )
 			}
 			
 			autobuf_append_binary( &payload, buff, sizeof( buff ) );
-			autobuf_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+			payload_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
 			autobuf_destory( &payload );
 		} else {
 			log_r( "failed to create payload\n" );

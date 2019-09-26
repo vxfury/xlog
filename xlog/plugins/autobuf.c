@@ -1,10 +1,4 @@
-#include <xlog/xlog.h>
-#include <xlog/xlog_helper.h>
-
 #include <xlog/plugins/autobuf.h>
-#include <xlog/plugins/hexdump.h>
-
-#include "internal.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wpragmas"
@@ -18,6 +12,10 @@
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 
+#define AUTOBUF_MIN(a, b) ((a) <= (b) ? (a) : (b))
+#define AUTOBUF_ALIGN_UP(size, align) ((align+size-1) & (~(align-1)))
+#define AUTOBUF_TRACE(...)
+
 /**
  * @brief  create a autobuf object
  *
@@ -28,7 +26,7 @@
  * @return pointer to `autobuf_t`, NULL if failed to allocate memory.
  *
  */
-XLOG_PUBLIC( autobuf_t * ) autobuf_create( unsigned int id, const char *brief, int options, ... )
+API_PUBLIC( autobuf_t * ) autobuf_create( unsigned int id, const char *brief, int options, ... )
 {
 	autobuf_t *autobuf = NULL;
 	int align = 0, reserved = 0;
@@ -39,34 +37,31 @@ XLOG_PUBLIC( autobuf_t * ) autobuf_create( unsigned int id, const char *brief, i
 	va_start( ap, options );
 	if( AUTOBUF_TEST_OPTION( options, AUTOBUF_ODYNAMIC ) ) {
 		length = va_arg( ap, size_t );
-		__XLOG_TRACE( "length = %zu", length );
+		AUTOBUF_TRACE( "length = %zu", length );
 		length += sizeof( autobuf_t );
 		if( AUTOBUF_TEST_OPTION( options, AUTOBUF_OALIGN ) ) {
 			align = va_arg( ap, int );
-			XLOG_ASSERT( align > 0 && 0 == ( align & ( align - 1 ) ) );
+			AUTOBUF_ASSERT( align > 0 && 0 == ( align & ( align - 1 ) ) );
 			AUTOBUF_SET_ALIGN_BITS( options, BITS_FLS( align ) );
 		}
 		if( AUTOBUF_TEST_OPTION( options, AUTOBUF_ORESERVING ) ) {
 			reserved = va_arg( ap, int );
-			__XLOG_TRACE( "reserved = %d", reserved );
-			XLOG_ASSERT( reserved >= 0 );
+			AUTOBUF_TRACE( "reserved = %d", reserved );
+			AUTOBUF_ASSERT( reserved >= 0 );
 			length += reserved;
 			AUTOBUF_SET_RESERVED( options, reserved );
 		}
 		if( AUTOBUF_TEST_OPTION( options, AUTOBUF_OALIGN ) ) {
-			length = XLOG_ALIGN_UP( length, align );
-			__XLOG_TRACE( "length = %zu after alignment", length );
+			length = AUTOBUF_ALIGN_UP( length, align );
+			AUTOBUF_TRACE( "length = %zu after alignment", length );
 		}
 		va_end( ap );
 		
-		autobuf = ( autobuf_t * )XLOG_MALLOC( length );
+		autobuf = ( autobuf_t * )AUTOBUF_MALLOC( length );
 		if( NULL == autobuf ) {
-			__XLOG_TRACE( "Out of memory" );
+			AUTOBUF_TRACE( "Out of memory" );
 			return NULL;
 		}
-		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-		autobuf->magic = XLOG_MAGIC_PAYLOAD;
-		#endif
 		
 		autobuf->id = id;
 		#ifdef AUTOBUF_ENABLE_DYNAMIC_BRIEF_INFO
@@ -81,24 +76,21 @@ XLOG_PUBLIC( autobuf_t * ) autobuf_create( unsigned int id, const char *brief, i
 		if( AUTOBUF_TEST_OPTION( options, AUTOBUF_OFIXED ) ) {
 			options &= ~( AUTOBUF_OALIGN );
 			vptr = va_arg( ap, void * );
-			XLOG_ASSERT( vptr );
+			AUTOBUF_ASSERT( vptr );
 			length = va_arg( ap, size_t );
-			__XLOG_TRACE( "Pre-Allocated: vptr = %p, size = %zu", vptr, length );
+			AUTOBUF_TRACE( "Pre-Allocated: vptr = %p, size = %zu", vptr, length );
 			if( AUTOBUF_TEST_OPTION( options, AUTOBUF_ORESERVING ) ) {
 				reserved = va_arg( ap, int );
-				XLOG_ASSERT( reserved >= 0 );
-				XLOG_ASSERT( length > reserved );
+				AUTOBUF_ASSERT( reserved >= 0 );
+				AUTOBUF_ASSERT( length > reserved );
 				AUTOBUF_SET_RESERVED( options, reserved );
 			}
 			va_end( ap );
 			
-			autobuf = ( autobuf_t * )XLOG_MALLOC( sizeof( autobuf_t ) + sizeof( void * ) );
+			autobuf = ( autobuf_t * )AUTOBUF_MALLOC( sizeof( autobuf_t ) + sizeof( void * ) );
 			if( NULL == autobuf ) {
 				return NULL;
 			}
-			#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-			autobuf->magic = XLOG_MAGIC_PAYLOAD;
-			#endif
 			
 			autobuf->id = id;
 			#ifdef AUTOBUF_ENABLE_DYNAMIC_BRIEF_INFO
@@ -127,36 +119,31 @@ XLOG_PUBLIC( autobuf_t * ) autobuf_create( unsigned int id, const char *brief, i
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_resize( autobuf_t **autobuf, size_t size )
+API_PUBLIC( int ) autobuf_resize( autobuf_t **autobuf, size_t size )
 {
 	if(
 		autobuf == NULL
 		|| *autobuf == NULL
 		|| !AUTOBUF_RESIZEABLE( ( *autobuf )->options )
 	) {
-		__XLOG_TRACE( "Invalid parameters." );
+		AUTOBUF_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( ( *autobuf )->magic != XLOG_MAGIC_PAYLOAD ) {
-		return EINVAL;
-	}
-	#endif
 	
 	size_t reserved = AUTOBUF_GET_RESERVED( ( *autobuf )->options );
 	size_t new_size = size + reserved + sizeof( autobuf_t );
 	
 	if( AUTOBUF_TEST_OPTION( ( *autobuf )->options, AUTOBUF_OALIGN ) ) {
-		new_size = XLOG_ALIGN_UP( new_size, ( 0x1 << AUTOBUF_GET_ALIGN_BITS( ( *autobuf )->options ) ) );
+		new_size = AUTOBUF_ALIGN_UP( new_size, ( 0x1 << AUTOBUF_GET_ALIGN_BITS( ( *autobuf )->options ) ) );
 	}
 	
-	autobuf_t *temp = ( autobuf_t * )XLOG_REALLOC( ( *autobuf ), new_size );
+	autobuf_t *temp = ( autobuf_t * )AUTOBUF_REALLOC( ( *autobuf ), new_size );
 	if( temp == NULL ) {
 		return ENOMEM;
 	}
 	*autobuf = temp;
 	( *autobuf )->length = new_size - sizeof( autobuf_t ) - reserved;
-	__XLOG_TRACE(
+	AUTOBUF_TRACE(
 		"Payload: lenth = %u, offset = %u, reserved = %lu",
 		( *autobuf )->length, ( *autobuf )->offset, AUTOBUF_GET_RESERVED( ( *autobuf )->options )
 	);
@@ -171,23 +158,17 @@ XLOG_PUBLIC( int ) autobuf_resize( autobuf_t **autobuf, size_t size )
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_destory( autobuf_t **autobuf )
+API_PUBLIC( int ) autobuf_destory( autobuf_t **autobuf )
 {
 	if(
 		autobuf == NULL
 		|| *autobuf == NULL
 	) {
-		__XLOG_TRACE( "Invalid parameters." );
+		AUTOBUF_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
 	
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( ( *autobuf )->magic != XLOG_MAGIC_PAYLOAD ) {
-		return EINVAL;
-	}
-	#endif
-	
-	XLOG_FREE( *autobuf );
+	AUTOBUF_FREE( *autobuf );
 	*autobuf = NULL;
 	
 	return 0;
@@ -200,15 +181,9 @@ XLOG_PUBLIC( int ) autobuf_destory( autobuf_t **autobuf )
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC( void * ) autobuf_data_vptr( const autobuf_t *autobuf )
+API_PUBLIC( void * ) autobuf_data_vptr( const autobuf_t *autobuf )
 {
-	XLOG_ASSERT( autobuf );
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( autobuf->magic != XLOG_MAGIC_PAYLOAD ) {
-		__XLOG_TRACE( "Runtime error: maybe autobuf has been destoryed. magic is 0x%X.", autobuf->magic );
-		return NULL;
-	}
-	#endif
+	AUTOBUF_ASSERT( autobuf );
 	void *vptr = NULL;
 	if( AUTOBUF_TEST_OPTION( autobuf->options, AUTOBUF_ODYNAMIC ) ) {
 		vptr = ( void * )autobuf->data;
@@ -227,7 +202,7 @@ XLOG_PUBLIC( void * ) autobuf_data_vptr( const autobuf_t *autobuf )
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_append_text( autobuf_t **autobuf, const char *text )
+API_PUBLIC( int ) autobuf_append_text( autobuf_t **autobuf, const char *text )
 {
 	if(
 		autobuf == NULL
@@ -235,14 +210,9 @@ XLOG_PUBLIC( int ) autobuf_append_text( autobuf_t **autobuf, const char *text )
 		|| !AUTOBUF_TEXT_COMPATIBLE( ( *autobuf )->options )
 		|| text == NULL
 	) {
-		__XLOG_TRACE( "Invalid parameters. text = %p", text );
+		AUTOBUF_TRACE( "Invalid parameters. text = %p", text );
 		return EINVAL;
 	}
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( ( *autobuf )->magic != XLOG_MAGIC_PAYLOAD ) {
-		return EINVAL;
-	}
-	#endif
 	
 	size_t textlen = AUTOBUF_TEXT_LENGTH( text );
 	if( ( *autobuf )->offset + textlen < ( *autobuf )->length ) {
@@ -254,7 +224,7 @@ XLOG_PUBLIC( int ) autobuf_append_text( autobuf_t **autobuf, const char *text )
 		return 0;
 	} else if( AUTOBUF_RESIZEABLE( ( *autobuf )->options ) ) {
 		int rv = autobuf_resize( autobuf, ( *autobuf )->offset + textlen + 1 );
-		__XLOG_TRACE( "Resize triggered, error = %d.", rv );
+		AUTOBUF_TRACE( "Resize triggered, error = %d.", rv );
 		if( 0 == rv ) {
 			char *ptr = ( char * )autobuf_data_vptr( *autobuf );
 
@@ -277,7 +247,7 @@ XLOG_PUBLIC( int ) autobuf_append_text( autobuf_t **autobuf, const char *text )
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_append_text_va_list( autobuf_t **autobuf, const char *format, va_list ap )
+API_PUBLIC( int ) autobuf_append_text_va_list( autobuf_t **autobuf, const char *format, va_list ap )
 {
 	if(
 		autobuf == NULL
@@ -285,15 +255,9 @@ XLOG_PUBLIC( int ) autobuf_append_text_va_list( autobuf_t **autobuf, const char 
 		|| !AUTOBUF_TEXT_COMPATIBLE( ( *autobuf )->options )
 		|| format == NULL
 	) {
-		__XLOG_TRACE( "Invalid parameters." );
+		AUTOBUF_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
-	
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( ( *autobuf )->magic != XLOG_MAGIC_PAYLOAD ) {
-		return EINVAL;
-	}
-	#endif
 	
 	va_list ap_bkp;
 	va_copy( ap_bkp, ap );
@@ -309,7 +273,7 @@ XLOG_PUBLIC( int ) autobuf_append_text_va_list( autobuf_t **autobuf, const char 
 			return 0;
 		} else if( AUTOBUF_RESIZEABLE( ( *autobuf )->options ) ) {
 			int rv = autobuf_resize( autobuf, ( *autobuf )->offset + len + 1 );
-			__XLOG_TRACE( "Resize triggered, error = %d.", rv );
+			AUTOBUF_TRACE( "Resize triggered, error = %d.", rv );
 			if( 0 == rv ) {
 				ptr = ( char * )autobuf_data_vptr( *autobuf );
 				len = vsnprintf( ptr + ( *autobuf )->offset, ( *autobuf )->length - ( *autobuf )->offset, format, ap_bkp );
@@ -337,22 +301,16 @@ XLOG_PUBLIC( int ) autobuf_append_text_va_list( autobuf_t **autobuf, const char 
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_append_text_va( autobuf_t **autobuf, const char *format, ... )
+API_PUBLIC( int ) autobuf_append_text_va( autobuf_t **autobuf, const char *format, ... )
 {
 	if(
 		autobuf == NULL
 		|| *autobuf == NULL
 		|| !AUTOBUF_TEXT_COMPATIBLE( ( *autobuf )->options )
 	) {
-		__XLOG_TRACE( "Invalid parameters." );
+		AUTOBUF_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
-	
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( ( *autobuf )->magic != XLOG_MAGIC_PAYLOAD ) {
-		return EINVAL;
-	}
-	#endif
 	
 	va_list ap;
 	va_start( ap, format );
@@ -370,23 +328,16 @@ XLOG_PUBLIC( int ) autobuf_append_text_va( autobuf_t **autobuf, const char *form
  * @return error code(@see Exxx).
  *
  */
-XLOG_PUBLIC( int ) autobuf_append_binary( autobuf_t **autobuf, const void *vptr, size_t size )
+API_PUBLIC( int ) autobuf_append_binary( autobuf_t **autobuf, const void *vptr, size_t size )
 {
 	if(
 		autobuf == NULL
 		|| *autobuf == NULL
 		|| !AUTOBUF_BINARY_COMPATIBLE( ( *autobuf )->options )
 	) {
-		__XLOG_TRACE( "Invalid parameters." );
+		AUTOBUF_TRACE( "Invalid parameters." );
 		return EINVAL;
 	}
-	
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( ( *autobuf )->magic != XLOG_MAGIC_PAYLOAD ) {
-		__XLOG_TRACE( "Runtime error: maybe autobuf given has been destoryed." );
-		return EINVAL;
-	}
-	#endif
 	
 	if( ( *autobuf )->offset + size <= ( *autobuf )->length ) {
 		char *ptr = ( char * )autobuf_data_vptr( *autobuf );
@@ -396,104 +347,18 @@ XLOG_PUBLIC( int ) autobuf_append_binary( autobuf_t **autobuf, const void *vptr,
 		return 0;
 	} else if( AUTOBUF_RESIZEABLE( ( *autobuf )->options ) ) {
 		int rv = autobuf_resize( autobuf, ( *autobuf )->offset + size );
-		__XLOG_TRACE( "Resize triggered, error = %d.", rv );
+		AUTOBUF_TRACE( "Resize triggered, error = %d.", rv );
 		if( 0 == rv ) {
 			char *ptr = ( char * )autobuf_data_vptr( *autobuf );
 
 			memcpy( ptr + ( *autobuf )->offset, vptr, size );
 			( *autobuf )->offset += size;
 		}
-		__XLOG_TRACE( "test" );
 		
 		return rv;
 	} else {
-		__XLOG_TRACE( "Overflow, terminate appending." );
+		AUTOBUF_TRACE( "Overflow, terminate appending." );
 	}
 	
 	return EINVAL;
-}
-
-/**
- * @brief  print TEXT compatible autobuf
- *
- * @param  autobuf, autobuf object to print
- *         printer, printer to print the autobuf
- * @return length of printed autobuf data
- *
- */
-XLOG_PUBLIC( int ) autobuf_print_TEXT(
-	const autobuf_t *autobuf, xlog_printer_t *printer
-)
-{
-	XLOG_ASSERT( autobuf );
-	XLOG_ASSERT( AUTOBUF_TEXT_COMPATIBLE( autobuf->options ) );
-	
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( autobuf->magic != XLOG_MAGIC_PAYLOAD ) {
-		__XLOG_TRACE( "Runtime error, magic is NOT XLOG_MAGIC_PAYLOAD." );
-		return 0;
-	}
-	#endif
-	
-	return printer->append( printer, ( const char * )autobuf_data_vptr( autobuf ) );
-}
-
-static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg )
-{
-	xlog_printer_t *printer = ( xlog_printer_t * )arg;
-	
-	char buffer[128];
-	snprintf(
-		buffer, sizeof( buffer ),
-		"%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline
-	);
-	printer->append( printer, buffer );
-}
-
-static int hexdump_memory_readline( const void *addr, off_t offset, void *buffer, size_t size )
-{
-	memcpy( buffer, ( char * )addr + offset, size );
-	
-	return size;
-}
-
-/**
- * @brief  print BINARY compatible autobuf
- *
- * @param  autobuf, autobuf object to print
- *         printer, printer to print the autobuf
- * @return length of printed autobuf data
- *
- */
-XLOG_PUBLIC( int ) autobuf_print_BINARY(
-	const autobuf_t *autobuf, xlog_printer_t *printer
-)
-{
-	XLOG_ASSERT( autobuf );
-	XLOG_ASSERT( printer );
-	
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
-	if( autobuf->magic != XLOG_MAGIC_PAYLOAD ) {
-		__XLOG_TRACE( "Runtime error: maybe autobuf has been destoryed." );
-		return 0;
-	}
-	#endif
-	
-	hexdump_options_t options = {
-		.start = 0,
-		.end = -1,
-		.columns = 16,
-		.groupsize = 8,
-		.use_formatting = false,
-	};
-	options.end = options.start + autobuf->offset;
-	if( printer->optctl ) {
-		printer->optctl( printer, XLOG_PRINTER_CTRL_LOCK, NULL, 0 );
-	}
-	int length = __hexdump( autobuf_data_vptr( autobuf ), &options, hexdump_memory_readline, hexdump_printline, printer );
-	if( printer->optctl ) {
-		printer->optctl( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL, 0 );
-	}
-	
-	return length;
 }
