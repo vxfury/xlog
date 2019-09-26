@@ -6,6 +6,7 @@
 #include "plugins/getopt.h"
 
 #ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wcast-qual"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wshorten-64-to-32"

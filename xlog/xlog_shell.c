@@ -8,6 +8,7 @@
 #include "plugins/getopt.h"
 
 #ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wzero-length-array"
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
