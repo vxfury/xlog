@@ -1,11 +1,11 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
+#include <setjmp.h>
+
 #include "internal.h"
 #include "plugins/hexdump.h"
-
-#include <getopt.h>
-#include <setjmp.h>
+#include "plugins/getopt.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wzero-length-array"

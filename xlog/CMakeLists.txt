@@ -47,6 +47,7 @@ set(
 	plugins/family_tree.c
 	plugins/ringbuf.c
 	plugins/hexdump.c
+	plugins/getopt.c
 	
 	printers/stdio-basic.c
 	printers/stdio-ringbuf.c
@@ -93,8 +94,8 @@ else()
 	set_target_properties("${XLOG_LIB}-shared" PROPERTIES PREFIX "lib")
 	set_target_properties("${XLOG_LIB}-shared" PROPERTIES SOVERSION "${PROJECT_VERSION_SO}" VERSION "${PROJECT_VERSION}")
 	if (NOT WIN32)
-		target_link_libraries("${XLOG_LIB}" m pthread getopt)
-		target_link_libraries("${XLOG_LIB}-shared" m pthread getopt)
+		target_link_libraries("${XLOG_LIB}" m pthread)
+		target_link_libraries("${XLOG_LIB}-shared" m pthread)
 	endif()
 endif()
 

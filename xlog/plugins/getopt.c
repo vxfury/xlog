@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <getopt.h>
+#include "plugins/getopt.h"
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wcast-qual"

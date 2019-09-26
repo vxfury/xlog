@@ -29,8 +29,6 @@ add_definitions(
 	-DPROJECT_PATH_PREFIX="${CMAKE_SOURCE_DIR}"
 )
 
-add_library(getopt STATIC getopt.c)
-
 add_subdirectory(xlog)
 
 link_directories(${LIBRARY_OUTPUT_PATH})
@@ -75,7 +73,7 @@ redefine_file_macro(cov-shell)
 # demo-xlog
 set(SOURCES examples/demo-xlog.c)
 add_executable(demo-xlog ${SOURCES})
-target_link_libraries(demo-xlog xlog pthread getopt)
+target_link_libraries(demo-xlog xlog pthread)
 if(ENABLE_COVERAGE_CHECK)
 	target_link_libraries(demo-xlog gcov)
 endif()
