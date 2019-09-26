@@ -1,8 +1,7 @@
 #ifndef __AUTOBUF_H
 #define __AUTOBUF_H
 
-#include <stdlib.h>
-#include <string.h>
+#include <xlog/xlog.h>
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"

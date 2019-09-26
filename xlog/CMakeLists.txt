@@ -10,7 +10,7 @@ set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT
 # features
 option(XLOG_FEATURE_ENABLE_COLOR "Enable colorful logging" ON)
 
-option(XLOG_FEATURE_ENABLE_STATS "Enable statistics" ON)
+option(XLOG_FEATURE_ENABLE_STATS "Enable statistics" OFF)
 option(XLOG_FEATURE_ENABLE_STATS_PRINTER "Enable statistics for printer(s)" ON)
 option(XLOG_FEATURE_ENABLE_STATS_MODULE "Enable statistics for module(s)" ON)
 

@@ -1313,6 +1313,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	
 	/* package time */
 	if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OTIME ) ) {
+		XLOG_TRACE( "Package time to payload." );
 		#if ((defined __linux__) || (defined __FreeBSD__) || (defined __APPLE__) || (defined __unix__))
 		char buffer[48];
 		struct timeval tv;
@@ -1335,6 +1336,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	
 	/* package task info */
 	if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OTASK ) ) {
+		XLOG_TRACE( "Package task info to payload." );
 		char taskname[XLOG_LIMIT_THREAD_NAME];
 		XLOG_GET_THREAD_NAME( taskname );
 		if( taskname[0] == '\0' ) {
@@ -1348,6 +1350,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	
 	/* package class(level and module path) */
 	if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLEVEL | XLOG_FORMAT_OMODULE ) ) {
+		XLOG_TRACE( "Package class info to payload." );
 		char modulename[XLOG_LIMIT_MODULE_PATH] = { 0 };
 		autobuf_append_text( &payload, level_attributes[level].class_prefix );
 		if( module && __xlog_format_been_enabled( module, level, XLOG_FORMAT_OMODULE ) ) {
@@ -1358,6 +1361,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	
 	/* package source location */
 	if( __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLOCATION ) ) {
+		XLOG_TRACE( "Package source location to payload." );
 		const char *_file = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OFILE ) ? file : NULL;
 		const char *_func = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OFUNC ) ? func : NULL;
 		long _line = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLINE ) ? line : -1;
