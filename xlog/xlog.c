@@ -101,7 +101,7 @@ static size_t __strlcpy( char *dest, const char *src, size_t size )
 }
 
 /** make directory recursively */
-static int __xlog_mkdir_p( const char *dir, mode_t mode )
+static int __mkdir_p( const char *dir, mode_t mode )
 {
 	XLOG_ASSERT( dir );
 	int status = 0;
@@ -133,7 +133,7 @@ static int __xlog_mkdir_p( const char *dir, mode_t mode )
 }
 
 /** remove directory recursively */
-static int __xlog_rmdir_r( const char *dir )
+static int __rmdir_r( const char *dir )
 {
 	XLOG_ASSERT( dir );
 	int status = 0;
@@ -160,7 +160,7 @@ static int __xlog_rmdir_r( const char *dir )
 			}
 			
 			snprintf( dirtmp, sizeof( dirtmp ), "%s/%s", dir, dp->d_name );
-			status = __xlog_rmdir_r( dirtmp );
+			status = __rmdir_r( dirtmp );
 			if( status != 0 ) {
 				break;
 			}
@@ -760,7 +760,7 @@ XLOG_PUBLIC( int ) xlog_module_dump_to( const xlog_module_t *module, const char 
 		}
 		char path[XLOG_LIMIT_NODE_PATH];
 		if( __xlog_module_node_dir( path, sizeof( path ), module ) ) {
-			__xlog_mkdir_p( path, XLOG_PERM_MODULE_DIR );
+			__mkdir_p( path, XLOG_PERM_MODULE_DIR );
 			strcat( path, "/" XLOG_NODE_NAME );
 			
 			fd = open( path, O_WRONLY | O_CREAT, XLOG_PERM_MODULE_NODE );
@@ -969,6 +969,7 @@ static int __xlog_load_modules( xlog_t *context )
 	return __traverse_dir_recursive( context->savepath, __hook_load_from_file, context->module );
 }
 
+
 /**
  * @brief  create xlog context
  *
@@ -1015,7 +1016,7 @@ XLOG_PUBLIC( xlog_t * ) xlog_open( const char *savepath, int option )
 						*_ptr -- = '\0';
 					}
 					context->savepath = _dir;
-					__xlog_mkdir_p( context->savepath, 0777 );
+					__mkdir_p( context->savepath, 0777 );
 					
 					if( option & XLOG_OPEN_LOAD ) {
 						XLOG_TRACE( "Loading configuration from files." );
@@ -1062,7 +1063,7 @@ XLOG_PUBLIC( int ) xlog_close( xlog_t *context, int option )
 		if( context->savepath ) {
 			if( option & XLOG_CLOSE_CLEAR ) {
 				XLOG_TRACE( "CLEAR ON CLOSE is enabled, and savepath is NOT NULL, remove directories." );
-				__xlog_rmdir_r( context->savepath );
+				__rmdir_r( context->savepath );
 			}
 			XLOG_FREE( context->savepath );
 		}
@@ -1475,11 +1476,9 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	}
 	int length = payload_print_TEXT( payload, printer );
 	autobuf_destory( &payload );
-	if( length > 0 ) {
-		if( module ) {
-			XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
-			XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
-		}
+	if( length > 0 && module ) {
+		XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
+		XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
 	}
 	XLOG_TRACE( "Logged length is %d.", length );
 	

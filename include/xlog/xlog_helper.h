@@ -14,8 +14,13 @@
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif
 
+#include <xlog/xlog_config.h>
 #include <xlog/plugins/bitops.h>
 #include <xlog/plugins/autobuf.h>
+
+#if (defined HAVE_ASM_ATOMIC_H)
+#include <asm/atomic.h>
+#endif
 
 /**
  * @brief Instructs the compiler that a specific variable or function is used.
@@ -132,7 +137,11 @@ then using the XLOG_API_VISIBILITY flag to "export" the same symbols the way XLO
 /** xlog structures & types */
 typedef struct {
 	int option;
+	#if (defined HAVE_ASM_ATOMIC_H)
+	atomic_t *data;
+	#else
 	unsigned int *data;
+	#endif
 } xlog_stats_t;
 
 typedef struct {
@@ -161,12 +170,9 @@ typedef struct __xlog_printer {
 
 typedef struct xlog_level_attr_tag {
 	int format;
-	const char *time_prefix;
-	const char *time_suffix;
-	const char *class_prefix;
-	const char *class_suffix;
-	const char *body_prefix;
-	const char *body_suffix;
+	const char *time_prefix, *time_suffix;
+	const char *class_prefix, *class_suffix;
+	const char *body_prefix, *body_suffix;
 } xlog_level_attr_t;
 
 typedef struct {
@@ -227,6 +233,39 @@ typedef struct {
 
 #ifdef XLOG_FEATURE_ENABLE_STATS
 
+#if (defined HAVE_ASM_ATOMIC_H)
+
+#define XLOG_STATS_INIT(pstats, options)	do { \
+	size_t msize = XLOG_STATS_LENGTH( options ) * sizeof( atomic_t ); \
+	(pstats)->option = options; \
+	if( msize > 0 ) { \
+		(pstats)->data = (atomic_t *)XLOG_MALLOC( msize ); \
+		if( (pstats)->data ) { memset( (pstats)->data, 0, msize ); } \
+	} \
+} while(0)
+
+#define XLOG_STATS_FINI(pstats)	do { \
+	if( (pstats)->data ) { XLOG_FREE( (pstats)->data ); (pstats)->data = NULL; } \
+	(pstats)->option = 0; \
+} while(0)
+
+#define XLOG_STATS_CLEAR(pstats)	if( (pstats)->data ) { \
+	size_t length = XLOG_STATS_LENGTH(options); \
+	for( int i = 0; i < length; i ++ ) { \
+		atomic_set( (pstats)->data + i, 0 ); \
+	} \
+}
+
+#define XLOG_STATS_UPDATE(pstats, major, minor, inc)	if(XLOG_STATS_ABICHK((pstats)->option, XLOG_STATS_MAJOR_##major, XLOG_STATS_MINOR_##minor)) { \
+	atomic_add( (pstats)->data + XLOG_STATS_OFFSET((pstats)->option, XLOG_STATS_MAJOR_##major, XLOG_STATS_MINOR_##minor), inc ); \
+}
+
+#define XLOG_STATS_CLEAR_FILED(pstats, major, minor, value)	if(XLOG_STATS_ABICHK((pstats)->option, XLOG_STATS_MAJOR_##major, XLOG_STATS_MINOR_##minor)) { \
+	atomic_set( (pstats)->data + XLOG_STATS_OFFSET((pstats)->option, XLOG_STATS_MAJOR_##major, XLOG_STATS_MINOR_##minor), value ); \
+}
+
+#else
+
 #define XLOG_STATS_INIT(pstats, options)	do { \
 	size_t msize = XLOG_STATS_LENGTH( options ) * sizeof( unsigned int ); \
 	(pstats)->option = options; \
@@ -252,6 +291,8 @@ typedef struct {
 #define XLOG_STATS_CLEAR_FILED(pstats, major, minor, value)	if(XLOG_STATS_ABICHK((pstats)->option, XLOG_STATS_MAJOR_##major, XLOG_STATS_MINOR_##minor)) { \
 	(pstats)->data[XLOG_STATS_OFFSET((pstats)->option, XLOG_STATS_MAJOR_##major, XLOG_STATS_MINOR_##minor)] = (value); \
 }
+
+#endif
 
 #else
 

@@ -18,7 +18,6 @@
 #include <inttypes.h>
 #include <errno.h>
 #include <assert.h>
-#include <fcntl.h>
 #include <ctype.h>
 #include <pthread.h>
 #include <unistd.h>
@@ -29,6 +28,10 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <setjmp.h>
+
+/** check if headers exists */
+#cmakedefine HAVE_ASM_ATOMIC_H
+
 
 /** assert and debug */
 #define XLOG_ASSERT(cond)			assert(cond)
