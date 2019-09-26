@@ -100,7 +100,7 @@ if (ENABLE_SAFE_STACK)
     )
 endif()
 
-option(ENABELE_POSITION_INDEPENDENT_CODE "Enable Position Independent Code" ON)
+option(ENABELE_POSITION_INDEPENDENT_CODE "Enable Position Independent Code" OFF)
 if (ENABELE_POSITION_INDEPENDENT_CODE)
     list(APPEND custom_compiler_flags -fPIC)
 endif()
