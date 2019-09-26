@@ -1476,8 +1476,8 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	int length = payload_print_TEXT( payload, printer );
 	autobuf_destory( &payload );
 	if( length > 0 ) {
-		XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
 		if( module ) {
+			XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
 			XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
 		}
 	}
