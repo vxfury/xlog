@@ -22,6 +22,7 @@
 #include <xlog/xlog_debug.h>
 
 #ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wshorten-64-to-32"
