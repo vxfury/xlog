@@ -107,26 +107,26 @@ int printf( const char *restrict format, ... );
  * known size (i.e. sizeof(array) works) could be supported.
  */
 #define __format(arg) _Generic((arg), \
-    char: "%c", \
-    signed char: "%hhd", \
-    unsigned char: "%hhu", \
-    signed short: "%hd", \
-    unsigned short: "%hu", \
-    signed int: "%d", \
-    unsigned int: "%u", \
-    long int: "%ld", \
-    unsigned long int: "%lu", \
-    long long int: "%lld", \
-    unsigned long long int: "%llu", \
-    _Bool: "%d", \
-    float: "%g", \
-    double: "%g", \
-    long double: "%Lg", \
-    _Complex double: "%g + %gi", \
-    char *: "%s", \
-    void *: "%p", \
-    char[sizeof(arg)]: "%s", \
-    default: "<unknown>" \
+	char: "%c", \
+	signed char: "%hhd", \
+	unsigned char: "%hhu", \
+	signed short: "%hd", \
+	unsigned short: "%hu", \
+	signed int: "%d", \
+	unsigned int: "%u", \
+	long int: "%ld", \
+	unsigned long int: "%lu", \
+	long long int: "%lld", \
+	unsigned long long int: "%llu", \
+	_Bool: "%d", \
+	float: "%g", \
+	double: "%g", \
+	long double: "%Lg", \
+	_Complex double: "%g + %gi", \
+	char *: "%s", \
+	void *: "%p", \
+	char[sizeof(arg)]: "%s", \
+	default: "<unknown>" \
 	)
 
 /* Print an argument regardless of its type (see __format). */

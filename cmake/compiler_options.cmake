@@ -14,7 +14,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         )
     endif()
 else()
-    add_definitions(-D__RELEASE__)
+    add_definitions(-D__RELEASE__ -DNDEBUG)
     if (("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU"))
         list(APPEND custom_compiler_flags
             -O3
@@ -122,7 +122,7 @@ foreach(compiler_flag ${custom_compiler_flags})
     #remove problematic characters
     string(REGEX REPLACE "[^a-zA-Z0-9]" "" current_variable ${compiler_flag})
     
-    CHECK_C_COMPILER_FLAG(${compiler_flag} "OPTION_${current_variable}")
+    CHECK_C_COMPILER_FLAG(${compiler_flag} "FLAG_${current_variable}")
     if (OPTION_${current_variable})
         list(APPEND supported_compiler_flags ${compiler_flag})
     endif()

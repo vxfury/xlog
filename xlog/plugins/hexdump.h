@@ -32,15 +32,15 @@ typedef struct {
 } hexdump_iterator_t;
 
 int __hexdump_iterator(
-    hexdump_iterator_t *iterator,
-    const void *target, const hexdump_options_t *options,
-    int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ )
+	hexdump_iterator_t *iterator,
+	const void *target, const hexdump_options_t *options,
+	int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ )
 );
 
 int __hexdump(
-    const void *target, const hexdump_options_t *options,
-    int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ ),
-    void ( *printline )( uintmax_t, const char *, void * ), void *arg
+	const void *target, const hexdump_options_t *options,
+	int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ ),
+	void ( *printline )( uintmax_t, const char *, void * ), void *arg
 );
 
 #if 0

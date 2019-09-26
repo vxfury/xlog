@@ -128,7 +128,7 @@ int main( int argc, char **argv )
 				struct tm *p = localtime( &tv_sec );
 				snprintf(
 				    temp, 2048,
-				    XLOG_TAG_PREFIX_LOG_TIME_NONE "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME_NONE XLOG_TAG_PREFIX_LOG_CLASS_NONE( WARN ) "%s" XLOG_TAG_SUFFIX_LOG_CLASS_NONE( WARN ) "%s",
+				    XLOG_PREFIX_LOG_TIME_NONE "%02d/%02d %02d:%02d:%02d.%03d" XLOG_SUFFIX_LOG_TIME_NONE XLOG_PREFIX_LOG_CLASS_NONE( WARN ) "%s" XLOG_SUFFIX_LOG_CLASS_NONE( WARN ) "%s",
 				    p->tm_mon + 1, p->tm_mday,
 				    p->tm_hour, p->tm_min, p->tm_sec, ( int )( now.tv.tv_usec / 1000 ),
 				    "/net",

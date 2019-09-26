@@ -62,12 +62,12 @@ static const char *hexdump_format_of( int v )
 				*value++ = '\0';
 				
 				int i = (
-		            strcmp( key, "zero" ) == 0 ? 0 :
-		            strcmp( key, "all"  ) == 0 ? 1 :
-		            strcmp( key, "low"  ) == 0 ? 2 :
-		            strcmp( key, "high" ) == 0 ? 3 :
-		            strcmp( key, "high" ) == 0 ? 4 : -1
-		        );
+					strcmp( key, "zero" ) == 0 ? 0 :
+					strcmp( key, "all"  ) == 0 ? 1 :
+					strcmp( key, "low"  ) == 0 ? 2 :
+					strcmp( key, "high" ) == 0 ? 3 :
+					strcmp( key, "high" ) == 0 ? 4 : -1
+				);
 				if( i >= 0 && i < ( int )HEXD_ARRAY_SIZE( formats ) ) {
 					initialized = true;
 					snprintf( formats[i].format, sizeof( formats[i].format ), "%s", value );
@@ -92,9 +92,9 @@ static const char *hexdump_format_of( int v )
 }
 
 int __hexdump_iterator(
-    hexdump_iterator_t *iterator,
-    const void *target, const hexdump_options_t *options,
-    int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ )
+	hexdump_iterator_t *iterator,
+	const void *target, const hexdump_options_t *options,
+	int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ )
 )
 {
 	XLOG_ASSERT( target );
@@ -115,9 +115,9 @@ int __hexdump_iterator(
 	char *dumpptr = iterator->dumpline;
 	
 	if(
-	    iterator->status != HEXD_FIRST_LINE
-	    && 0 == memcmp( iterator->line, iterator->prev_line, options->columns )
-	    && n == ( int )options->columns
+		iterator->status != HEXD_FIRST_LINE
+		&& 0 == memcmp( iterator->line, iterator->prev_line, options->columns )
+		&& n == ( int )options->columns
 	) {
 		switch( iterator->status ) {
 			case HEXD_DUPLICATE:
@@ -227,9 +227,9 @@ int __hexdump_iterator(
 }
 
 int __hexdump(
-    const void *target, const hexdump_options_t *options,
-    int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ ),
-    void ( *printline )( uintmax_t, const char *, void * ), void *arg
+	const void *target, const hexdump_options_t *options,
+	int ( *readline )( const void * /* target */, off_t /* offset */, void * /* buffer */, size_t /* size */ ),
+	void ( *printline )( uintmax_t, const char *, void * ), void *arg
 )
 {
 	XLOG_ASSERT( target );
@@ -260,10 +260,10 @@ int __hexdump(
 	
 	///< xxxxxyyy  hh hh hh ... hh  ee ee ee ... ee  abcdefgh abcdefgh
 	dumpline_size = (
-        ( 5 + 3 )/* offset */ + 2/* space */ + 1 /*  */
-        + ( options->columns / options->groupsize )/* space */
-        + ( 2/* hex */ + 1/* space */ + HEXD_LINE_RSV_SIZE_COLORS ) * options->columns
-    );
+		( 5 + 3 )/* offset */ + 2/* space */ + 1 /*  */
+		+ ( options->columns / options->groupsize )/* space */
+		+ ( 2/* hex */ + 1/* space */ + HEXD_LINE_RSV_SIZE_COLORS ) * options->columns
+	);
 	dumpline = ( char * )malloc( dumpline_size );
 	if( NULL == dumpline ) {
 		free( line );
@@ -460,10 +460,10 @@ int hexdump_shell_main( int argc, char **argv )
 		for ( int i = 0; i < argc; i++ ) {
 			if ( argc > 1 ) {
 				printf(
-				    "%s====> hexdump of file %s%s%s <====\n", i > 0 ? "\n" : "",
-				    hexdopt.use_formatting ? "\x1B[1m" : "",
-				    argv[i],
-				    hexdopt.use_formatting ? "\x1B[m" : ""
+					"%s====> hexdump of file %s%s%s <====\n", i > 0 ? "\n" : "",
+					hexdopt.use_formatting ? "\x1B[1m" : "",
+					argv[i],
+					hexdopt.use_formatting ? "\x1B[m" : ""
 				);
 			}
 			

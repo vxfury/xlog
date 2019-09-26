@@ -2,7 +2,7 @@
 #define __XLOG_HELPER_H
 
 #ifdef __GNUC__
-#pragma GCC diagnostic ignored "-pedantic"
+// #pragma GCC diagnostic ignored "-pedantic"
 #pragma GCC diagnostic ignored "-Wpedantic"
 #pragma GCC diagnostic ignored "-Wzero-length-array"
 #pragma GCC diagnostic ignored "-Wcast-qual"
@@ -535,7 +535,7 @@ XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const v
  *
  */
 XLOG_PUBLIC( int ) xlog_payload_print_TEXT(
-    const xlog_payload_t *payload, xlog_printer_t *printer
+	const xlog_payload_t *payload, xlog_printer_t *printer
 );
 
 /**
@@ -547,7 +547,7 @@ XLOG_PUBLIC( int ) xlog_payload_print_TEXT(
  *
  */
 XLOG_PUBLIC( int ) xlog_payload_print_BINARY(
-    const xlog_payload_t *payload, xlog_printer_t *printer
+	const xlog_payload_t *payload, xlog_printer_t *printer
 );
 
 #ifdef __cplusplus

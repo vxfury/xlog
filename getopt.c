@@ -31,7 +31,7 @@ static void reverse_argv_elements( char **argv, int num )
 	char *tmp;
 	
 	for(
-	    i = 0; i < ( num >> 1 ); i++
+		i = 0; i < ( num >> 1 ); i++
 	) {
 		tmp = argv[i];
 		argv[i] = argv[num - i - 1];
@@ -51,18 +51,18 @@ static void permute( char *const argv[], int len1, int len2 )
 static int is_option( char *argv_element, int only )
 {
 	return (
-	        ( argv_element == 0 )
-	        || ( argv_element[0] == '-' ) || ( only && argv_element[0] == '+' )
-	    );
+			( argv_element == 0 )
+			|| ( argv_element[0] == '-' ) || ( only && argv_element[0] == '+' )
+		);
 }
 
 /* getopt_internal:  the function that does all the dirty work
    NOTE: to reduce the code and RAM footprint this function uses
    fputs()/fputc() to do output to stderr instead of fprintf(). */
 static int getopt_internal(
-    int argc, char *const argv[], const char *shortopts,
-    const struct option *longopts, int *longind, int only,
-    struct getopt_data *data
+	int argc, char *const argv[], const char *shortopts,
+	const struct option *longopts, int *longind, int only,
+	struct getopt_data *data
 )
 {
 	GETOPT_ORDERING_T ordering = PERMUTE;
@@ -79,7 +79,7 @@ static int getopt_internal(
 	
 	/* first, deal with silly parameters and easy stuff */
 	if( argc == 0 || argv == 0 || ( shortopts == 0 && longopts == 0 )
-	    || data->optind >= argc || argv[data->optind] == 0 ) {
+		|| data->optind >= argc || argv[data->optind] == 0 ) {
 		return EOF;
 	}
 	if( strcmp( argv[data->optind], "--" ) == 0 ) {
@@ -153,10 +153,10 @@ static int getopt_internal(
 	
 	/* first, is it a long option? */
 	if( longopts != 0
-	    && (
-	        memcmp( argv[data->optind], "--", 2 ) == 0
-	        || ( only && argv[data->optind][0] == '+' )
-	    ) && data->optwhere == 1 ) {
+		&& (
+			memcmp( argv[data->optind], "--", 2 ) == 0
+			|| ( only && argv[data->optind][0] == '+' )
+		) && data->optwhere == 1 ) {
 		/* handle long options */
 		if( memcmp( argv[data->optind], "--", 2 ) == 0 ) {
 			data->optwhere = 2;
@@ -172,13 +172,13 @@ static int getopt_internal(
 			match_chars = ( possible_arg - argv[data->optind] ) - data->optwhere;
 		}
 		for(
-		    optindex = 0; longopts[optindex].name != 0; ++optindex
+			optindex = 0; longopts[optindex].name != 0; ++optindex
 		) {
 			if( memcmp
-			    (
-			        argv[data->optind] + data->optwhere, longopts[optindex].name,
-			        match_chars
-			    ) == 0 ) {
+				(
+					argv[data->optind] + data->optwhere, longopts[optindex].name,
+					match_chars
+				) == 0 ) {
 				/* do we have an exact match? */
 				if( match_chars == strlen( longopts[optindex].name ) ) {
 					longopt_match = optindex;
@@ -229,9 +229,9 @@ static int getopt_internal(
 			return ( data->optopt = '?' );
 		}
 		has_arg = (
-		        ( cp[1] == ':' )
-		        ? ( ( cp[2] == ':' ) ? OPTIONAL_ARG : REQUIRED_ARG ) : NO_ARG
-		    );
+				( cp[1] == ':' )
+				? ( ( cp[2] == ':' ) ? OPTIONAL_ARG : REQUIRED_ARG ) : NO_ARG
+			);
 		possible_arg = argv[data->optind] + data->optwhere + 1;
 		data->optopt = *cp;
 	}
@@ -314,26 +314,26 @@ static int getopt_internal(
 }
 
 int getopt_r(
-    int argc, char *const argv[], const char *optstring,
-    struct getopt_data *data
+	int argc, char *const argv[], const char *optstring,
+	struct getopt_data *data
 )
 {
 	return getopt_internal( argc, argv, optstring, 0, 0, 0, data );
 }
 
 int getopt_long_r(
-    int argc, char *const argv[], const char *shortopts,
-    const struct option *longopts, int *longind,
-    struct getopt_data *data
+	int argc, char *const argv[], const char *shortopts,
+	const struct option *longopts, int *longind,
+	struct getopt_data *data
 )
 {
 	return getopt_internal( argc, argv, shortopts, longopts, longind, 0, data );
 }
 
 int getopt_long_only_r(
-    int argc, char *const argv[], const char *shortopts,
-    const struct option *longopts, int *longind,
-    struct getopt_data *data
+	int argc, char *const argv[], const char *shortopts,
+	const struct option *longopts, int *longind,
+	struct getopt_data *data
 )
 {
 	return getopt_internal( argc, argv, shortopts, longopts, longind, 1, data );

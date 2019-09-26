@@ -56,9 +56,9 @@ set(
 )
 
 configure_file(
-    "${CMAKE_SOURCE_DIR}/include/xlog/xlog_config.h.in"
-    "${CMAKE_SOURCE_DIR}/include/xlog/xlog_config.h"
-    @ONLY
+	"${CMAKE_SOURCE_DIR}/include/xlog/xlog_config.h.in"
+	"${CMAKE_SOURCE_DIR}/include/xlog/xlog_config.h"
+	@ONLY
 )
 
 option(BUILD_SHARED_AND_STATIC_LIBS "Build both shared and static libraries" ON)
@@ -66,13 +66,13 @@ option(XLOG_OVERRIDE_BUILD_SHARED_LIBS "Override BUILD_SHARED_LIBS with XLOG_BUI
 option(XLOG_BUILD_SHARED_LIBS "Overrides BUILD_SHARED_LIBS if XLOG_OVERRIDE_BUILD_SHARED_LIBS is enabled" OFF)
 if (NOT BUILD_SHARED_AND_STATIC_LIBS)
 	if ((XLOG_OVERRIDE_BUILD_SHARED_LIBS AND XLOG_BUILD_SHARED_LIBS) OR ((NOT XLOG_OVERRIDE_BUILD_SHARED_LIBS) AND BUILD_SHARED_LIBS))
-	    set(XLOG_LIBRARY_TYPE SHARED)
+		set(XLOG_LIBRARY_TYPE SHARED)
 	else()
-	    set(XLOG_LIBRARY_TYPE STATIC)
+		set(XLOG_LIBRARY_TYPE STATIC)
 	endif()
-    add_library("${XLOG_LIB}" "${XLOG_LIBRARY_TYPE}" "${HEADERS}" "${SOURCES}")
-    
-    if (NOT WIN32)
+	add_library("${XLOG_LIB}" "${XLOG_LIBRARY_TYPE}" "${HEADERS}" "${SOURCES}")
+	
+	if (NOT WIN32)
 		target_link_libraries("${XLOG_LIB}" m pthread)
 	endif()
 	

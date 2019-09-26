@@ -63,22 +63,22 @@ static void shell_debug_exit( xlog_shell_globals_t *globals, int code )
 static void usage( xlog_shell_globals_t *globals )
 {
 	( void )fprintf(
-	    stderr,
-	    "Usage: debug [OPTIONS] MODULE[/SUB-MODULE/...]\n"
-	    "\n"
-	    "Mandatory arguments to long options are mandatory for short options too.\n"
-	    "  -f, --force        Update module's paramters forcibly,\n"
-	    "                     minimal changes will applied to it's parent.\n"
-	    "  -F                 Make no changes on it's parent, contrary to --force option.\n"
-	    "  -r, --recursive    Update sub-modules too.\n"
-	    "  -L, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.\n"
-	    "                     s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).\n"
-	    "  -l, --list         List modules in your application.\n"
-	    "  -a, --all          Show all modules, include the hidden.\n"
-	    "      --only         Only enable output of specified modules(disabling will be applied to other modules).\n"
-	    "  -v, --version      Show version of logger.\n"
-	    "  -h, --help         Display this help and exit.\n"
-	    "\n"
+		stderr,
+		"Usage: debug [OPTIONS] MODULE[/SUB-MODULE/...]\n"
+		"\n"
+		"Mandatory arguments to long options are mandatory for short options too.\n"
+		"  -f, --force        Update module's paramters forcibly,\n"
+		"                     minimal changes will applied to it's parent.\n"
+		"  -F                 Make no changes on it's parent, contrary to --force option.\n"
+		"  -r, --recursive    Update sub-modules too.\n"
+		"  -L, --level=LEVEL  Specify the logging level. XLOG_LEVEL_DEBUG if not specified.\n"
+		"                     s[ilent]/f[atal]/e[rror]/w[arn]/i[nfo]/d[ebug]/v[erbose](case insensitive, or -1 ~ 5).\n"
+		"  -l, --list         List modules in your application.\n"
+		"  -a, --all          Show all modules, include the hidden.\n"
+		"      --only         Only enable output of specified modules(disabling will be applied to other modules).\n"
+		"  -v, --version      Show version of logger.\n"
+		"  -h, --help         Display this help and exit.\n"
+		"\n"
 	);
 	exit( EXIT_FAILURE );
 	/* NOTREACHED */
@@ -95,10 +95,10 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 	globals->f_list_options = XLOG_LIST_OWITH_TAG;
 	
 	while( (
-        ch = getopt_long_r(
-            argc, argv,
-            XLOG_CLI_SHORT_OPTIONS, debug_options, &oi, &getopt_reent
-        )
+		ch = getopt_long_r(
+			argc, argv,
+			XLOG_CLI_SHORT_OPTIONS, debug_options, &oi, &getopt_reent
+		)
 	) != - 1 ) {
 		switch( ch ) {
 			case 'f':
@@ -188,9 +188,9 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 		if( globals->f_only ) {
 			XLOG_TRACE( "Disable logging of all modules." );
 			globals->exit_code |= xlog_module_set_level(
-		        globals->context->module,
-		        XLOG_LEVEL_SILENT, XLOG_LEVEL_ORECURSIVE
-		    );
+				globals->context->module,
+				XLOG_LEVEL_SILENT, XLOG_LEVEL_ORECURSIVE
+			);
 		}
 		for( int i = 0; i < argc; i ++ ) {
 			globals->exit_code |= xlog_module_set_level(

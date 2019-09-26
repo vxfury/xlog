@@ -7,12 +7,12 @@ INCLUDE(${CMAKE_ROOT}/Modules/CheckCXXSourceCompiles.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/TestBigEndian.cmake)
 INCLUDE(${CMAKE_ROOT}/Modules/CheckSymbolExists.cmake)
 
-# check for include files
-CHECK_INCLUDE_FILE("stdarg.h" HAVE_STDARG_H)
-
 # check the size of primitive types
 CHECK_TYPE_SIZE("long" SIZEOF_LONG)
 math(EXPR BITS_PER_LONG "8 * ${SIZEOF_LONG}")
+
+# check for include files
+# CHECK_INCLUDE_FILE("stdarg.h" HAVE_STDARG_H)
 
 # check for functions: set/get thread name
 # list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)

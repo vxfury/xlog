@@ -22,16 +22,16 @@ static int __filepath( char *buffer, size_t size, const char *pattern, int i )
 	
 	if( _ptr_ext ) {
 		if(
-		    ( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
-		    || ( _ptr_dir == NULL ) // file.ext, no parent dir
+			( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
+			|| ( _ptr_dir == NULL ) // file.ext, no parent dir
 		) {
 			snprintf(
-			    buffer, size,
-			    "%.*s_%05d%s"
-			    , ( int )( _ptr_ext - pattern )
-			    , pattern
-			    , i
-			    , _ptr_ext
+				buffer, size,
+				"%.*s_%05d%s"
+				, ( int )( _ptr_ext - pattern )
+				, pattern
+				, i
+				, _ptr_ext
 			);
 		} else { // xxx/path/to/file.ext/
 			return -1;

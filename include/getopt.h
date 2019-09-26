@@ -43,20 +43,20 @@ typedef struct getopt_data {
 
 /* function prototypes */
 int getopt_r(
-    int __argc, char *const __argv[], const char *__optstring,
-    struct getopt_data *__data
+	int __argc, char *const __argv[], const char *__optstring,
+	struct getopt_data *__data
 );
 
 int getopt_long_r(
-    int __argc, char *const __argv[], const char *__shortopts,
-    const struct option *__longopts, int *__longind,
-    struct getopt_data *__data
+	int __argc, char *const __argv[], const char *__shortopts,
+	const struct option *__longopts, int *__longind,
+	struct getopt_data *__data
 );
 
 int getopt_long_only_r(
-    int __argc, char *const __argv[], const char *__shortopts,
-    const struct option *__longopts, int *__longind,
-    struct getopt_data *__data
+	int __argc, char *const __argv[], const char *__shortopts,
+	const struct option *__longopts, int *__longind,
+	struct getopt_data *__data
 );
 
 #ifdef __cplusplus

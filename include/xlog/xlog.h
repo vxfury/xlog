@@ -48,7 +48,9 @@ extern "C" {
 #define XLOG_FORMAT_OFILE			BIT_MASK(4) /**< file */
 #define XLOG_FORMAT_OFUNC			BIT_MASK(5) /**< function */
 #define XLOG_FORMAT_OLINE			BIT_MASK(6) /**< line number */
-#define XLOG_FORMAT_OLOCATION		(XLOG_FORMAT_OFILE | XLOG_FORMAT_OFUNC | XLOG_FORMAT_OLINE)
+#define XLOG_FORMAT_OLOCATION		BITS_MASK(4, 7)
+#define XLOG_FORMAT_OALL	 		BITS_MASK(0, 7)
+
 
 /** xlog shell list control options */
 #define XLOG_LIST_OWITH_TAG			BIT_MASK(0)
@@ -246,8 +248,8 @@ XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer );
  *
  */
 XLOG_PUBLIC( int ) xlog_output_rawlog(
-    xlog_printer_t *printer, xlog_t *context, const char *prefix, const char *suffix,
-    const char *format, ...
+	xlog_printer_t *printer, xlog_t *context, const char *prefix, const char *suffix,
+	const char *format, ...
 );
 
 /**
@@ -261,10 +263,10 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
  *
  */
 XLOG_PUBLIC( int ) xlog_output_fmtlog(
-    xlog_printer_t *printer,
-    xlog_module_t *module, int level,
-    const char *file, const char *func, long int line,
-    const char *format, ...
+	xlog_printer_t *printer,
+	xlog_module_t *module, int level,
+	const char *file, const char *func, long int line,
+	const char *format, ...
 );
 
 

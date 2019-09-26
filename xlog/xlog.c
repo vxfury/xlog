@@ -16,6 +16,7 @@
 #pragma GCC diagnostic ignored "-Wembedded-directive"
 #endif
 
+#define XLOG_THREAD_UNNAMED			"unnamed-thread"
 #define XLOG_NODE_NAME				".node"
 #define XLOG_PERM_MODULE_DIR		0740
 #define XLOG_PERM_MODULE_NODE		0640
@@ -30,12 +31,12 @@ static xlog_t *__default_context = NULL;
 #define XLOG_LEVEL_ATTR_DEFAULT(LEVEL) \
 	[XLOG_LEVEL_##LEVEL] = { \
 		.format = XLOG_DEFAULT_FORMAT_##LEVEL, \
-		.time_prefix = XLOG_TAG_PREFIX_LOG_TIME,\
-		.time_suffix = XLOG_TAG_SUFFIX_LOG_TIME,\
-		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS( LEVEL ), \
-		.class_suffix = XLOG_TAG_SUFFIX_LOG_CLASS( LEVEL ), \
-		.body_prefix  = XLOG_TAG_PREFIX_LOG_BODY( LEVEL ), \
-		.body_suffix  = XLOG_TAG_PREFIX_LOG_BODY( LEVEL ), \
+		.time_prefix = XLOG_PREFIX_LOG_TIME,\
+		.time_suffix = XLOG_SUFFIX_LOG_TIME,\
+		.class_prefix = XLOG_PREFIX_LOG_CLASS( LEVEL ), \
+		.class_suffix = XLOG_SUFFIX_LOG_CLASS( LEVEL ), \
+		.body_prefix  = XLOG_PREFIX_LOG_BODY( LEVEL ), \
+		.body_suffix  = XLOG_PREFIX_LOG_BODY( LEVEL ), \
 	}
 static const xlog_level_attr_t _level_attributes_default[] = {
 	XLOG_LEVEL_ATTR_DEFAULT( FATAL ),
@@ -49,12 +50,12 @@ static const xlog_level_attr_t _level_attributes_default[] = {
 #define XLOG_LEVEL_ATTR_NONE(LEVEL) \
 	[XLOG_LEVEL_##LEVEL] = { \
 		.format = XLOG_DEFAULT_FORMAT_##LEVEL, \
-		.time_prefix = XLOG_TAG_PREFIX_LOG_TIME_NONE,\
-		.time_suffix = XLOG_TAG_SUFFIX_LOG_TIME_NONE,\
-		.class_prefix = XLOG_TAG_PREFIX_LOG_CLASS_NONE( WARN ), \
-		.class_suffix = XLOG_TAG_SUFFIX_LOG_CLASS_NONE( LEVEL ), \
-		.body_prefix  = XLOG_TAG_PREFIX_LOG_BODY_NONE( LEVEL ), \
-		.body_suffix  = XLOG_TAG_PREFIX_LOG_BODY_NONE( LEVEL ), \
+		.time_prefix = XLOG_PREFIX_LOG_TIME_NONE,\
+		.time_suffix = XLOG_SUFFIX_LOG_TIME_NONE,\
+		.class_prefix = XLOG_PREFIX_LOG_CLASS_NONE( WARN ), \
+		.class_suffix = XLOG_SUFFIX_LOG_CLASS_NONE( LEVEL ), \
+		.body_prefix  = XLOG_PREFIX_LOG_BODY_NONE( LEVEL ), \
+		.body_suffix  = XLOG_PREFIX_LOG_BODY_NONE( LEVEL ), \
 	}
 static const xlog_level_attr_t _level_attributes_none[] = {
 	XLOG_LEVEL_ATTR_NONE( FATAL ),
@@ -66,7 +67,7 @@ static const xlog_level_attr_t _level_attributes_none[] = {
 };
 
 /** reverse version of strncpy */
-static char *__xlog_strnrcpy( char *dst, size_t size, const char *src )
+static char *__strnrcpy( char *dst, size_t size, const char *src )
 {
 	XLOG_ASSERT( dst );
 	XLOG_ASSERT( src );
@@ -80,7 +81,7 @@ static char *__xlog_strnrcpy( char *dst, size_t size, const char *src )
 }
 
 /** copy a C-string into a sized buffer */
-static size_t __xlog_strlcpy( char *dest, const char *src, size_t size )
+static size_t __strlcpy( char *dest, const char *src, size_t size )
 {
 	size_t slen = strlen( src );
 	
@@ -105,9 +106,9 @@ static int __xlog_mkdir_p( const char *dir, mode_t mode )
 	__ptr = strtok_r( __dir, __delim, &__saveptr );
 	while( __ptr != NULL ) {
 		pathcursor += snprintf(
-	        pathcursor, pathparent + sizeof( pathparent ) - pathcursor,
-	        "%s/", __ptr
-	    );
+			pathcursor, pathparent + sizeof( pathparent ) - pathcursor,
+			"%s/", __ptr
+		);
 		#define __X( path ) ( 0 == strcmp( __ptr, path ) )
 		if( !__X( "." ) && !__X( ".." ) ) { // for ".." or ".", just skip
 			if( access( pathparent, F_OK ) != 0 ) {
@@ -200,9 +201,9 @@ static bool __xlog_format_been_enabled( const xlog_module_t *module, int level, 
 		xlog_t *context = xlog_module_context( module );
 		
 		if(
-		    context
-		    && ( context->options & XLOG_CONTEXT_OALIVE )
-		    && ( context->attributes[level].format & format )
+			context
+			&& ( context->options & XLOG_CONTEXT_OALIVE )
+			&& ( context->attributes[level].format & format )
 		) {
 			return true;
 		}
@@ -521,8 +522,8 @@ XLOG_PUBLIC( const char * ) xlog_module_name( char *buffer, int length, const xl
 		const xlog_module_t *cur = module;
 		while( cur ) {
 			if( cur->name ) {
-				ptr = __xlog_strnrcpy( ptr, ptr - buffer, cur->name );
-				ptr = __xlog_strnrcpy( ptr, ptr - buffer, "/" );
+				ptr = __strnrcpy( ptr, ptr - buffer, cur->name );
+				ptr = __strnrcpy( ptr, ptr - buffer, "/" );
 			} else {
 				XLOG_TRACE( "Name of current module is NULL, pay attention to it." );
 			}
@@ -583,7 +584,7 @@ XLOG_PUBLIC( void ) xlog_module_list_submodules( const xlog_module_t *module, in
 		
 		// Feature(Hidden modules): don't show module whose name start with dot[.]
 		if(
-		    __module->name[0] == '.' && !( options & XLOG_LIST_OALL )
+			__module->name[0] == '.' && !( options & XLOG_LIST_OALL )
 		) {
 			XLOG_TRACE( "Hiddent module[%s] won't be printed to session.", __module->name );
 			child = child->next;
@@ -603,10 +604,10 @@ XLOG_PUBLIC( void ) xlog_module_list_submodules( const xlog_module_t *module, in
 		if( show ) {
 			if( options & XLOG_LIST_OWITH_TAG ) {
 				log_r(
-				    "[%s]%c %s\n"
-				    , __xlog_level_short_name( __module->level )
-				    , XLOG_IF_DROP_LEVEL( __module->level, __limit ) ? '*' : ' '
-				    , name
+					"[%s]%c %s\n"
+					, __xlog_level_short_name( __module->level )
+					, XLOG_IF_DROP_LEVEL( __module->level, __limit ) ? '*' : ' '
+					, name
 				);
 			} else {
 				log_r( "%s\n", name );
@@ -886,8 +887,8 @@ static int __traverse_dir_recursive( const char *path, int ( *hook )( const char
 	char childpath[XLOG_LIMIT_NODE_PATH] = { 0 };
 	while( ( entry = readdir( dp ) ) != NULL ) {
 		if(
-		    strcmp( entry->d_name, "." ) == 0
-		    || strcmp( entry->d_name, ".." ) == 0
+			strcmp( entry->d_name, "." ) == 0
+			|| strcmp( entry->d_name, ".." ) == 0
 		) {
 			continue;
 		}
@@ -936,7 +937,7 @@ static int __hook_load_from_file( const char *path, void *arg )
 	xlog_module_t *module = xlog_module_open( path + strlen( context->savepath ), XLOG_LEVEL_INFO, root );
 	if( module ) {
 		char nodepath[XLOG_LIMIT_NODE_PATH] = { 0 };
-		strcpy( nodepath, path );
+		__strlcpy( nodepath, path, sizeof( nodepath ) );
 		strcat( nodepath, "/" XLOG_NODE_NAME );
 		XLOG_TRACE( "nodepath = %s", nodepath );
 		xlog_module_load_from( module, nodepath );
@@ -1122,35 +1123,35 @@ XLOG_PUBLIC( int ) xlog_version( char *buffer, int size )
 {
 	#if (defined XLOG_VERSION_WITH_BUILDDATE)
 	#define DATE_YEAR ( ( ( ( __DATE__[7] - '0' ) * 10 + ( __DATE__[8] - '0' ) ) *10 \
-	    + ( __DATE__[9] - '0' ) ) * 10 + ( __DATE__[10] - '0' ) \
+		+ ( __DATE__[9] - '0' ) ) * 10 + ( __DATE__[10] - '0' ) \
 	)
 	#define DATE_MONTH ( __DATE__[2] == 'n' ? 1 \
-	    : __DATE__[2] == 'b' ? 2 \
-	    : __DATE__[2] == 'r' ? ( __DATE__[0] == 'M' ? 3 : 4 ) \
-	    : __DATE__[2] == 'y' ? 5 \
-	    : __DATE__[2] == 'n' ? 6 \
-	    : __DATE__[2] == 'l' ? 7 \
-	    : __DATE__[2] == 'g' ? 8 \
-	    : __DATE__[2] == 'p' ? 9 \
-	    : __DATE__[2] == 't' ? 10 \
-	    : __DATE__[2] == 'v' ? 11 : 12 \
+		: __DATE__[2] == 'b' ? 2 \
+		: __DATE__[2] == 'r' ? ( __DATE__[0] == 'M' ? 3 : 4 ) \
+		: __DATE__[2] == 'y' ? 5 \
+		: __DATE__[2] == 'n' ? 6 \
+		: __DATE__[2] == 'l' ? 7 \
+		: __DATE__[2] == 'g' ? 8 \
+		: __DATE__[2] == 'p' ? 9 \
+		: __DATE__[2] == 't' ? 10 \
+		: __DATE__[2] == 'v' ? 11 : 12 \
 	)
 	#define DATE_DAY ( ( __DATE__[4] == ' ' ? 0 :__DATE__[4] - '0' ) * 10 \
-	    + ( __DATE__[5] - '0' ) \
+		+ ( __DATE__[5] - '0' ) \
 	)
 	#endif
 
 	if( buffer != NULL ) {
 		snprintf(
-		    buffer, size, "V%d.%d.%d"
-		    #if (defined XLOG_VERSION_WITH_BUILDDATE)
-		    "(build %4d%02d%02d)"
-		    #endif
-		    , XLOG_VERSION_MAJOR, XLOG_VERSION_MINOR,
-		    XLOG_VERSION_PATCH
-		    #if (defined XLOG_VERSION_WITH_BUILDDATE)
-		    , DATE_YEAR, DATE_MONTH, DATE_DAY
-		    #endif
+			buffer, size, "V%d.%d.%d"
+			#if (defined XLOG_VERSION_WITH_BUILDDATE)
+			"(build %4d%02d%02d)"
+			#endif
+			, XLOG_VERSION_MAJOR, XLOG_VERSION_MINOR,
+			XLOG_VERSION_PATCH
+			#if (defined XLOG_VERSION_WITH_BUILDDATE)
+			, DATE_YEAR, DATE_MONTH, DATE_DAY
+			#endif
 		);
 	}
 	
@@ -1167,8 +1168,8 @@ XLOG_PUBLIC( int ) xlog_version( char *buffer, int size )
  *
  */
 XLOG_PUBLIC( int ) xlog_output_rawlog(
-    xlog_printer_t *printer, xlog_t *context, const char *prefix, const char *suffix,
-    const char *format, ...
+	xlog_printer_t *printer, xlog_t *context, const char *prefix, const char *suffix,
+	const char *format, ...
 )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -1224,10 +1225,10 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
  *
  */
 XLOG_PUBLIC( int ) xlog_output_fmtlog(
-    xlog_printer_t *printer,
-    xlog_module_t *module, int level,
-    const char *file, const char *func, long int line,
-    const char *format, ...
+	xlog_printer_t *printer,
+	xlog_module_t *module, int level,
+	const char *file, const char *func, long int line,
+	const char *format, ...
 )
 {
 	xlog_t *context = xlog_module_context( module );
@@ -1333,11 +1334,11 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		char taskname[XLOG_LIMIT_THREAD_NAME];
 		XLOG_GET_THREAD_NAME( taskname );
 		if( taskname[0] == '\0' ) {
-			snprintf( taskname, sizeof( taskname ), "%s", "unnamed-task" );
+			snprintf( taskname, sizeof( taskname ), "%s", XLOG_THREAD_UNNAMED );
 		}
 		xlog_payload_append_text_va(
-		    &payload, XLOG_TAG_PREFIX_LOG_TASK "%d/%d %s" XLOG_TAG_SUFFIX_LOG_TASK,
-		    getppid(), getpid(), taskname
+			&payload, XLOG_PREFIX_LOG_TASK "%d/%d %s" XLOG_SUFFIX_LOG_TASK,
+			getppid(), getpid(), taskname
 		);
 	}
 	
@@ -1357,7 +1358,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 		const char *_func = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OFUNC ) ? func : NULL;
 		long _line = __xlog_format_been_enabled( module, level, XLOG_FORMAT_OLINE ) ? line : -1;
 		
-		xlog_payload_append_text( &payload, XLOG_TAG_PREFIX_LOG_POINT );
+		xlog_payload_append_text( &payload, XLOG_PREFIX_LOG_POINT );
 		if( _file ) {
 			xlog_payload_append_text( &payload, _file );
 		}
@@ -1375,7 +1376,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 			snprintf( buff, sizeof( buff ), "%ld", _line );
 			xlog_payload_append_text( &payload, buff );
 		}
-		xlog_payload_append_text( &payload, XLOG_TAG_SUFFIX_LOG_POINT );
+		xlog_payload_append_text( &payload, XLOG_SUFFIX_LOG_POINT );
 	}
 	
 	/* package log body */

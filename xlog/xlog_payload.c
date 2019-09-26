@@ -126,9 +126,9 @@ XLOG_PUBLIC( xlog_payload_t * ) xlog_payload_create( unsigned int id, const char
 XLOG_PUBLIC( int ) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 {
 	if(
-	    payload == NULL
-	    || *payload == NULL
-	    || !XLOG_PAYLOAD_RESIZEABLE( ( *payload )->options )
+		payload == NULL
+		|| *payload == NULL
+		|| !XLOG_PAYLOAD_RESIZEABLE( ( *payload )->options )
 	) {
 		__XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
@@ -153,8 +153,8 @@ XLOG_PUBLIC( int ) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 	*payload = temp;
 	( *payload )->length = new_size - sizeof( xlog_payload_t ) - reserved;
 	__XLOG_TRACE(
-	    "Payload: lenth = %u, offset = %u, reserved = %lu",
-	    ( *payload )->length, ( *payload )->offset, XLOG_PAYLOAD_GET_RESERVED( ( *payload )->options )
+		"Payload: lenth = %u, offset = %u, reserved = %lu",
+		( *payload )->length, ( *payload )->offset, XLOG_PAYLOAD_GET_RESERVED( ( *payload )->options )
 	);
 	
 	return 0;
@@ -170,8 +170,8 @@ XLOG_PUBLIC( int ) xlog_payload_resize( xlog_payload_t **payload, size_t size )
 XLOG_PUBLIC( int ) xlog_payload_destory( xlog_payload_t **payload )
 {
 	if(
-	    payload == NULL
-	    || *payload == NULL
+		payload == NULL
+		|| *payload == NULL
 	) {
 		__XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
@@ -226,10 +226,10 @@ XLOG_PUBLIC( void * ) xlog_payload_data_vptr( const xlog_payload_t *payload )
 XLOG_PUBLIC( int ) xlog_payload_append_text( xlog_payload_t **payload, const char *text )
 {
 	if(
-	    payload == NULL
-	    || *payload == NULL
-	    || !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
-	    || text == NULL
+		payload == NULL
+		|| *payload == NULL
+		|| !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
+		|| text == NULL
 	) {
 		__XLOG_TRACE( "Invalid parameters. text = %p", text );
 		return EINVAL;
@@ -276,10 +276,10 @@ XLOG_PUBLIC( int ) xlog_payload_append_text( xlog_payload_t **payload, const cha
 XLOG_PUBLIC( int ) xlog_payload_append_text_va_list( xlog_payload_t **payload, const char *format, va_list ap )
 {
 	if(
-	    payload == NULL
-	    || *payload == NULL
-	    || !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
-	    || format == NULL
+		payload == NULL
+		|| *payload == NULL
+		|| !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
+		|| format == NULL
 	) {
 		__XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
@@ -336,9 +336,9 @@ XLOG_PUBLIC( int ) xlog_payload_append_text_va_list( xlog_payload_t **payload, c
 XLOG_PUBLIC( int ) xlog_payload_append_text_va( xlog_payload_t **payload, const char *format, ... )
 {
 	if(
-	    payload == NULL
-	    || *payload == NULL
-	    || !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
+		payload == NULL
+		|| *payload == NULL
+		|| !XLOG_PAYLOAD_TEXT_COMPATIBLE( ( *payload )->options )
 	) {
 		__XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
@@ -369,9 +369,9 @@ XLOG_PUBLIC( int ) xlog_payload_append_text_va( xlog_payload_t **payload, const 
 XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const void *vptr, size_t size )
 {
 	if(
-	    payload == NULL
-	    || *payload == NULL
-	    || !XLOG_PAYLOAD_BINARY_COMPATIBLE( ( *payload )->options )
+		payload == NULL
+		|| *payload == NULL
+		|| !XLOG_PAYLOAD_BINARY_COMPATIBLE( ( *payload )->options )
 	) {
 		__XLOG_TRACE( "Invalid parameters." );
 		return EINVAL;
@@ -418,7 +418,7 @@ XLOG_PUBLIC( int ) xlog_payload_append_binary( xlog_payload_t **payload, const v
  *
  */
 XLOG_PUBLIC( int ) xlog_payload_print_TEXT(
-    const xlog_payload_t *payload, xlog_printer_t *printer
+	const xlog_payload_t *payload, xlog_printer_t *printer
 )
 {
 	XLOG_ASSERT( payload );
@@ -440,8 +440,8 @@ static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg
 	
 	char buffer[128];
 	snprintf(
-	    buffer, sizeof( buffer ),
-	    "%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline
+		buffer, sizeof( buffer ),
+		"%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline
 	);
 	printer->append( printer, buffer );
 }
@@ -462,7 +462,7 @@ static int hexdump_memory_readline( const void *addr, off_t offset, void *buffer
  *
  */
 XLOG_PUBLIC( int ) xlog_payload_print_BINARY(
-    const xlog_payload_t *payload, xlog_printer_t *printer
+	const xlog_payload_t *payload, xlog_printer_t *printer
 )
 {
 	XLOG_ASSERT( payload );

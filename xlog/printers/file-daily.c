@@ -37,10 +37,10 @@ static int __filepath( char *buffer, size_t size, const char *pattern )
 	struct tm tm;
 	localtime_r( &tv.tv_sec, &tm );
 	snprintf(
-	    __date, sizeof( __date ),
-	    "%02d%02d_%02d%02d%02d",
-	    tm.tm_mon + 1, tm.tm_mday,
-	    tm.tm_hour, tm.tm_min, tm.tm_sec
+		__date, sizeof( __date ),
+		"%02d%02d_%02d%02d%02d",
+		tm.tm_mon + 1, tm.tm_mday,
+		tm.tm_hour, tm.tm_min, tm.tm_sec
 	);
 	#else
 	#error No implementation for this system.
@@ -48,16 +48,16 @@ static int __filepath( char *buffer, size_t size, const char *pattern )
 	
 	if( _ptr_ext ) {
 		if(
-		    ( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
-		    || ( _ptr_dir == NULL ) // file.ext, no parent dir
+			( _ptr_dir && _ptr_ext > _ptr_dir ) // xxx/path/to/file.ext
+			|| ( _ptr_dir == NULL ) // file.ext, no parent dir
 		) {
 			snprintf(
-			    buffer, size,
-			    "%.*s_%s%s"
-			    , ( int )( _ptr_ext - pattern )
-			    , pattern
-			    , __date
-			    , _ptr_ext
+				buffer, size,
+				"%.*s_%s%s"
+				, ( int )( _ptr_ext - pattern )
+				, pattern
+				, __date
+				, _ptr_ext
 			);
 		} else { // xxx/path/to/file.ext/
 			return -1;

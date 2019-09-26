@@ -49,12 +49,12 @@ static xlog_payload_t *xlog_payload_create_LOG_CLASS( const char *level, const c
 		XLOG_PAYLOAD_TEXT_LENGTH( level ) + ( module ? XLOG_PAYLOAD_TEXT_LENGTH( module ) : 0 ) + 15, 16
 	);
 	if( payload ) {
-		xlog_payload_append_text( &payload, XLOG_TAG_PREFIX_LOG_CLASS );
+		xlog_payload_append_text( &payload, XLOG_PREFIX_LOG_CLASS );
 		xlog_payload_append_text( &payload, level );
 		if( module ) {
 			xlog_payload_append_text( &payload, module );
 		}
-		xlog_payload_append_text( &payload, XLOG_TAG_SUFFIX_LOG_CLASS );
+		xlog_payload_append_text( &payload, XLOG_SUFFIX_LOG_CLASS );
 	}
 	return payload;
 }
@@ -64,7 +64,7 @@ static xlog_payload_t *xlog_payload_create_LOG_POINT( const char *file, const ch
 {
 	xlog_payload_t *payload = xlog_payload_create( XLOG_PAYLOAD_ID_LOG_POINT, "Source Location", XLOG_PAYLOAD_OTEXT | XLOG_PAYLOAD_ODYNAMIC, 64 );
 	if( payload ) {
-		xlog_payload_append_text( &payload, XLOG_TAG_PREFIX_LOG_POINT );
+		xlog_payload_append_text( &payload, XLOG_PREFIX_LOG_POINT );
 		if( file ) {
 			xlog_payload_append_text( &payload, file );
 		}
@@ -82,7 +82,7 @@ static xlog_payload_t *xlog_payload_create_LOG_POINT( const char *file, const ch
 			snprintf( buff, sizeof( buff ), "%d", line );
 			xlog_payload_append_text( &payload, buff );
 		}
-		xlog_payload_append_text( &payload, XLOG_TAG_SUFFIX_LOG_POINT );
+		xlog_payload_append_text( &payload, XLOG_SUFFIX_LOG_POINT );
 	}
 	return payload;
 }
@@ -95,7 +95,7 @@ static xlog_payload_t *xlog_payload_create_LOG_TASK( void )
 		char taskname[XLOG_LIMIT_THREAD_NAME];
 		XLOG_GET_THREAD_NAME( taskname );
 		xlog_payload_append_text_va(
-			&payload, XLOG_TAG_PREFIX_LOG_TASK "%d/%d %s" XLOG_TAG_SUFFIX_LOG_TASK,
+			&payload, XLOG_PREFIX_LOG_TASK "%d/%d %s" XLOG_SUFFIX_LOG_TASK,
 			getppid(), getpid(), taskname
 		);
 	}
@@ -117,7 +117,7 @@ static int xlog_payload_print_LOG_TIME(
 	char buffer[48];
 	snprintf(
         buffer, sizeof(buffer),
-        XLOG_TAG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_TAG_SUFFIX_LOG_TIME,
+        XLOG_PREFIX_LOG_TIME "%02d/%02d %02d:%02d:%02d.%03d" XLOG_SUFFIX_LOG_TIME,
         p->tm_mon + 1, p->tm_mday,
         p->tm_hour, p->tm_min, p->tm_sec, ( int )( ( xtm->tv.tv_usec + 500 ) / 1000 )
     );

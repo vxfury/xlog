@@ -3,7 +3,6 @@
 
 #ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wpedantic"
-#pragma GCC diagnostic ignored "-pedantic"
 #pragma GCC diagnostic ignored "-Wzero-length-array"
 #pragma GCC diagnostic ignored "-Wcast-qual"
 #pragma GCC diagnostic ignored "-Wcast-align"
