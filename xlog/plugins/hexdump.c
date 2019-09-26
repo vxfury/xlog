@@ -30,7 +30,9 @@ static const char *CHAR_AREA_HIGH_LUT[] = {
 
 static const char *hexdump_format_of( int v )
 {
+	#if !(defined HEXD_ENABLE_ONLOAD_FORMAT)
 	static bool initialized = false;
+	#endif
 	static struct {
 		const char *key;
 		char format[16];
@@ -42,6 +44,7 @@ static const char *hexdump_format_of( int v )
 		{ "printable", "" },
 	};
 	
+	#if !(defined HEXD_ENABLE_ONLOAD_FORMAT)
 	if( !initialized ) {
 		// Parse HEXD_COLORS
 		char *colors_var = getenv( "HEXD_COLORS" );
@@ -76,6 +79,7 @@ static const char *hexdump_format_of( int v )
 			free( colors_var );
 		}
 	}
+	#endif
 	
 	return ( const char * )(
 		formats[

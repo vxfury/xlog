@@ -19,12 +19,12 @@ extern "C" {
 #pragma GCC diagnostic ignored "-Wconversion"
 #endif
 
-#define FAMILY_TREE_MALLOC(size)			malloc(size)
+#define FAMILY_TREE_MALLOC(size)		malloc(size)
 #define FAMILY_TREE_REALLOC(ptr, size)	realloc(ptr, size)
-#define FAMILY_TREE_FREE(ptr)				free(ptr)
+#define FAMILY_TREE_FREE(ptr)			free(ptr)
 
-#define FAMILY_TREE_ASSERT(cond)			assert(cond)
-#define FAMILY_TREE_TRACE(...)			// do { printf("[FAMILY_TREE] <%s:%d> ", __FILE__, __LINE__); printf( __VA_ARGS__ ); printf( "\n" ); } while(0)
+#define FAMILY_TREE_ASSERT(cond)		assert(cond)
+#define FAMILY_TREE_TRACE(...)			// fprintf( stderr, "TRACE: <" __FILE__ ":" XSTRING(__LINE__) "> " ), fprintf( stderr, __VA_ARGS__ ), fprintf( stderr, "\r\n" )
 
 typedef struct __family_tree family_tree_t;
 struct __family_tree {
@@ -54,21 +54,13 @@ struct __family_tree {
 family_tree_t *family_tree_create( size_t size );
 
 /**
- * @brief  Destory the family_tree_t
- *
- * @param  node(*), family_tree_t to destory.
- *
- */
-void family_tree_destory( family_tree_t *node );
-
-/**
  * @brief  Destory the xlog-tree
  *
  * @param  tree(*), xlog-tree to destory.
- *         hook, this function will be executed before destory.
+ *         hook, called before destory tree node; NULL, do nothing.
  *
  */
-void family_tree_destory_with_hook( family_tree_t *tree, void ( *hook )( family_tree_t * ) );
+void family_tree_destory( family_tree_t *tree, void ( *hook )( family_tree_t * ) );
 
 /**
  * @brief  Resize the family_tree_t

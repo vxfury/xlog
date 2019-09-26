@@ -13,7 +13,6 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
-static unsigned long random_integer( void );
 static int shell_make_args( char *, int *, char **, int );
 
 /*
@@ -113,7 +112,15 @@ int main( int argc, char **argv )
 	}
 	
 	{
-		char cmdline[] = "debug -a -l";
+		char cmdline[] = "debug --tag -a -l";
+		int targc;
+		char *targv[10];
+		shell_make_args( cmdline, &targc, targv, 10 );
+		xlog_shell_main( XLOG_CONTEXT, targc, targv );
+	}
+	
+	{
+		char cmdline[] = "debug --no-tag -a -l";
 		int targc;
 		char *targv[10];
 		shell_make_args( cmdline, &targc, targv, 10 );
@@ -122,6 +129,30 @@ int main( int argc, char **argv )
 	
 	{
 		char cmdline[] = "debug --only -L=fatal -r /network";
+		int targc;
+		char *targv[10];
+		shell_make_args( cmdline, &targc, targv, 10 );
+		xlog_shell_main( XLOG_CONTEXT, targc, targv );
+	}
+	
+	{
+		char cmdline[] = "debug -f --only -L=fat -r /network";
+		int targc;
+		char *targv[10];
+		shell_make_args( cmdline, &targc, targv, 10 );
+		xlog_shell_main( XLOG_CONTEXT, targc, targv );
+	}
+	
+	{
+		char cmdline[] = "debug -F --only -L=fat -r /network";
+		int targc;
+		char *targv[10];
+		shell_make_args( cmdline, &targc, targv, 10 );
+		xlog_shell_main( XLOG_CONTEXT, targc, targv );
+	}
+	
+	{
+		char cmdline[] = "debug --only -L -r /network";
 		int targc;
 		char *targv[10];
 		shell_make_args( cmdline, &targc, targv, 10 );
@@ -143,28 +174,6 @@ int main( int argc, char **argv )
 	xlog_printer_destory( __printer );
 	
 	return 0;
-}
-
-static unsigned long random_integer( void )
-{
-	static bool initialized = false;
-	if( !initialized ) {
-		unsigned long seed;
-		
-		int fd = open( "/dev/urandom", O_RDONLY );
-		if( fd < 0 || read( fd, &seed, sizeof( seed ) ) < 0 ) {
-			seed = time( NULL );
-		}
-		if( fd >= 0 ) {
-			close( fd );
-			fd = -1;
-		}
-		
-		srand( ( unsigned int )seed );
-		initialized = true;
-	}
-	
-	return rand();
 }
 
 static int shell_make_args( char *cmdline, int *argc_p, char **argv_p, int max_args )

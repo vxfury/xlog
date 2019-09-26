@@ -364,7 +364,7 @@ int xlog_module_close( xlog_module_t *module )
 		}
 		#endif
 		family_tree_t *te_module = ( family_tree_t * )XLOG_MODULE_TO_NODE( module );
-		family_tree_destory_with_hook( te_module, __xlog_module_destory_hook );
+		family_tree_destory( te_module, __xlog_module_destory_hook );
 	} else {
 		XLOG_TRACE( "Module given is NULL." );
 		return EINVAL;

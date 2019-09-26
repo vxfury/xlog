@@ -30,6 +30,26 @@ int main( int argc, char **argv )
 	
 	{
 		xlog_payload_t *payload = xlog_payload_create(
+		    XLOG_PAYLOAD_ID_TEXT, "Text",
+		    XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN | XLOG_PAYLOAD_OTEXT,
+		    1024, 32
+		);
+		
+		char buff[2048];
+		for( int i = 0; i < sizeof( buff ) / sizeof( *buff ); i ++ ) {
+			buff[i] = random_integer() % 26 + 'a';
+		}
+		buff[sizeof( buff ) - 1] = '\0';
+		
+		xlog_payload_append_text( &payload, buff );
+		xlog_payload_print_TEXT( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+		xlog_payload_destory( &payload );
+		
+		log_r( "buffer = %s\n", buff );
+	}
+	
+	{
+		xlog_payload_t *payload = xlog_payload_create(
 		    XLOG_PAYLOAD_ID_BINARY, "Binary",
 		    XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN | XLOG_PAYLOAD_OBINARY,
 		    1024, 32

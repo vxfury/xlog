@@ -278,7 +278,7 @@ int main( int argc, char **argv )
 	xlog_test_init();
 	xlog_test_set_level();
 	
-	xlog_close( g_master, 0 );
+	xlog_close( g_master, XLOG_CLOSE_CLEAR );
 	
 	return 0;
 }

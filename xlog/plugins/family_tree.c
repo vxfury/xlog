@@ -49,38 +49,19 @@ static inline void __family_tree_destory( family_tree_t *tree, void ( *hook )( f
  * @brief  Destory the xlog-tree
  *
  * @param  tree(*), xlog-tree to destory.
+ *         hook, called before destory tree node; NULL, do nothing.
  *
  */
-void family_tree_destory( family_tree_t *tree )
+void family_tree_destory( family_tree_t *tree, void ( *hook )( family_tree_t * ) )
 {
-	if( NULL == tree ) {
-		return;
+	if( tree ) {
+		family_tree_set_parent( tree, NULL );
+		__family_tree_destory( FAMILY_TREE_CHILD( tree ), hook );
+		if( hook ) {
+			hook( tree );
+		}
+		FAMILY_TREE_FREE( tree );
 	}
-	
-	family_tree_set_parent( tree, NULL );
-	__family_tree_destory( FAMILY_TREE_CHILD( tree ), NULL );
-	FAMILY_TREE_FREE( tree );
-}
-
-/**
- * @brief  Destory the xlog-tree
- *
- * @param  tree(*), xlog-tree to destory.
- *         hook, this function will be executed before destory.
- *
- */
-void family_tree_destory_with_hook( family_tree_t *tree, void ( *hook )( family_tree_t * ) )
-{
-	if( NULL == tree ) {
-		return;
-	}
-	
-	family_tree_set_parent( tree, NULL );
-	__family_tree_destory( FAMILY_TREE_CHILD( tree ), hook );
-	if( hook ) {
-		hook( tree );
-	}
-	FAMILY_TREE_FREE( tree );
 }
 
 /**
