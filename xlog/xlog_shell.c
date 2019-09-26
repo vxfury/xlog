@@ -26,6 +26,7 @@ typedef struct {
 	int f_force;
 	int f_recursive;
 	int f_only;
+	int f_list;
 	int f_list_options;
 	
 	int exit_code;
@@ -113,20 +114,20 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 				if( getopt_reent.optarg && *( getopt_reent.optarg ) != '\0' ) {
 					#define __X( b ) (0 == strcasecmp( getopt_reent.optarg, b ))
 					#define __Y( num, tag, word ) ( __X( tag ) || __X( num ) || __X( word ) )
-					if( __Y( "0", "f", "fatal" ) ) {
-						globals->level = XLOG_LEVEL_FATAL;
-					} else if( __Y( "1", "e", "error" ) ) {
-						globals->level = XLOG_LEVEL_ERROR;
-					} else if( __Y( "2", "w", "warn" ) ) {
-						globals->level = XLOG_LEVEL_WARN;
-					} else if( __Y( "3", "i", "info" ) ) {
-						globals->level = XLOG_LEVEL_INFO;
-					} else if( __Y( "4", "d", "debug" ) ) {
-						globals->level = XLOG_LEVEL_DEBUG;
-					} else if( __Y( "5", "v", "verbose" ) ) {
-						globals->level = XLOG_LEVEL_VERBOSE;
-					} else if( __Y( "-1", "s", "silent" ) ) {
+					if( __Y( "0", "s", "silent" ) ) {
 						globals->level = XLOG_LEVEL_SILENT;
+					} else if( __Y( "1", "f", "fatal" ) ) {
+						globals->level = XLOG_LEVEL_FATAL;
+					} else if( __Y( "2", "e", "error" ) ) {
+						globals->level = XLOG_LEVEL_ERROR;
+					} else if( __Y( "3", "w", "warn" ) ) {
+						globals->level = XLOG_LEVEL_WARN;
+					} else if( __Y( "4", "i", "info" ) ) {
+						globals->level = XLOG_LEVEL_INFO;
+					} else if( __Y( "5", "d", "debug" ) ) {
+						globals->level = XLOG_LEVEL_DEBUG;
+					} else if( __Y( "6", "v", "verbose" ) ) {
+						globals->level = XLOG_LEVEL_VERBOSE;
 					}
 					#undef __Y
 					#undef __X
@@ -155,10 +156,7 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 				exit( EXIT_SUCCESS );
 				break;
 			case 'l':
-				log_r( "Modules in your application:\n" );
-				xlog_list_modules( globals->context, globals->f_list_options );
-				log_r( "\n" );
-				exit( EXIT_SUCCESS );
+				globals->f_list = 1;
 				break;
 			case LOG_CLI_OPT_ONLY:
 				globals->f_only = 1;
@@ -171,6 +169,13 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 	argc -= getopt_reent.optind;
 	argv += getopt_reent.optind;
 	
+	if( globals->f_list ) {
+		log_r( "Modules in your application:\n" );
+		xlog_list_modules( globals->context, globals->f_list_options );
+		log_r( "\n" );
+		exit( EXIT_SUCCESS );
+	}
+	
 	int flags = 0;
 	if( globals->f_recursive ) {
 		flags |= XLOG_LEVEL_ORECURSIVE;
@@ -181,17 +186,17 @@ static int main_debug( xlog_shell_globals_t *globals, int argc, char **argv )
 	
 	if( argc > 0 ) { // settings for multiple modules could be supported
 		if( globals->f_only ) {
+			XLOG_TRACE( "Disable logging of all modules." );
 			globals->exit_code |= xlog_module_set_level(
 		        globals->context->module,
 		        XLOG_LEVEL_SILENT, XLOG_LEVEL_ORECURSIVE
 		    );
 		}
-		int i;
-		for( i = 0; i < argc; i ++ ) {
+		for( int i = 0; i < argc; i ++ ) {
 			globals->exit_code |= xlog_module_set_level(
-			        xlog_module_lookup( globals->context->module, argv[i] ),
-			        globals->level, flags
-			    );
+				xlog_module_lookup( globals->context->module, argv[i] ),
+				globals->level, flags
+			);
 		}
 		exit( globals->exit_code );
 	} else {

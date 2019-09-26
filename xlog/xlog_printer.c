@@ -40,7 +40,7 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_default( void )
  * @return pointer to default printer.
  *
  */
-XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( const xlog_printer_t *printer )
+XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( xlog_printer_t *printer )
 {
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( printer->magic != XLOG_MAGIC_PRINTER ) {
@@ -51,7 +51,7 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( const xlog_printer_t *
 	
 	if( printer->append ) {
 		__XLOG_TRACE( "Default printer has changed." );
-		__default_printer = ( xlog_printer_t * )printer;
+		__default_printer = printer;
 	}
 	
 	__XLOG_TRACE( "Invalid printer" );

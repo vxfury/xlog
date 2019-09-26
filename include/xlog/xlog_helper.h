@@ -205,18 +205,19 @@ static inline int BITS_FFS( unsigned long v )
 
 
 /** xlog level */
-#define __XLOG_LEVEL_SILENT			(-1)
-#define __XLOG_LEVEL_FATAL 			(0)
-#define __XLOG_LEVEL_ERROR 			(1)
-#define __XLOG_LEVEL_WARN 			(2)
-#define __XLOG_LEVEL_INFO 			(3)
-#define __XLOG_LEVEL_DEBUG 			(4)
-#define __XLOG_LEVEL_VERBOSE 		(5)
-#define XLOG_LIMIT_LEVEL_NUMBER 	(6)
+#define __XLOG_LEVEL_SILENT			(0)
+#define __XLOG_LEVEL_FATAL 			(1)
+#define __XLOG_LEVEL_ERROR 			(2)
+#define __XLOG_LEVEL_WARN 			(3)
+#define __XLOG_LEVEL_INFO 			(4)
+#define __XLOG_LEVEL_DEBUG 			(5)
+#define __XLOG_LEVEL_VERBOSE 		(6)
+#define XLOG_LIMIT_LEVEL_NUMBER 	(7)
 
 #define XLOG_IF_DROP_LEVEL(level, limit)	((level) > (limit))
 #define XLOG_IF_LOWER_LEVEL(level, limit)	((level) < (limit))
-#define XLOG_IF_LEGAL_LEVEL(level)	(((level) > XLOG_LEVEL_SILENT) && ((level) < XLOG_LIMIT_LEVEL_NUMBER))
+#define XLOG_IF_LEGAL_LEVEL(level)			(((level) >= __XLOG_LEVEL_SILENT) && ((level) <= __XLOG_LEVEL_VERBOSE))
+#define XLOG_IF_NOT_SILENT_LEVEL(level)		(((level) > __XLOG_LEVEL_SILENT) && ((level) <= __XLOG_LEVEL_VERBOSE))
 
 
 /** xlog structures & types */

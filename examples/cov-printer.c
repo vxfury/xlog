@@ -46,10 +46,13 @@ static int xlog_test_multi_thread( int nthread )
 	if( threads == NULL ) {
 		return -1;
 	}
-	
+	pthread_attr_t attr;
+	pthread_attr_init( &attr );
+	pthread_attr_setschedpolicy( &attr, SCHED_OTHER );
 	for( int i = 0; i < nthread; i ++ ) {
-		pthread_create( threads + i, NULL, xlog_test_thread, ( void * )( uintptr_t )i );
+		pthread_create( threads + i, &attr, xlog_test_thread, ( void * )( uintptr_t )i );
 	}
+	pthread_attr_destroy( &attr );
 	
 	for( int i = 0; i < nthread; i ++ ) {
 		pthread_join( threads[i], NULL );

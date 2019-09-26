@@ -174,6 +174,7 @@ static int __xlog_rmdir_r( const char *dir )
 static const char *__xlog_level_short_name( int level )
 {
 	static const char *lvl_tags[] = {
+		[XLOG_LEVEL_SILENT]  = XLOG_TAG_LEVEL_SILENT,
 		[XLOG_LEVEL_FATAL]   = XLOG_TAG_LEVEL_FATAL,
 		[XLOG_LEVEL_ERROR]   = XLOG_TAG_LEVEL_ERROR,
 		[XLOG_LEVEL_WARN]    = XLOG_TAG_LEVEL_WARN,
@@ -193,7 +194,7 @@ static const char *__xlog_level_short_name( int level )
 /** check if format is enabled for specified level */
 static bool __xlog_format_been_enabled( const xlog_module_t *module, int level, int format )
 {
-	XLOG_ASSERT( XLOG_IF_LEGAL_LEVEL( level ) );
+	XLOG_ASSERT( XLOG_IF_NOT_SILENT_LEVEL( level ) );
 	
 	if( module ) {
 		xlog_t *context = xlog_module_context( module );
@@ -238,6 +239,7 @@ static inline xlog_module_t *__xlog_module_lookup( const char *name, const famil
 /** create module under parent, NO '/' in name */
 static inline xlog_module_t *__xlog_module_open( const char *name, int level, xlog_module_t *parent )
 {
+	XLOG_ASSERT( name == NULL || ( name && strchr( name, '/' ) == NULL ) );
 	family_tree_t *te_parent = parent ? ( family_tree_t * )XLOG_MODULE_TO_NODE( parent ) : NULL;
 	xlog_module_t *module = parent ? __xlog_module_lookup( name, te_parent ) : NULL;
 	if( module ) {
@@ -316,7 +318,7 @@ XLOG_PUBLIC( xlog_module_t * ) xlog_module_open( const char *name, int level, xl
 			__default_context = xlog_open( NULL, 0 );
 			if( __default_context == NULL ) {
 				XLOG_TRACE( "Failed to create default context." );
-				return 0;
+				return NULL;
 			}
 		}
 		XLOG_TRACE( "Redirected to default context." );
@@ -330,7 +332,7 @@ XLOG_PUBLIC( xlog_module_t * ) xlog_module_open( const char *name, int level, xl
 	if( __name ) {
 		__ptr = strtok_r( __name, __delim, &__saveptr );
 		while( __ptr != NULL ) {
-			XLOG_TRACE( "Create new module named \"%s\" under it's parent.", __ptr );
+			XLOG_TRACE( "Create new module named \"%s\" under it's parent(%s).", __ptr, __parent && __parent->name ? __parent->name : "NILL" );
 			module = __xlog_module_open( ( const char * )__ptr, level, __parent );
 			__parent = module;
 			__ptr = strtok_r( NULL, __delim, &__saveptr );
@@ -617,6 +619,33 @@ XLOG_PUBLIC( void ) xlog_module_list_submodules( const xlog_module_t *module, in
 	}
 }
 
+/** apply logging level to all sub-modules */
+static int __xlog_module_set_level_recursive( xlog_module_t *module, int level )
+{
+	if( module == NULL ) {
+		return -1;
+	}
+	
+	xlog_t *context = xlog_module_context( module );
+	xlog_module_t *__module = NULL;
+	family_tree_t *__node = ( ( family_tree_t * )XLOG_MODULE_TO_NODE( module ) )->child;
+	while( __node ) {
+		__module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node );
+		if( __module->level != level ) {
+			__module->level = level;
+			if( context && ( context->options & XLOG_CONTEXT_OAUTO_DUMP ) ) {
+				xlog_module_dump_to( __module, NULL );
+			}
+		}
+		
+		__xlog_module_set_level_recursive( ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node ), level );
+		
+		__node = __node->next;
+	}
+	
+	return 0;
+}
+
 /**
  * @brief  change level of module
  *         child(ren)'s or parent's level may be changed too.
@@ -628,6 +657,7 @@ XLOG_PUBLIC( void ) xlog_module_list_submodules( const xlog_module_t *module, in
  */
 XLOG_PUBLIC( int ) xlog_module_set_level( xlog_module_t *module, int level, int flags )
 {
+	XLOG_ASSERT( XLOG_IF_LEGAL_LEVEL( level ) );
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( module && module->magic != XLOG_MAGIC_MODULE ) {
 		XLOG_TRACE( "Runtime error: may be module has been closed." );
@@ -648,37 +678,25 @@ XLOG_PUBLIC( int ) xlog_module_set_level( xlog_module_t *module, int level, int 
 		module = __default_context->module;
 	}
 	#endif
+	
 	xlog_t *context = xlog_module_context( module );
-	if( module && XLOG_IF_LEGAL_LEVEL( level ) ) {
-		module->level = level;
-		if( context && ( context->options & XLOG_CONTEXT_OAUTO_DUMP ) ) {
-			XLOG_TRACE( "Auto dump enabled, dump to file now." );
-			xlog_module_dump_to( module, NULL );
+	if( module ) {
+		if( module->level != level ) {
+			module->level = level;
+			if( context && ( context->options & XLOG_CONTEXT_OAUTO_DUMP ) ) {
+				XLOG_TRACE( "Auto dump enabled, dump to file now." );
+				xlog_module_dump_to( module, NULL );
+			}
 		}
 	} else {
+		XLOG_TRACE( "Module is NULL." );
 		return -1;
 	}
 	family_tree_t *__node = NULL;
 	xlog_module_t *__module = NULL;
 	
 	if( flags & XLOG_LEVEL_ORECURSIVE ) {
-		__node = ( ( family_tree_t * )XLOG_MODULE_TO_NODE( module ) )->child;
-		while( __node ) {
-			__module = ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node );
-			__module->level = level;
-			if( context && ( context->options & XLOG_CONTEXT_OAUTO_DUMP ) ) {
-				xlog_module_dump_to( __module, NULL );
-			}
-			
-			if( __node->child ) {
-				xlog_module_set_level( ( xlog_module_t * )XLOG_MODULE_FROM_NODE( __node->child ), level, flags & ( ~ XLOG_LEVEL_OFORCE ) );
-			}
-			
-			__node = __node->next;
-		}
-		
-		__node = NULL;
-		__module = NULL;
+		__xlog_module_set_level_recursive( module, level );
 	}
 	
 	if( flags & XLOG_LEVEL_OFORCE ) {
@@ -697,7 +715,6 @@ XLOG_PUBLIC( int ) xlog_module_set_level( xlog_module_t *module, int level, int 
 	
 	return 0;
 }
-
 
 typedef struct {
 	int level;
@@ -976,7 +993,6 @@ XLOG_PUBLIC( xlog_t * ) xlog_open( const char *savepath, int option )
 				return context;
 			}
 			context->module->context = context;
-			
 			context->options = XLOG_CONTEXT_OALIVE | XLOG_CONTEXT_OCOLOR;
 			if( savepath ) {
 				XLOG_TRACE( "Auto dump enabled 'cause savepath is NOT NULL." );
@@ -1176,7 +1192,7 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
 	}
 	
 	int length = 0;
-	xlog_payload_t *payload = xlog_payload_create( XLOG_PAYLOAD_ID_AUTO, "Log Text", XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN, 240, 32 );
+	xlog_payload_t *payload = xlog_payload_create( XLOG_PAYLOAD_ID_AUTO, "Log Text", XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN, 240, 64 );
 	if( payload ) {
 		if( prefix ) {
 			xlog_payload_append_text( &payload, prefix );
@@ -1283,7 +1299,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	}
 	xlog_payload_t *payload = xlog_payload_create(
 		XLOG_PAYLOAD_ID_AUTO, "Log",
-		XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN | XLOG_PAYLOAD_OTEXT, XLOG_DEFAULT_PAYLOAD_SIZE, 16
+		XLOG_PAYLOAD_ODYNAMIC | XLOG_PAYLOAD_OALIGN | XLOG_PAYLOAD_OTEXT, XLOG_DEFAULT_PAYLOAD_SIZE, 64
 	);
 	if( payload == NULL ) {
 		XLOG_TRACE( "Failed to create payload." );

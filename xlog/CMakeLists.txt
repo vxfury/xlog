@@ -48,11 +48,11 @@ set(
 	plugins/ringbuf.c
 	plugins/hexdump.c
 	
-	printers/direct-stdio.c
+	printers/stdio-basic.c
+	printers/stdio-ringbuf.c
 	printers/file-basic.c
 	printers/file-daily.c
 	printers/file-rotating.c
-	printers/ringbuf-stdout.c
 )
 
 configure_file(

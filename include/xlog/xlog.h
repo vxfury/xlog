@@ -212,7 +212,7 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_default( void );
  * @return pointer to default printer.
  *
  */
-XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( const xlog_printer_t *printer );
+XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( xlog_printer_t *printer );
 
 /**
  * @brief  create dynamic printer
