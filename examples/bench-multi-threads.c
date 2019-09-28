@@ -81,6 +81,8 @@ int main( int argc, char **argv )
 	( void )argv;
 	xlog_printer_t *g_printer = NULL;
 	unsigned int nthread = 16;
+	unsigned int time_limit = 5;
+	unsigned int count_limit = 10;
 	char filename[32] = { 0 };
 	snprintf( filename, 32, "bench-multi-threads-%d.txt", nthread );
 	FILE *fp = fopen( filename, "w" );
@@ -92,8 +94,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "STDERR",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -109,8 +111,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "STDOUT",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -126,8 +128,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "ROTATING-FILE",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -143,8 +145,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "BASIC-FILE",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -160,8 +162,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "DAILY-FILE",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -177,8 +179,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "RING-BUFFER",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -194,8 +196,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "RB-STDERR",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -211,8 +213,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "RB-STDOUT",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -228,8 +230,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "RB-ROTATING-FILE",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -245,8 +247,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "RB-BASIC-FILE",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );
@@ -262,8 +264,8 @@ int main( int argc, char **argv )
 		bench_param_t param = {
 			.brief = "RB-DAILY-FILE",
 			.printer = g_printer,
-			.time_limit = 5,
-			.count_limit = 10,
+			.time_limit = time_limit,
+			.count_limit = count_limit,
 			.fp = fp,
 		};
 		xlog_test_multi_thread( nthread, &param );

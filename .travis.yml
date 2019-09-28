@@ -6,7 +6,7 @@ script:
  - mkdir logs && ./bin/demo-xlog > /dev/null
  - ./bin/cov-printer > /dev/null && ./bin/cov-autobuf > /dev/null
  - ./bin/cov-not-default-context && ./bin/cov-not-default-context
- - ./bin/cov-shell
+ - ./bin/cov-shell && ./bin/bench-multi-threads
  - cd ..
 
 after_success:
