@@ -176,9 +176,7 @@ static int xlog_test_init( void )
 	}
 	
 	{
-		fprintf(stderr, "====> %s:%d\n", __FILE__, __LINE__ );
 		xlog_module_set_level( xlog_module_lookup( ROOT_MODULE, "media/audio" ), XLOG_LEVEL_VERBOSE, XLOG_LEVEL_ORECURSIVE | XLOG_LEVEL_OFORCE );
-		fprintf(stderr, "====> %s:%d\n", __FILE__, __LINE__ );
 	}
 	
 	{
@@ -189,7 +187,6 @@ static int xlog_test_init( void )
 		g_net_http = xlog_module_open( "/net/http", XLOG_LEVEL_INFO, ROOT_MODULE );
 		xlog_list_modules( XLOG_CONTEXT, XLOG_LIST_OWITH_TAG );
 	}
-	fprintf(stderr, "====> %s:%d\n", __FILE__, __LINE__ );
 	
 	xlog_module_set_level( ROOT_MODULE, XLOG_LEVEL_VERBOSE, XLOG_LEVEL_ORECURSIVE );
 	log_v( "verbose: use to trace variables, usually you won't use this level." );
@@ -205,7 +202,6 @@ static int xlog_test_init( void )
 	);
 	log_e( "error: runing time error, current process is terminated." );
 	log_f( "fatal: the service/system is not online now." );
-	fprintf(stderr, "====> %s:%d\n", __FILE__, __LINE__ );
 	
 	return 0;
 }
