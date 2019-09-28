@@ -70,6 +70,16 @@ endif()
 redefine_file_macro(cov-shell)
 
 
+# bench-multi-threads
+set(SOURCES examples/bench-multi-threads.c)
+add_executable(bench-multi-threads ${SOURCES})
+target_link_libraries(bench-multi-threads xlog)
+if(ENABLE_COVERAGE_CHECK)
+	target_link_libraries(bench-multi-threads gcov)
+endif()
+redefine_file_macro(bench-multi-threads)
+
+
 # demo-xlog
 set(SOURCES examples/demo-xlog.c)
 add_executable(demo-xlog ${SOURCES})

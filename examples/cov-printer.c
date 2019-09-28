@@ -357,7 +357,7 @@ int main( int argc, char **argv )
 		bench_result[index].count = i / time_limit;
 		index ++;
 	}
-	fprintf(stderr, "End of RD-DAILY-FILE\n" );
+	fprintf(stderr, "End of RB-DAILY-FILE\n" );
 	#endif
 	
 	#if 1
