@@ -1,12 +1,12 @@
+#undef XLOG_PRINTER
+#define XLOG_PRINTER	g_printer
+
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
 static xlog_printer_t *g_printer = NULL;
 static xlog_module_t *g_mod = NULL;
 #define XLOG_MODULE g_mod
-
-#undef XLOG_PRINTER
-#define XLOG_PRINTER	g_printer
 
 /** BENCH/DEMO: multi-thread */
 static void *xlog_test_thread( void *arg )
@@ -106,6 +106,7 @@ int main( int argc, char **argv )
 	}
 	buffer[sizeof( buffer ) - 1] = '\0';
 	
+	#if 1
 	{
 		time_t st = time( NULL );
 		unsigned int i = 0;
@@ -147,6 +148,7 @@ int main( int argc, char **argv )
 		index ++;
 	}
 	fprintf(stderr, "End of BASE\n" );
+	#endif
 	
 	#if 1
 	{
@@ -172,10 +174,12 @@ int main( int argc, char **argv )
 		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT );
 		time_t st = time( NULL );
 		unsigned int i = 0;
+		fprintf(stderr, "destory printer ----\n" );
 		while( time( NULL ) - st < time_limit && i < count_limit ) {
 			log_w( "%s", buffer );
 			i ++;
 		}
+		fprintf(stderr, "destory printer\n" );
 		xlog_printer_destory( g_printer );
 		g_printer = NULL;
 		
@@ -263,6 +267,26 @@ int main( int argc, char **argv )
 	fprintf(stderr, "End of RING-BUFFER\n" );
 	#endif
 	
+	#if 1
+	{
+		g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_RINGBUF );
+		time_t st = time( NULL );
+		unsigned int i = 0;
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "%s", buffer );
+			i ++;
+		}
+		xlog_printer_destory( g_printer );
+		g_printer = NULL;
+		
+		bench_result[index].brief = "RB-STDERR";
+		bench_result[index].count = i / time_limit;
+		index ++;
+	}
+	fprintf(stderr, "End of RB-STDERR\n" );
+	#endif
+	
+	#if 1
 	xlog_test_multi_thread( 10 );
 	
 	for( int i = 0; i < index; i ++ ) {
@@ -277,6 +301,7 @@ int main( int argc, char **argv )
 		XLOG_SET_THREAD_NAME( "cov-printer" );
 		log_i( "test info" );
 	}
+	#endif
 	
 	return 0;
 }

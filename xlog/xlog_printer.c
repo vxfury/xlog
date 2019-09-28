@@ -1,6 +1,8 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_config.h>
 #include <xlog/xlog_helper.h>
+#include <xlog/plugins/ringbuf.h>
+#include <xlog/plugins/autobuf.h>
 
 #include "internal.h"
 
@@ -60,6 +62,137 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_set_default( xlog_printer_t *printe
 	return NULL;
 }
 
+
+struct __printer_ringbuf_context {
+	bool force_exit;
+	pthread_t thread_consumer;
+	ringbuf_t *rbuff;
+	xlog_printer_t *printer;
+};
+
+static void *__printer_ringbuf_consumer( void *arg )
+{
+	assert( arg );
+	xlog_printer_t *printer = ( xlog_printer_t * )arg;
+	struct __printer_ringbuf_context *context = ( struct __printer_ringbuf_context * )printer->context;
+	autobuf_t *autobuf = NULL;
+	
+	bool idle_show = false;
+	while( true ) {
+		int length = ringbuf_copy_from( context->rbuff , &autobuf, sizeof( autobuf_t * ), true );
+		if( length > 0 ) {
+			__XLOG_TRACE( "consumer-READ: length = %d\n", length );
+			payload_print_TEXT( autobuf, context->printer );
+			autobuf_destory( &autobuf );
+			idle_show = true;
+		} else if( context->force_exit ) {
+			__XLOG_TRACE( "Force exit." );
+			return NULL;
+		} else {
+			if( idle_show ) {
+				__XLOG_TRACE( "Consumer IDLE." );
+				idle_show = false;
+			}
+		}
+	}
+	
+	/* NOTREACHED */
+	return NULL;
+}
+
+static struct __printer_ringbuf_context *__buffering_context_create_ringbuf( size_t capacity, xlog_printer_t *printer )
+{
+	XLOG_ASSERT( printer );
+	XLOG_ASSERT( capacity > 0 );
+	struct __printer_ringbuf_context *bufctx = ( struct __printer_ringbuf_context * )XLOG_MALLOC( sizeof( struct __printer_ringbuf_context ) );
+	if( bufctx ) {
+		bufctx->rbuff = ringbuf_create( capacity );
+		if( bufctx->rbuff == NULL ) {
+			XLOG_FREE( bufctx );
+			__XLOG_TRACE( "Failed to create ring-bufffer" );
+			return NULL;
+		}
+		if( pthread_create( &bufctx->thread_consumer, NULL, __printer_ringbuf_consumer, bufctx ) != 0 ) {
+			__XLOG_TRACE( "Failed to start ringbuf consumer thread." );
+			ringbuf_destory( bufctx->rbuff );
+			XLOG_FREE( bufctx );
+			
+			return NULL;
+		}
+		bufctx->printer = printer;
+	}
+	
+	return bufctx;
+}
+
+static int __buffering_context_destory_ringbuf( struct __printer_ringbuf_context *bufctx )
+{
+	assert( bufctx );
+	ringbuf_destory( bufctx->rbuff );
+	XLOG_FREE( bufctx );
+	
+	return 0;
+}
+
+static int __buffering_printer_append( xlog_printer_t *printer, const char *text )
+{
+	int buff_type = XLOG_PRINTER_BUFF_GET( printer->options );
+	switch( buff_type ) {
+		case XLOG_PRINTER_BUFF_NONE: {
+			__XLOG_TRACE( "Non-Buffing appending" );
+			return printer->append( printer, text );
+		} break;
+		case XLOG_PRINTER_BUFF_RINGBUF: {
+			__XLOG_TRACE( "No-Copy ring-buffer appending" );
+			autobuf_t *autobuf = ( autobuf_t * )text;
+			struct __printer_ringbuf_context *bufctx = ( struct __printer_ringbuf_context * )printer->context;
+			ringbuf_copy_into( bufctx->rbuff, &autobuf, sizeof( autobuf_t * ) );
+			
+			return autobuf->offset;
+		} break;
+		default: {
+			XLOG_ASSERT( 0 );
+		} break;
+	}
+	if( buff_type == XLOG_PRINTER_BUFF_RINGBUF ) {
+		autobuf_t *autobuf = ( autobuf_t * )text;
+		struct __printer_ringbuf_context *bufctx = ( struct __printer_ringbuf_context * )printer->context;
+		ringbuf_copy_into( bufctx->rbuff, &autobuf, sizeof( autobuf_t * ) );
+		
+		return autobuf->offset;
+	} else {
+		return printer->append( printer, text );
+	}
+}
+
+static int __buffering_printer_optctl( xlog_printer_t *printer, int option, void *vptr, size_t size )
+{
+	return printer->optctl( printer, option, vptr, size );
+}
+
+static xlog_printer_t *__buffering_printer_create( size_t capacity, xlog_printer_t *printer )
+{
+	xlog_printer_t *printer_ringbuf = XLOG_MALLOC( sizeof( xlog_printer_t ) );
+	if( printer_ringbuf ) {
+		struct __printer_ringbuf_context *bufctx = __buffering_context_create_ringbuf( capacity, printer );
+		if( bufctx == NULL ) {
+			// FIXME
+		}
+		printer_ringbuf->context = bufctx;
+		printer_ringbuf->append = __buffering_printer_append;
+		printer_ringbuf->optctl = __buffering_printer_optctl;
+		
+		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+		printer_ringbuf->magic = XLOG_MAGIC_PRINTER;
+		#endif
+	}
+	
+	return printer_ringbuf;
+}
+
+
+
+
 /**
  * @brief  create dynamic printer
  *
@@ -71,7 +204,8 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... )
 {
 	xlog_printer_t *printer = NULL;
 	int type = XLOG_PRINTER_TYPE_GET( options );
-	
+	// int buff_type = XLOG_PRINTER_BUFF_GET( options );
+	// __XLOG_TRACE( "options = 0x%X, type = %d, buffering = %d", options, type, buff_type );
 	switch( type ) {
 		case XLOG_PRINTER_STDOUT: {
 			printer = &stdout_printer;
@@ -114,12 +248,31 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... )
 		} break;
 	}
 	
-	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 	if( printer ) {
+		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 		__XLOG_TRACE( "Magic after created is 0x%X.", printer->magic );
 		printer->magic = XLOG_MAGIC_PRINTER;
+		#endif
+		#if 0
+		switch( buff_type ) {
+			case XLOG_PRINTER_BUFF_RINGBUF: {
+				xlog_printer_t *buffprinter = __buffering_printer_create( 1024, printer );
+				if( buffprinter ) {
+					#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
+					buffprinter->magic = XLOG_MAGIC_PRINTER;
+					#endif
+					buffprinter->options = XLOG_PRINTER_BUFF_RINGBUF;
+					printer = buffprinter;
+				} else {
+					__XLOG_TRACE( "Failed to create buffering-printer." );
+				}
+			} break;
+		}
+		#endif
+	} else {
+		__XLOG_TRACE( "Failed to create printer." );
 	}
-	#endif
+	__XLOG_TRACE( "Succeed to create printer." );
 	
 	return printer;
 }
@@ -138,12 +291,26 @@ XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer )
 	if( printer == NULL ) {
 		return EINVAL;
 	}
+	// int buff_type = XLOG_PRINTER_BUFF_GET( printer->options );
+	// __XLOG_TRACE( "buffering = %d.", buff_type );
+	#if 0
+	switch( buff_type ) {
+		case XLOG_PRINTER_BUFF_RINGBUF: {
+			struct __printer_ringbuf_context *bufctx = (struct __printer_ringbuf_context *)printer->context;
+			printer = bufctx->printer;
+			bufctx->printer = NULL;
+			__XLOG_TRACE( "Destory buffering context." );
+			__buffering_context_destory_ringbuf( bufctx );
+		} break;
+	}
+	#endif
 	
 	int type = XLOG_PRINTER_TYPE_GET( printer->options );
+	__XLOG_TRACE( "type = %d.", type );
 	switch( type ) {
 		case XLOG_PRINTER_STDOUT:
 		case XLOG_PRINTER_STDERR: {
-			__XLOG_TRACE( "stdout/stderr printer, no need to destory" );
+			__XLOG_TRACE( "stdout/stderr printer, no need to destory." );
 		} break;
 		case XLOG_PRINTER_FILES_BASIC: {
 			xlog_printer_destory_basic_file( printer );
@@ -158,7 +325,7 @@ XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer )
 			xlog_printer_destory_ringbuf( printer );
 		} break;
 		default: {
-			__XLOG_TRACE( "unkown printer type(%d).", type );
+			__XLOG_TRACE( "unkown printer type(0x%X).", type );
 			return EINVAL;
 		} break;
 	}

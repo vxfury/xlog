@@ -199,8 +199,9 @@ typedef struct {
 
 /** printer for xlog */
 #define XLOG_PRINTER_TYPE_OPT(type)		BITS_MASK_K(0, 4, type)
-#define XLOG_PRINTER_TYPE_GET(options)	GET_BITS(options, 0, 4)
-
+#define XLOG_PRINTER_TYPE_GET(options)	CHK_BITS(options, 0, 4)
+#define XLOG_PRINTER_BUFF_OPT(type)		BITS_MASK_K(4, 8, type)
+#define XLOG_PRINTER_BUFF_GET(options)	CHK_BITS(options, 4, 8)
 
 /** statistics for xlog */
 #define XLOG_STATS_MAJOR_BYTE		0

@@ -742,6 +742,7 @@ typedef struct {
 XLOG_PUBLIC( int ) xlog_module_dump_to( const xlog_module_t *module, const char *savepath )
 {
 	if( module == NULL ) {
+		XLOG_TRACE( "Module is NULL." );
 		return EINVAL;
 	}
 	#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
@@ -776,6 +777,7 @@ XLOG_PUBLIC( int ) xlog_module_dump_to( const xlog_module_t *module, const char 
 	if( fd >= 0 ) {
 		xlog_module_node_t config;
 		config.level = module->level;
+		#if 0
 		#if (defined XLOG_FEATURE_ENABLE_STATS) && (defined XLOG_FEATURE_ENABLE_STATS_MODULE)
 		config.stats.option = module->stats.option;
 		size_t stats_size = sizeof( unsigned int ) * XLOG_STATS_LENGTH( module->stats.option );
@@ -787,6 +789,7 @@ XLOG_PUBLIC( int ) xlog_module_dump_to( const xlog_module_t *module, const char 
 			close( fd );
 			return EIO;
 		}
+		#endif
 		#else
 		if( write(
 			fd, &config,
@@ -1374,6 +1377,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 			level_attributes = context->attributes;
 		}
 	}
+	
 	autobuf_t *payload = autobuf_create(
 		PAYLOAD_ID_AUTO, "Log",
 		AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN | AUTOBUF_OTEXT, XLOG_DEFAULT_PAYLOAD_SIZE, 64
@@ -1462,11 +1466,17 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	/* package log body */
 	va_list ap;
 	va_start( ap, format );
-	if( ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
+	if(
+	   ( context->options & XLOG_CONTEXT_OCOLOR_BODY )
+	   && level_attributes[level].body_prefix
+	) {
 		autobuf_append_text( &payload, level_attributes[level].body_prefix );
 	}
 	autobuf_append_text_va_list( &payload, format, ap );
-	if( ( context->options & XLOG_CONTEXT_OCOLOR_BODY ) ) {
+	if(
+	   ( context->options & XLOG_CONTEXT_OCOLOR_BODY )
+	   && level_attributes[level].body_suffix
+	) {
 		autobuf_append_text( &payload, level_attributes[level].body_suffix );
 	}
 	va_end( ap );
@@ -1474,13 +1484,31 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	if( module ) {
 		XLOG_STATS_UPDATE( &module->stats, BYTE, INPUT, payload->offset );
 	}
-	int length = payload_print_TEXT( payload, printer );
-	autobuf_destory( &payload );
-	if( length > 0 && module ) {
-		XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
-		XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
-	}
-	XLOG_TRACE( "Logged length is %d.", length );
 	
-	return length;
+	int buff_type = XLOG_PRINTER_BUFF_GET( printer->options );
+	switch( buff_type ) {
+		case XLOG_PRINTER_BUFF_NONE: {
+			XLOG_TRACE( "Output via printer." );
+			int length = payload_print_TEXT( payload, printer );
+			autobuf_destory( &payload );
+			if( length > 0 && module ) {
+				XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
+				XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
+			}
+			XLOG_TRACE( "Logged length is %d.", length );
+			
+			return length;
+		} break;
+		case XLOG_PRINTER_BUFF_RINGBUF: {
+			XLOG_TRACE( "Trasfer to ring-buffer." );
+			printer->append( printer, (const char *)payload );
+			return payload->offset;
+		} break;
+		default: {
+			XLOG_TRACE( "Never reached." );
+			XLOG_ASSERT( 0 );
+		} break;
+	}
+	
+	return 0;
 }

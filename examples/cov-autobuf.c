@@ -1,11 +1,11 @@
 #include <xlog/xlog.h>
 #include <xlog/xlog_helper.h>
 
-static unsigned long random_integer( void )
+static int random_integer( void )
 {
 	static bool initialized = false;
 	if( !initialized ) {
-		unsigned long seed;
+		unsigned int seed;
 		
 		int fd = open( "/dev/urandom", O_RDONLY );
 		if( fd < 0 || read( fd, &seed, sizeof( seed ) ) < 0 ) {
@@ -16,7 +16,7 @@ static unsigned long random_integer( void )
 			fd = -1;
 		}
 		
-		srand( ( unsigned int )seed );
+		srand( seed );
 		initialized = true;
 	}
 	
@@ -45,7 +45,7 @@ int main( int argc, char **argv )
 		payload_print_TEXT( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
 		autobuf_destory( &payload );
 		
-		log_r( "buffer = %s\n", buff );
+		log_r( "\n\nbuffer = %s\n", buff );
 	}
 	
 	{
@@ -55,7 +55,7 @@ int main( int argc, char **argv )
 		    1024, 32
 		);
 		
-		unsigned long buff[2048];
+		int buff[2048];
 		for( int i = 0; i < sizeof( buff ) / sizeof( *buff ); i ++ ) {
 			buff[i] = random_integer();
 		}
@@ -74,7 +74,7 @@ int main( int argc, char **argv )
 		);
 		
 		if( payload ) {
-			unsigned long buff[128];
+			int buff[128];
 			for( int i = 0; i < sizeof( buff ) / sizeof( *buff ); i ++ ) {
 				buff[i] = random_integer();
 			}
