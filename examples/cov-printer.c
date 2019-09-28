@@ -98,7 +98,7 @@ int main( int argc, char **argv )
 	struct {
 		const char *brief;
 		unsigned int count;
-	} bench_result[10];
+	} bench_result[20];
 	
 	char buffer[BENCH_BUFFER_SIZE];
 	for( int i = 0; i < sizeof( buffer ); ++ i ) {
@@ -174,12 +174,10 @@ int main( int argc, char **argv )
 		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT );
 		time_t st = time( NULL );
 		unsigned int i = 0;
-		fprintf(stderr, "destory printer ----\n" );
 		while( time( NULL ) - st < time_limit && i < count_limit ) {
 			log_w( "%s", buffer );
 			i ++;
 		}
-		fprintf(stderr, "destory printer\n" );
 		xlog_printer_destory( g_printer );
 		g_printer = NULL;
 		
@@ -284,6 +282,82 @@ int main( int argc, char **argv )
 		index ++;
 	}
 	fprintf(stderr, "End of RB-STDERR\n" );
+	#endif
+	
+	#if 1
+	{
+		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_RINGBUF );
+		time_t st = time( NULL );
+		unsigned int i = 0;
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "%s", buffer );
+			i ++;
+		}
+		xlog_printer_destory( g_printer );
+		g_printer = NULL;
+		
+		bench_result[index].brief = "RB-STDOUT";
+		bench_result[index].count = i / time_limit;
+		index ++;
+	}
+	fprintf(stderr, "End of RB-STDOUT\n" );
+	#endif
+	
+	#if 1
+	{
+		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_RINGBUF, "rotating-rb.txt", 1024 * 8, 16 );
+		time_t st = time( NULL );
+		unsigned int i = 0;
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "%s", buffer );
+			i ++;
+		}
+		xlog_printer_destory( g_printer );
+		g_printer = NULL;
+		
+		bench_result[index].brief = "RB-ROTATING-FILE";
+		bench_result[index].count = i / time_limit;
+		index ++;
+	}
+	fprintf(stderr, "End of RB-ROTATING-FILE\n" );
+	#endif
+	
+	#if 1
+	{
+		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_RINGBUF, "basic-file-rb.txt" );
+		time_t st = time( NULL );
+		unsigned int i = 0;
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "%s", buffer );
+			i ++;
+		}
+		xlog_printer_destory( g_printer );
+		g_printer = NULL;
+		
+		bench_result[index].brief = "RB-BASIC-FILE";
+		bench_result[index].count = i / time_limit;
+		index ++;
+	}
+	fprintf(stderr, "End of RB-BASIC-FILE\n" );
+	#endif
+	
+	#if 1
+	{
+		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_RINGBUF, "daily-file-rb.txt" );
+		time_t st = time( NULL );
+		unsigned int i = 0;
+		while( time( NULL ) - st < time_limit && i < count_limit ) {
+			log_w( "%s", buffer );
+			i ++;
+		}
+		xlog_printer_destory( g_printer );
+		g_printer = NULL;
+		
+		bench_result[index].brief = "RB-DAILY-FILE";
+		bench_result[index].count = i / time_limit;
+		index ++;
+	}
+	fprintf(stderr, "End of RD-DAILY-FILE\n" );
 	#endif
 	
 	#if 1
