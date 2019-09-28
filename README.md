@@ -278,5 +278,5 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 6. ~~Auto-created context, auto printer and NULL module.~~
 7. ~~Bench demos and develop examples;~~
 8. ~~(DEPRECATED)Plugin support: allow (un)install/(dis)active plugin package.~~
-9. Log Assitent: Timeline-based logging aggregationa.
+9. Log Assistant: Timeline-based logging aggregationa.
 10. Protobuf and High-Performance socket framework for log transmission.
