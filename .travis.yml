@@ -7,7 +7,6 @@ script:
  - ./bin/cov-printer > /dev/null && ./bin/cov-autobuf > /dev/null
  - ./bin/cov-not-default-context && ./bin/cov-not-default-context
  - ./bin/cov-shell && ./bin/cov-plugins > /dev/null
- - ./bin/bench-multi-threads
  - cd ..
 
 after_success:

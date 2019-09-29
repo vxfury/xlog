@@ -82,7 +82,7 @@ int main( int argc, char **argv )
 	xlog_printer_t *g_printer = NULL;
 	unsigned int nthread = 16;
 	unsigned int time_limit = 5;
-	unsigned int count_limit = 10;
+	unsigned int count_limit = 10000000;
 	char filename[32] = { 0 };
 	snprintf( filename, 32, "bench-multi-threads-%d.txt", nthread );
 	FILE *fp = fopen( filename, "w" );
@@ -192,7 +192,7 @@ int main( int argc, char **argv )
 	
 	#if 1
 	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_RINGBUF );
+		g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
 		bench_param_t param = {
 			.brief = "RB-STDERR",
 			.printer = g_printer,
@@ -209,7 +209,7 @@ int main( int argc, char **argv )
 	
 	#if 1
 	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_RINGBUF );
+		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
 		bench_param_t param = {
 			.brief = "RB-STDOUT",
 			.printer = g_printer,
@@ -226,7 +226,7 @@ int main( int argc, char **argv )
 	
 	#if 1
 	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_RINGBUF, "rotating-rb.txt", 1024 * 8, 16 );
+		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "rotating-rb.txt", 1024 * 8, 16, 1024 );
 		bench_param_t param = {
 			.brief = "RB-ROTATING-FILE",
 			.printer = g_printer,
@@ -243,7 +243,7 @@ int main( int argc, char **argv )
 	
 	#if 1
 	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_RINGBUF, "basic-file-rb.txt" );
+		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "basic-file-rb.txt", 1024 );
 		bench_param_t param = {
 			.brief = "RB-BASIC-FILE",
 			.printer = g_printer,
@@ -260,7 +260,7 @@ int main( int argc, char **argv )
 	
 	#if 1
 	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_RINGBUF, "daily-file-rb.txt" );
+		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "daily-file-rb.txt", 1024 );
 		bench_param_t param = {
 			.brief = "RB-DAILY-FILE",
 			.printer = g_printer,

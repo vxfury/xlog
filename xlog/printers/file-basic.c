@@ -57,8 +57,9 @@ static int __basic_file_destory_context( struct __basic_file_printer_context *co
 	return 0;
 }
 
-static int __basic_file_append( xlog_printer_t *printer, const char *text )
+static int __basic_file_append( xlog_printer_t *printer, void *data )
 {
+	const char *text = ( const char * )data;
 	struct __basic_file_printer_context *_ctx = ( struct __basic_file_printer_context * )printer->context;
 	int fd = _ctx->fd;
 	if( fd >= 0 ) {

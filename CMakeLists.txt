@@ -78,6 +78,14 @@ if(ENABLE_COVERAGE_CHECK)
 endif()
 redefine_file_macro(cov-plugins)
 
+# bench-printers
+set(SOURCES examples/bench-printers.c)
+add_executable(bench-printers ${SOURCES})
+target_link_libraries(bench-printers xlog)
+if(ENABLE_COVERAGE_CHECK)
+	target_link_libraries(bench-printers gcov)
+endif()
+redefine_file_macro(bench-printers)
 
 # bench-multi-threads
 set(SOURCES examples/bench-multi-threads.c)

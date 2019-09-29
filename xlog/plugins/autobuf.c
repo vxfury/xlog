@@ -19,7 +19,7 @@
 /**
  * @brief  create a autobuf object
  *
- * @param  id, autobuf identifier(@see PAYLOAD_ID_xxx)
+ * @param  id, autobuf identifier(@see XLOG_PAYLOAD_ID_xxx)
  *         brief, brief info of autobuf
  *         options, create options(@see AUTOBUF_Oxxx)
  *         ..., variable arguments, correspond with options

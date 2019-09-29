@@ -30,7 +30,7 @@ int main( int argc, char **argv )
 	
 	{
 		autobuf_t *payload = autobuf_create(
-		    PAYLOAD_ID_TEXT, "Text",
+		    XLOG_PAYLOAD_ID_TEXT, "Text",
 		    AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN | AUTOBUF_OTEXT,
 		    1024, 32
 		);
@@ -42,7 +42,7 @@ int main( int argc, char **argv )
 		buff[sizeof( buff ) - 1] = '\0';
 		
 		autobuf_append_text( &payload, buff );
-		payload_print_TEXT( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+		_xlog_printer_print_TEXT( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
 		autobuf_destory( &payload );
 		
 		log_r( "\n\nbuffer = %s\n", buff );
@@ -50,7 +50,7 @@ int main( int argc, char **argv )
 	
 	{
 		autobuf_t *payload = autobuf_create(
-		    PAYLOAD_ID_BINARY, "Binary",
+		    XLOG_PAYLOAD_ID_BINARY, "Binary",
 		    AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN | AUTOBUF_OBINARY,
 		    1024, 32
 		);
@@ -61,14 +61,14 @@ int main( int argc, char **argv )
 		}
 		
 		autobuf_append_binary( &payload, buff, sizeof( buff ) );
-		payload_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+		_xlog_printer_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
 		autobuf_destory( &payload );
 	}
 	
 	{
 		char buffer[1024];
 		autobuf_t *payload = autobuf_create(
-		    PAYLOAD_ID_BINARY, "Binary",
+		    XLOG_PAYLOAD_ID_BINARY, "Binary",
 		    AUTOBUF_OFIXED | AUTOBUF_OBINARY,
 		    buffer, sizeof( buffer )
 		);
@@ -80,7 +80,7 @@ int main( int argc, char **argv )
 			}
 			
 			autobuf_append_binary( &payload, buff, sizeof( buff ) );
-			payload_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
+			_xlog_printer_print_BINARY( payload, xlog_printer_create( XLOG_PRINTER_STDOUT ) );
 			autobuf_destory( &payload );
 		} else {
 			log_r( "failed to create payload\n" );

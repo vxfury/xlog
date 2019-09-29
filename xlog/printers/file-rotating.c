@@ -123,8 +123,9 @@ static int rotating_file_get_fd( xlog_printer_t *printer )
 	return -1;
 }
 
-static int rotating_file_append( xlog_printer_t *printer, const char *text )
+static int rotating_file_append( xlog_printer_t *printer, void *data )
 {
+	const char *text = ( const char * )data;
 	int fd = rotating_file_get_fd( printer );
 	struct __rotating_file_printer_context *_ctx = ( struct __rotating_file_printer_context * )printer->context;
 	if( fd >= 0 ) {

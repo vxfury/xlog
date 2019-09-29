@@ -140,8 +140,9 @@ static int daily_file_get_fd( xlog_printer_t *printer )
 	return -1;
 }
 
-static int daily_file_append( xlog_printer_t *printer, const char *text )
+static int daily_file_append( xlog_printer_t *printer, void *data )
 {
+	const char *text = ( const char * )data;
 	int fd = daily_file_get_fd( printer );
 	if( fd >= 0 ) {
 		size_t size = strlen( text );

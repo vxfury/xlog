@@ -164,7 +164,7 @@ typedef struct __xlog_printer {
 	#endif
 	void *context;
 	int options;
-	int ( *append )( struct __xlog_printer *printer, const char *text );
+	int ( *append )( struct __xlog_printer *printer, void *data );
 	int ( *optctl )( struct __xlog_printer *printer, int option, void *vptr, size_t size );
 } xlog_printer_t;
 
@@ -316,25 +316,14 @@ typedef struct {
 
 
 /** Payload ID */
-#define PAYLOAD_ID_AUTO			0	/* Unspecified payload */
-#define PAYLOAD_ID_TEXT			1	/* Text payload */
-#define PAYLOAD_ID_BINARY			2	/* Binary payload */
-#define PAYLOAD_ID_LOG_TIME		3	/* Time payload */
-#define PAYLOAD_ID_LOG_CLASS		4	/* Log class payload(level(int) + layer-path(variable-length string)) */
-#define PAYLOAD_ID_LOG_POINT		5	/* Source location payload */
-#define PAYLOAD_ID_LOG_TASK		6	/* Task info payload, PID + TID and it's name */
-#define PAYLOAD_ID_LOG_BODY		7	/* Log body payload */
-
-typedef struct xlog_time_tag {
-	struct {
-		long tv_sec;
-		long tv_usec;
-	} __attribute__( ( packed ) ) tv;
-	struct {
-		int tz_minuteswest;
-		int tz_dsttime;
-	} __attribute__( ( packed ) ) tz;
-} __attribute__( ( packed ) ) xlog_time_t;
+#define XLOG_PAYLOAD_ID_AUTO			0	/* Unspecified payload */
+#define XLOG_PAYLOAD_ID_TEXT			1	/* Text payload */
+#define XLOG_PAYLOAD_ID_BINARY			2	/* Binary payload */
+#define XLOG_PAYLOAD_ID_LOG_TIME		3	/* Time payload */
+#define XLOG_PAYLOAD_ID_LOG_CLASS		4	/* Log class payload(level(int) + layer-path(variable-length string)) */
+#define XLOG_PAYLOAD_ID_LOG_POINT		5	/* Source location payload */
+#define XLOG_PAYLOAD_ID_LOG_TASK		6	/* Task info payload, PID + TID and it's name */
+#define XLOG_PAYLOAD_ID_LOG_BODY		7	/* Log body payload */
 
 #ifdef __cplusplus
 extern "C" {
@@ -348,7 +337,7 @@ extern "C" {
  * @return length of printed autobuf data
  *
  */
-XLOG_PUBLIC( int ) payload_print_TEXT(
+XLOG_PUBLIC( int ) _xlog_printer_print_TEXT(
 	const autobuf_t *autobuf, xlog_printer_t *printer
 );
 
@@ -360,7 +349,7 @@ XLOG_PUBLIC( int ) payload_print_TEXT(
  * @return length of printed autobuf data
  *
  */
-XLOG_PUBLIC( int ) payload_print_BINARY(
+XLOG_PUBLIC( int ) _xlog_printer_print_BINARY(
 	const autobuf_t *autobuf, xlog_printer_t *printer
 );
 

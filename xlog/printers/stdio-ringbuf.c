@@ -88,8 +88,9 @@ static int __ringbuf_destory_context( struct __ringbuf_printer_context *context 
 	return 0;
 }
 
-static int __ringbuf_append( xlog_printer_t *printer, const char *text )
+static int __ringbuf_append( xlog_printer_t *printer, void *data )
 {
+	const char *text = ( const char * )data;
 	struct __ringbuf_printer_context *_ctx = ( struct __ringbuf_printer_context * )printer->context;
 	ringbuf_copy_into( _ctx->rbuff, text, strlen( text ) );
 	return 0;

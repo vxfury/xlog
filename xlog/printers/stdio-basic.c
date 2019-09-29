@@ -28,8 +28,9 @@ stderr_printer_context = {
     .lock = PTHREAD_MUTEX_INITIALIZER,
 };
 
-static int __stdxxx_append( xlog_printer_t *printer, const char *text )
+static int __stdxxx_append( xlog_printer_t *printer, void *data )
 {
+    const char *text = ( const char * )data;
     #ifndef XLOG_BENCH_NO_OUTPUT
     return fprintf(
         XLOG_PRINTER_TYPE_GET(printer->options) == XLOG_PRINTER_STDOUT ? stdout : stderr,

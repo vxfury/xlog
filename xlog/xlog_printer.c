@@ -3,6 +3,7 @@
 #include <xlog/xlog_helper.h>
 #include <xlog/plugins/ringbuf.h>
 #include <xlog/plugins/autobuf.h>
+#include <xlog/plugins/hexdump.h>
 
 #include "internal.h"
 
@@ -80,9 +81,7 @@ static void *__printer_ringbuf_consumer( void *arg )
 		int length = ringbuf_copy_from( context->rbuff , &autobuf, sizeof( autobuf_t * ), true );
 		if( length > 0 ) {
 			__XLOG_TRACE( "consumer-READ: length = %d\n", length );
-			if( context->printer ) {
-				payload_print_TEXT( autobuf, context->printer );
-			}
+			_xlog_printer_print_TEXT( autobuf, context->printer );
 			autobuf_destory( &autobuf );
 			idle_show = true;
 		} else if( context->force_exit ) {
@@ -133,39 +132,45 @@ static int __buffering_context_destory_ringbuf( struct __printer_ringbuf_context
 	pthread_mutex_unlock( &bufctx->rbuff->mutex );
 	pthread_join( bufctx->thread_consumer, NULL );
 	ringbuf_destory( bufctx->rbuff );
+	bufctx->rbuff = NULL;
 	XLOG_FREE( bufctx );
 	
 	return 0;
 }
 
-static int __buffering_printer_append( xlog_printer_t *printer, const char *text )
+static int __buffering_printer_append( xlog_printer_t *printer, void *data )
 {
 	int buff_type = XLOG_PRINTER_BUFF_GET( printer->options );
+	autobuf_t **payload = (autobuf_t **)data;
 	switch( buff_type ) {
 		case XLOG_PRINTER_BUFF_NONE: {
 			__XLOG_TRACE( "Non-Buffing appending" );
-			return printer->append( printer, text );
+			void *_ptr = autobuf_data_vptr( *payload );
+			printer->append( printer, _ptr );
+		} break;
+		case XLOG_PRINTER_BUFF_NCPYRBUF: {
+			__XLOG_TRACE( "No-Copy ring-buffer appending" );
+			struct __printer_ringbuf_context *bufctx = ( struct __printer_ringbuf_context * )printer->context;
+			ringbuf_copy_into( bufctx->rbuff, payload, sizeof( autobuf_t * ) );
+			int length = (*payload)->offset;
+			*payload = NULL;
+			return length;
 		} break;
 		case XLOG_PRINTER_BUFF_RINGBUF: {
-			__XLOG_TRACE( "No-Copy ring-buffer appending" );
-			autobuf_t *autobuf = ( autobuf_t * )text;
+			__XLOG_TRACE( "Ring-buffer appending" );
 			struct __printer_ringbuf_context *bufctx = ( struct __printer_ringbuf_context * )printer->context;
-			ringbuf_copy_into( bufctx->rbuff, &autobuf, sizeof( autobuf_t * ) );
+			void *_ptr = autobuf_data_vptr( *payload );
+			size_t _len = (*payload)->offset;
+			ringbuf_copy_into( bufctx->rbuff, _ptr, _len );
 			
-			return autobuf->offset;
+			return _len;
 		} break;
 		default: {
 			XLOG_ASSERT( 0 );
 		} break;
 	}
-	if( buff_type == XLOG_PRINTER_BUFF_RINGBUF ) {
-		autobuf_t *autobuf = ( autobuf_t * )text;
-		struct __printer_ringbuf_context *bufctx = ( struct __printer_ringbuf_context * )printer->context;
-		ringbuf_copy_into( bufctx->rbuff, &autobuf, sizeof( autobuf_t * ) );
-		return autobuf->offset;
-	} else {
-		return printer->append( printer, text );
-	}
+	
+	return 0;
 }
 
 static int __buffering_printer_optctl( xlog_printer_t *printer, int option, void *vptr, size_t size )
@@ -216,6 +221,9 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... )
 	int type = XLOG_PRINTER_TYPE_GET( options );
 	int buff_type = XLOG_PRINTER_BUFF_GET( options );
 	__XLOG_TRACE( "options = 0x%X, type = %d, buffering = %d", options, type, buff_type );
+	
+	va_list ap;
+	va_start( ap, options );
 	switch( type ) {
 		case XLOG_PRINTER_STDOUT: {
 			printer = &stdout_printer;
@@ -224,33 +232,21 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... )
 			printer = &stderr_printer;
 		} break;
 		case XLOG_PRINTER_FILES_BASIC: {
-			va_list ap;
-			va_start( ap, options );
 			const char *file = va_arg( ap, const char * );
-			va_end( ap );
 			printer = xlog_printer_create_basic_file( file );
 		} break;
 		case XLOG_PRINTER_FILES_ROTATING: {
-			va_list ap;
-			va_start( ap, options );
 			const char *file = va_arg( ap, const char * );
 			size_t max_size_per_file = va_arg( ap, size_t );
 			size_t max_file_to_ratating = va_arg( ap, size_t );
-			va_end( ap );
 			printer = xlog_printer_create_rotating_file( file, max_size_per_file, max_file_to_ratating );
 		} break;
 		case XLOG_PRINTER_FILES_DAILY: {
-			va_list ap;
-			va_start( ap, options );
 			const char *file = va_arg( ap, const char * );
-			va_end( ap );
 			printer = xlog_printer_create_daily_file( file );
 		} break;
 		case XLOG_PRINTER_RINGBUF: {
-			va_list ap;
-			va_start( ap, options );
 			size_t capacity = va_arg( ap, size_t );
-			va_end( ap );
 			printer = xlog_printer_create_ringbuf( capacity );
 		} break;
 		default: {
@@ -264,13 +260,15 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... )
 		printer->magic = XLOG_MAGIC_PRINTER;
 		#endif
 		switch( buff_type ) {
+			case XLOG_PRINTER_BUFF_NCPYRBUF:
 			case XLOG_PRINTER_BUFF_RINGBUF: {
-				xlog_printer_t *buffprinter = __buffering_printer_create( 1024, printer );
+				size_t rb_capacity = va_arg( ap, size_t );
+				xlog_printer_t *buffprinter = __buffering_printer_create( rb_capacity, printer );
 				if( buffprinter ) {
 					#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 					buffprinter->magic = XLOG_MAGIC_PRINTER;
 					#endif
-					buffprinter->options = XLOG_PRINTER_BUFF_RINGBUF;
+					buffprinter->options = XLOG_PRINTER_BUFF_NCPYRBUF;
 					printer = buffprinter;
 				} else {
 					__XLOG_TRACE( "Failed to create buffering-printer." );
@@ -280,6 +278,7 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... )
 	} else {
 		__XLOG_TRACE( "Failed to create printer." );
 	}
+	va_end( ap );
 	__XLOG_TRACE( "Succeed to create printer." );
 	
 	return printer;
@@ -302,12 +301,13 @@ XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer )
 	int buff_type = XLOG_PRINTER_BUFF_GET( printer->options );
 	__XLOG_TRACE( "buffering = %d.", buff_type );
 	switch( buff_type ) {
+		case XLOG_PRINTER_BUFF_NCPYRBUF:
 		case XLOG_PRINTER_BUFF_RINGBUF: {
+			__XLOG_TRACE( "Destory buffering context." );
 			struct __printer_ringbuf_context *bufctx = (struct __printer_ringbuf_context *)printer->context;
 			printer = bufctx->printer;
-			bufctx->printer = NULL;
-			__XLOG_TRACE( "Destory buffering context." );
 			__buffering_context_destory_ringbuf( bufctx );
+			bufctx->printer = NULL;
 		} break;
 	}
 	
@@ -337,4 +337,75 @@ XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer )
 	}
 	
 	return 0;
+}
+
+/**
+ * @brief  print TEXT compatible autobuf
+ *
+ * @param  autobuf, autobuf object to print
+ *         printer, printer to print the autobuf
+ * @return length of printed autobuf data
+ *
+ */
+XLOG_PUBLIC( int ) _xlog_printer_print_TEXT(
+	const autobuf_t *autobuf, xlog_printer_t *printer
+)
+{
+	XLOG_ASSERT( autobuf );
+	XLOG_ASSERT( AUTOBUF_TEXT_COMPATIBLE( autobuf->options ) );
+	
+	return printer->append( printer, ( void * )autobuf_data_vptr( autobuf ) );
+}
+
+static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg )
+{
+	xlog_printer_t *printer = ( xlog_printer_t * )arg;
+	
+	char buffer[128];
+	snprintf(
+		buffer, sizeof( buffer ),
+		"%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline
+	);
+	printer->append( printer, buffer );
+}
+
+static int hexdump_memory_readline( const void *addr, off_t offset, void *buffer, size_t size )
+{
+	memcpy( buffer, ( char * )addr + offset, size );
+	
+	return size;
+}
+
+/**
+ * @brief  print BINARY compatible autobuf
+ *
+ * @param  autobuf, autobuf object to print
+ *         printer, printer to print the autobuf
+ * @return length of printed autobuf data
+ *
+ */
+XLOG_PUBLIC( int ) _xlog_printer_print_BINARY(
+	const autobuf_t *autobuf, xlog_printer_t *printer
+)
+{
+	XLOG_ASSERT( autobuf );
+	XLOG_ASSERT( printer );
+	
+	hexdump_options_t options = {
+		.start = 0,
+		.end = -1,
+		.columns = 16,
+		.groupsize = 8,
+		.use_formatting = false,
+	};
+	options.end = options.start + autobuf->offset;
+	if( printer->optctl ) {
+		printer->optctl( printer, XLOG_PRINTER_CTRL_LOCK, NULL, 0 );
+	}
+	int length = __hexdump( autobuf_data_vptr( autobuf ), &options, hexdump_memory_readline, hexdump_printline, printer );
+	if( printer->optctl ) {
+		printer->optctl( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL, 0 );
+	}
+	
+	return length;
 }

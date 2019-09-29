@@ -42,6 +42,7 @@ extern "C" {
 
 #define XLOG_PRINTER_BUFF_NONE		XLOG_PRINTER_BUFF_OPT(0)
 #define XLOG_PRINTER_BUFF_RINGBUF	XLOG_PRINTER_BUFF_OPT(1)
+#define XLOG_PRINTER_BUFF_NCPYRBUF	XLOG_PRINTER_BUFF_OPT(2)
 
 /** xlog format control options */
 #define XLOG_FORMAT_OTIME			BIT_MASK(0) /**< time */

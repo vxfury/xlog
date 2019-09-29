@@ -1167,77 +1167,6 @@ XLOG_PUBLIC( int ) xlog_version( char *buffer, int size )
 }
 
 /**
- * @brief  print TEXT compatible autobuf
- *
- * @param  autobuf, autobuf object to print
- *         printer, printer to print the autobuf
- * @return length of printed autobuf data
- *
- */
-XLOG_PUBLIC( int ) payload_print_TEXT(
-	const autobuf_t *autobuf, xlog_printer_t *printer
-)
-{
-	XLOG_ASSERT( autobuf );
-	XLOG_ASSERT( AUTOBUF_TEXT_COMPATIBLE( autobuf->options ) );
-	
-	return printer->append( printer, ( const char * )autobuf_data_vptr( autobuf ) );
-}
-
-static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg )
-{
-	xlog_printer_t *printer = ( xlog_printer_t * )arg;
-	
-	char buffer[128];
-	snprintf(
-		buffer, sizeof( buffer ),
-		"%5jx%03jx  %s\n", cursor >> 12, cursor & 0xFFF, dumpline
-	);
-	printer->append( printer, buffer );
-}
-
-static int hexdump_memory_readline( const void *addr, off_t offset, void *buffer, size_t size )
-{
-	memcpy( buffer, ( char * )addr + offset, size );
-	
-	return size;
-}
-
-/**
- * @brief  print BINARY compatible autobuf
- *
- * @param  autobuf, autobuf object to print
- *         printer, printer to print the autobuf
- * @return length of printed autobuf data
- *
- */
-XLOG_PUBLIC( int ) payload_print_BINARY(
-	const autobuf_t *autobuf, xlog_printer_t *printer
-)
-{
-	XLOG_ASSERT( autobuf );
-	XLOG_ASSERT( printer );
-	
-	hexdump_options_t options = {
-		.start = 0,
-		.end = -1,
-		.columns = 16,
-		.groupsize = 8,
-		.use_formatting = false,
-	};
-	options.end = options.start + autobuf->offset;
-	if( printer->optctl ) {
-		printer->optctl( printer, XLOG_PRINTER_CTRL_LOCK, NULL, 0 );
-	}
-	int length = __hexdump( autobuf_data_vptr( autobuf ), &options, hexdump_memory_readline, hexdump_printline, printer );
-	if( printer->optctl ) {
-		printer->optctl( printer, XLOG_PRINTER_CTRL_UNLOCK, NULL, 0 );
-	}
-	
-	return length;
-}
-
-/**
  * @brief  output raw log
  *
  * @param  printer, printer to output log
@@ -1272,7 +1201,7 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
 	}
 	
 	int length = 0;
-	autobuf_t *payload = autobuf_create( PAYLOAD_ID_AUTO, "Log Text", AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN, 240, 64 );
+	autobuf_t *payload = autobuf_create( XLOG_PAYLOAD_ID_AUTO, "Log Text", AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN, 240, 64 );
 	if( payload ) {
 		if( prefix ) {
 			autobuf_append_text( &payload, prefix );
@@ -1284,8 +1213,8 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
 		if( suffix ) {
 			autobuf_append_text( &payload, suffix );
 		}
-		length = payload_print_TEXT( payload, printer );
-		autobuf_destory( &payload );
+		
+		return printer->append( printer, payload );
 	} else {
 		__XLOG_TRACE( "Failed to create payload." );
 	}
@@ -1379,7 +1308,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	}
 	
 	autobuf_t *payload = autobuf_create(
-		PAYLOAD_ID_AUTO, "Log",
+		XLOG_PAYLOAD_ID_AUTO, "Log",
 		AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN | AUTOBUF_OTEXT, XLOG_DEFAULT_PAYLOAD_SIZE, 64
 	);
 	if( payload == NULL ) {
@@ -1486,29 +1415,19 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	}
 	
 	int buff_type = XLOG_PRINTER_BUFF_GET( printer->options );
-	switch( buff_type ) {
-		case XLOG_PRINTER_BUFF_NONE: {
-			XLOG_TRACE( "Output via printer." );
-			int length = payload_print_TEXT( payload, printer );
+	if( buff_type == XLOG_PRINTER_BUFF_NONE ) {
+		int length = printer->append( printer, autobuf_data_vptr( payload ) );
+		autobuf_destory( &payload );
+		
+		return length;
+	} else {
+		int length = printer->append( printer, &payload );
+		if( payload ) {
 			autobuf_destory( &payload );
-			if( length > 0 && module ) {
-				XLOG_STATS_UPDATE( &module->stats, REQUEST, OUTPUT, 1 );
-				XLOG_STATS_UPDATE( &module->stats, BYTE, OUTPUT, length );
-			}
-			XLOG_TRACE( "Logged length is %d.", length );
-			
-			return length;
-		} break;
-		case XLOG_PRINTER_BUFF_RINGBUF: {
-			XLOG_TRACE( "Trasfer to ring-buffer." );
-			printer->append( printer, (const char *)payload );
-			return payload->offset;
-		} break;
-		default: {
-			XLOG_TRACE( "Never reached." );
-			XLOG_ASSERT( 0 );
-		} break;
+		} else {
+			// payload object has been trasfered to minimal-copy-buffering printer
+		}
+		
+		return length;
 	}
-	
-	return 0;
 }
