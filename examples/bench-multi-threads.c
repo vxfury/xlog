@@ -87,193 +87,270 @@ int main( int argc, char **argv )
 	snprintf( filename, 32, "bench-multi-threads-%d.txt", nthread );
 	FILE *fp = fopen( filename, "w" );
 	
-	#if 1
+	// NOTE: non-buffering printers
 	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_STDERR );
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT );
+			bench_param_t param = {
+				.brief = "STDOUT",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of STDOUT\n" );
 		
-		bench_param_t param = {
-			.brief = "STDERR",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR );
+			bench_param_t param = {
+				.brief = "STDERR",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of STDERR\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "rotating.txt", 1024 * 8, 16 );
+			bench_param_t param = {
+				.brief = "FILE-ROTATE",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of FILE-ROTATE\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "basic-file.txt" );
+			bench_param_t param = {
+				.brief = "FILE-BASIC",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of FILE-BASIC\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "daily-file.txt" );
+			bench_param_t param = {
+				.brief = "FILE-DAILY",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of FILE-DAILY\n" );
 	}
-	fprintf(stderr, "End of STDERR\n" );
-	#endif
 	
-	#if 1
+	// NOTE: printers with ring-buffer
 	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT );
-		bench_param_t param = {
-			.brief = "STDOUT",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_RINGBUF, 1024 * 1024 * 8 );
+			bench_param_t param = {
+				.brief = "RINGBUF-STDERR",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of RINGBUF-STDERR\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_RINGBUF, 1024 * 1024 * 8 );
+			bench_param_t param = {
+				.brief = "RINGBUF-STDOUT",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of RINGBUF-STDOUT\n" );
+		
+		// should be same as RINGBUF_STDOUT
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_RINGBUF, 1024 * 1024 * 8 );
+			bench_param_t param = {
+				.brief = "RING-BUFFER",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of RING-BUFFER\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 * 1024 * 8 );
+			bench_param_t param = {
+				.brief = "RINGBUF-FILE-ROTATE",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of RINGBUF-FILE-ROTATE\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-basic.txt", 1024 * 1024 * 8 );
+			bench_param_t param = {
+				.brief = "RINGBUF-FILE-BASIC",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of RINGBUF-FILE-BASIC\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-daily.txt", 1024 * 1024 * 8 );
+			bench_param_t param = {
+				.brief = "RINGBUF-FILE-DAILY",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of RINGBUF-FILE-DAILY\n" );
 	}
-	fprintf(stderr, "End of STDOUT\n" );
-	#endif
 	
-	#if 1
+	// NOTE: no-copying buffering printers
 	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "rotating.txt", 1024 * 8, 16 );
-		bench_param_t param = {
-			.brief = "ROTATING-FILE",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			bench_param_t param = {
+				.brief = "NCPY-RINGBUF-STDOUT",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of NCPY-RINGBUF-STDOUT\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			bench_param_t param = {
+				.brief = "NCPY-RINGBUF-STDERR",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of NCPY-RINGBUF-STDERR\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			bench_param_t param = {
+				.brief = "NCPY-RINGBUF-STDOUT",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of NCPY-RINGBUF-STDOUT\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 );
+			bench_param_t param = {
+				.brief = "NCPY-RINGBUF-FILE-ROTATE",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of NCPY-RINGBUF-FILE-ROTATE\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-basic.txt", 1024 );
+			bench_param_t param = {
+				.brief = "NCPY-RINGBUF-FILE-BASIC",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of NCPY-RINGBUF-FILE-BASIC\n" );
+		
+		{
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-daily.txt", 1024 );
+			bench_param_t param = {
+				.brief = "NCPY-RINGBUF-FILE-DAILY",
+				.printer = g_printer,
+				.time_limit = time_limit,
+				.count_limit = count_limit,
+				.fp = fp,
+			};
+			xlog_test_multi_thread( nthread, &param );
+			xlog_printer_destory( g_printer );
+			g_printer = NULL;
+		}
+		fprintf(stderr, "End of NCPY-RINGBUF-FILE-DAILY\n" );
 	}
-	fprintf(stderr, "End of ROTATING-FILE\n" );
-	#endif
-	
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "basic-file.txt" );
-		bench_param_t param = {
-			.brief = "BASIC-FILE",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
-	}
-	fprintf(stderr, "End of BASIC-FILE\n" );
-	#endif
-	
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "daily-file.txt" );
-		bench_param_t param = {
-			.brief = "DAILY-FILE",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
-	}
-	fprintf(stderr, "End of DAILY-FILE\n" );
-	#endif
-	
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_RINGBUF, 1024 * 1024 * 8 );
-		bench_param_t param = {
-			.brief = "RING-BUFFER",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
-	}
-	fprintf(stderr, "End of RING-BUFFER\n" );
-	#endif
-	
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
-		bench_param_t param = {
-			.brief = "RB-STDERR",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
-	}
-	fprintf(stderr, "End of RB-STDERR\n" );
-	#endif
-	
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
-		bench_param_t param = {
-			.brief = "RB-STDOUT",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
-	}
-	fprintf(stderr, "End of RB-STDOUT\n" );
-	#endif
-	
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "rotating-rb.txt", 1024 * 8, 16, 1024 );
-		bench_param_t param = {
-			.brief = "RB-ROTATING-FILE",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
-	}
-	fprintf(stderr, "End of RB-ROTATING-FILE\n" );
-	#endif
-	
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "basic-file-rb.txt", 1024 );
-		bench_param_t param = {
-			.brief = "RB-BASIC-FILE",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
-	}
-	fprintf(stderr, "End of RB-BASIC-FILE\n" );
-	#endif
-	
-	#if 1
-	{
-		g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "daily-file-rb.txt", 1024 );
-		bench_param_t param = {
-			.brief = "RB-DAILY-FILE",
-			.printer = g_printer,
-			.time_limit = time_limit,
-			.count_limit = count_limit,
-			.fp = fp,
-		};
-		xlog_test_multi_thread( nthread, &param );
-		xlog_printer_destory( g_printer );
-		g_printer = NULL;
-	}
-	fprintf(stderr, "End of RB-DAILY-FILE\n" );
-	#endif
 	
 	fclose( fp );
 	
