@@ -34,7 +34,7 @@ static const char *CHAR_AREA_HIGH_LUT[] = {
 
 static const char *hexdump_format_of( int v )
 {
-	#if !(defined HEXD_ENABLE_ONLOAD_FORMAT)
+	#if (defined HEXD_ENABLE_ONLOAD_FORMAT)
 	static bool initialized = false;
 	#endif
 	static struct {
@@ -48,7 +48,7 @@ static const char *hexdump_format_of( int v )
 		{ "printable", "" },
 	};
 	
-	#if !(defined HEXD_ENABLE_ONLOAD_FORMAT)
+	#if (defined HEXD_ENABLE_ONLOAD_FORMAT)
 	if( !initialized ) {
 		// Parse HEXD_COLORS
 		char *colors_var = getenv( "HEXD_COLORS" );
@@ -313,7 +313,6 @@ int __hexdump(
 	return 0;
 }
 
-#if 0
 static void hexdump_printline( uintmax_t cursor, const char *dumpline, void *arg )
 {
 	( void )arg;
@@ -358,7 +357,14 @@ static int hexdump_file_readline( const void *target, off_t offset, void *buffer
 
 void hexdump_file( const char *file, const hexdump_options_t *options )
 {
-	HEXD_ASSERT( options );
+	hexdump_options_t hexdopt_def = {
+		.start = 0,
+		.end = -1,
+		.columns = 16,
+		.groupsize = 8,
+		.use_formatting = true,
+	};
+	const hexdump_options_t *op = options ? options : &hexdopt_def;
 	
 	int fd = open( file, O_RDONLY );
 	if( fd < 0 ) {
@@ -366,7 +372,7 @@ void hexdump_file( const char *file, const hexdump_options_t *options )
 		return;
 	}
 	
-	__hexdump( &fd, options, hexdump_file_readline, NULL, NULL );
+	__hexdump( &fd, op, hexdump_file_readline, NULL, NULL );
 }
 
 /**
@@ -477,4 +483,3 @@ int hexdump_shell_main( int argc, char **argv )
 	
 	return 0;
 }
-#endif

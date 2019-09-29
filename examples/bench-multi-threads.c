@@ -82,7 +82,7 @@ int main( int argc, char **argv )
 	xlog_printer_t *g_printer = NULL;
 	unsigned int nthread = 16;
 	unsigned int time_limit = 5;
-	unsigned int count_limit = 10;
+	unsigned int count_limit = 1000000;
 	char filename[32] = { 0 };
 	snprintf( filename, 32, "bench-multi-threads-%d.txt", nthread );
 	FILE *fp = fopen( filename, "w" );

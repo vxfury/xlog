@@ -69,6 +69,15 @@ if(ENABLE_COVERAGE_CHECK)
 endif()
 redefine_file_macro(cov-shell)
 
+# cov-plugins
+set(SOURCES examples/cov-plugins.c)
+add_executable(cov-plugins ${SOURCES})
+target_link_libraries(cov-plugins xlog)
+if(ENABLE_COVERAGE_CHECK)
+	target_link_libraries(cov-plugins gcov)
+endif()
+redefine_file_macro(cov-plugins)
+
 
 # bench-multi-threads
 set(SOURCES examples/bench-multi-threads.c)
