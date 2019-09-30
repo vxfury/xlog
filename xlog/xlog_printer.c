@@ -409,3 +409,34 @@ XLOG_PUBLIC( int ) _xlog_printer_print_BINARY(
 	
 	return length;
 }
+
+/**
+ * @brief  output and destory autobuf to printer
+ *
+ * @param  printer, printer to print the autobuf
+ *         autobuf, autobuf object to print
+ * @return length of printed autobuf data
+ *
+ * @note   autobuf won't be destoryed for no-copy-buffering printer
+ *
+ */
+XLOG_PUBLIC( int ) xlog_printer_take_over_autobuf(
+	xlog_printer_t *printer, autobuf_t **autobuf
+)
+{
+	int buff_type = XLOG_PRINTER_BUFF_GET( printer->options );
+	if( buff_type == XLOG_PRINTER_BUFF_NONE ) {
+		int length = printer->append( printer, autobuf_data_vptr( *autobuf ) );
+		autobuf_destory( autobuf );
+		return length;
+	} else {
+		int length = printer->append( printer, autobuf );
+		if( autobuf ) {
+			autobuf_destory( autobuf );
+		} else {
+			// payload object has been trasfered to no-copy-buffering printer
+		}
+		return length;
+	}
+}
+

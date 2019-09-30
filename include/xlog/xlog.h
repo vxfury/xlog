@@ -241,6 +241,19 @@ XLOG_PUBLIC( xlog_printer_t * ) xlog_printer_create( int options, ... );
 XLOG_PUBLIC( int ) xlog_printer_destory( xlog_printer_t *printer );
 
 
+/**
+ * @brief  output and destory autobuf to printer
+ *
+ * @param  printer, printer to print the autobuf
+ *         autobuf, autobuf object to print
+ * @return length of printed autobuf data
+ *
+ * @note   autobuf won't be destoryed for no-copy-buffering printer
+ *
+ */
+XLOG_PUBLIC( int ) xlog_printer_take_over_autobuf(
+	xlog_printer_t *printer, autobuf_t **autobuf
+);
 
 /**
  * @brief  output raw log
