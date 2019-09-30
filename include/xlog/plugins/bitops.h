@@ -43,23 +43,25 @@
 #define AVERAGE(x, y)			(((x) & (y)) + (((x) ^ (y)) >> 1))
 
 /** count how many bits set */
-static inline unsigned int BITS_COUNT32(uint32_t x)
+static inline unsigned int BITS_COUNT( unsigned long x )
 {
+	#if BITS_PER_LONG == 32
 	x = ( x & 0x55555555 ) + ( ( x & 0xaaaaaaaa ) >> 1 );
 	x = ( x & 0x33333333 ) + ( ( x & 0xcccccccc ) >> 2 );
 	x = ( x & 0x0f0f0f0f ) + ( ( x & 0xf0f0f0f0 ) >> 4 );
 	x = ( x & 0x00ff00ff ) + ( ( x & 0xff00ff00 ) >> 8 );
 	x = ( x & 0x0000ffff ) + ( ( x & 0xffff0000 ) >> 16 );
 	
-	return x;
-}
-
-static inline unsigned int BITS_COUNT( unsigned long x )
-{
-	#if BITS_PER_LONG == 32
-	return BITS_COUNT32( (uint32_t)x );
+	return (unsigned int)x;
 	#elif BITS_PER_LONG == 64
-	return BITS_COUNT32( (uint32_t)x ) + BITS_COUNT32( (uint32_t)( x >> 32 ) );
+	x = ( x & 0x5555555555555555 ) + ( ( x & 0xaaaaaaaaaaaaaaaa ) >> 1 );
+	x = ( x & 0x3333333333333333 ) + ( ( x & 0xcccccccccccccccc ) >> 2 );
+	x = ( x & 0x0f0f0f0f0f0f0f0f ) + ( ( x & 0xf0f0f0f0f0f0f0f0 ) >> 4 );
+	x = ( x & 0x00ff00ff00ff00ff ) + ( ( x & 0xff00ff00ff00ff00 ) >> 8 );
+	x = ( x & 0x0000ffff0000ffff ) + ( ( x & 0xffff0000ffff0000 ) >> 16 );
+	x = ( x & 0x00000000ffffffff ) + ( ( x & 0xffffffff00000000 ) >> 32 );
+	
+	return (unsigned int)x;
 	#endif
 }
 
