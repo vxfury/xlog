@@ -80,9 +80,9 @@ int main( int argc, char **argv )
 	( void )argc;
 	( void )argv;
 	xlog_printer_t *g_printer = NULL;
-	unsigned int nthread = 16;
-	unsigned int time_limit = 5;
-	unsigned int count_limit = 10000000;
+	unsigned int nthread = 8;
+	unsigned int time_limit = 1;
+	unsigned int count_limit = 64;
 	char filename[32] = { 0 };
 	snprintf( filename, 32, "./logs/bench-multi-threads-%d.txt", nthread );
 	FILE *fp = fopen( filename, "w" );
@@ -122,7 +122,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of STDERR\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/rotating.txt", 1024 * 8, 16 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/file-rotating.txt", 1024 * 8, 16 );
 			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "FILE-ROTATE",

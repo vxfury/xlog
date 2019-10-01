@@ -29,6 +29,7 @@ static struct __basic_file_printer_context *__basic_file_create_context( const c
 	if( context ) {
 		context->filename = XLOG_STRDUP( file );
 		if( context->filename == NULL ) {
+			__XLOG_TRACE( "Failed to duplicate filename." );
 			XLOG_FREE( context );
 			
 			return NULL;
@@ -49,9 +50,10 @@ static struct __basic_file_printer_context *__basic_file_create_context( const c
 static int __basic_file_destory_context( struct __basic_file_printer_context *context )
 {
 	if( context ) {
+		close( context->fd );
+		context->fd = -1;
 		XLOG_FREE( context->filename );
 		XLOG_FREE( context );
-		close( context->fd );
 	}
 	
 	return 0;
@@ -92,6 +94,8 @@ xlog_printer_t *xlog_printer_create_basic_file( const char *file )
 		printer->context = ( void * )_prt_ctx;
 		printer->append = __basic_file_append;
 		printer->optctl = NULL;
+	} else {
+		__XLOG_TRACE( "Failed to create file-basic context." );
 	}
 	
 	return printer;

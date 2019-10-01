@@ -72,7 +72,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of STDERR\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/rotating.txt", 1024 * 8, 16 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/file-rotating.txt", 1024 * 8, 16 );
 			unsigned int i = 0;
 			while( i < count_limit ) {
 				log_w( "%s", buffer );

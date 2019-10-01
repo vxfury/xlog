@@ -87,6 +87,8 @@ static struct __rotating_file_printer_context *__rotating_file_create_context( c
 static int __rotating_file_destory_context( struct __rotating_file_printer_context *context )
 {
 	if( context ) {
+		close( context->current_fd );
+		context->current_fd = -1;
 		XLOG_FREE( context->pattern_file );
 		context->pattern_file = NULL;
 		XLOG_FREE( context );
@@ -108,6 +110,7 @@ static int rotating_file_get_fd( xlog_printer_t *printer )
 			context->current_bytes = 0;
 		} else if( context->current_bytes >= context->max_size_per_file ) {
 			close( fd );
+			context->current_fd = -1;
 			if( ( ++ context->current_index ) >= context->max_file_to_ratating ) {
 				context->current_index = 0;
 			}

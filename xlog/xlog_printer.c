@@ -431,7 +431,7 @@ XLOG_PUBLIC( int ) xlog_printer_take_over_autobuf(
 		return length;
 	} else {
 		int length = printer->append( printer, autobuf );
-		if( autobuf ) {
+		if( *autobuf ) {
 			autobuf_destory( autobuf );
 		} else {
 			// payload object has been trasfered to no-copy-buffering printer

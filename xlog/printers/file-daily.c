@@ -107,6 +107,8 @@ static struct __daily_file_printer_context *__daily_file_create_context( const c
 static int __daily_file_destory_context( struct __daily_file_printer_context *context )
 {
 	if( context ) {
+		close( context->current_fd );
+		context->current_fd = -1;
 		XLOG_FREE( context->pattern_file );
 		context->pattern_file = NULL;
 		XLOG_FREE( context );
@@ -124,13 +126,16 @@ static int daily_file_get_fd( xlog_printer_t *printer )
 			char buffer[256] = { 0 };
 			__filepath( buffer, sizeof( buffer ), context->pattern_file );
 			fd = open( buffer, O_WRONLY | O_CREAT, 0644 );
+			__XLOG_TRACE( "Daily File(%d): %s", fd, buffer );
 			context->current_fd = fd;
 			context->current_day = __now_day();
 		} else if( context->current_day != __now_day() ) {
 			close( fd );
+			context->current_fd = -1;
 			char buffer[256] = { 0 };
 			__filepath( buffer, sizeof( buffer ), context->pattern_file );
 			fd = open( buffer, O_WRONLY | O_CREAT, 0644 );
+			__XLOG_TRACE( "Daily File(%d): %s", fd, buffer );
 			context->current_fd = fd;
 			context->current_day = __now_day();
 		}

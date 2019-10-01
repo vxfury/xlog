@@ -127,7 +127,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of STDERR\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/rotating.txt", 1024 * 8, 16 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/file-rotating.txt", 1024 * 8, 16 );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
