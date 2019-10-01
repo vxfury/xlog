@@ -1,12 +1,12 @@
 language: c
 
 script:
- - mkdir build && cd build && rm -rf ./*
+ - mkdir build && cd build && rm -rf ./* && mkdir logs
  - cmake -DENABLE_COVERAGE_CHECK=ON .. && make
- - mkdir logs && ./bin/demo-xlog > /dev/null
- - ./bin/cov-printer > /dev/null && ./bin/cov-autobuf > /dev/null
+ - ./bin/demo-xlog > /dev/null
+ - ./bin/cov-printer && ./bin/cov-shell
  - ./bin/cov-not-default-context && ./bin/cov-not-default-context
- - ./bin/cov-shell && ./bin/cov-plugins > /dev/null
+ - ./bin/cov-autobuf > /dev/null && ./bin/cov-plugins > /dev/null
  - cd ..
 
 after_success:

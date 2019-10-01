@@ -44,42 +44,64 @@ int main( int argc, char **argv )
 	}
 	buffer[sizeof( buffer ) - 1] = '\0';
 	
+	unsigned int count_limit = 80;
 	// NOTE: non-buffering printers
 	{
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT );
-			log_w( "%s", buffer );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
+		fprintf(stderr, "End of STDOUT\n" );
 		
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR );
-			log_w( "%s", buffer );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of STDERR\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "rotating.txt", 1024 * 8, 16 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/rotating.txt", 1024 * 8, 16 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "basic-file.txt" );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "./logs/basic-file.txt" );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "daily-file.txt" );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "./logs/daily-file.txt" );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
@@ -89,100 +111,149 @@ int main( int argc, char **argv )
 	// NOTE: printers with ring-buffer
 	{
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_RINGBUF, 1024 * 1024 * 8 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of RINGBUF-STDERR\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_RINGBUF, 1024 * 1024 * 8 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of RINGBUF-STDOUT\n" );
 		
+		// should be same as RINGBUF_STDOUT
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_RINGBUF, 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
+			
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of RING-BUFFER\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "rotating-rb.txt", 1024 * 8, 16, 1024 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 * 1024 * 8 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of RINGBUF-FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "basic-file-rb.txt", 1024 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-basic.txt", 1024 * 1024 * 8 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of RINGBUF-FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "daily-file-rb.txt", 1024 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-daily.txt", 1024 * 1024 * 8 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of RINGBUF-FILE-DAILY\n" );
 	}
 	
-	
 	// NOTE: no-copying buffering printers
 	{
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of NCPY-RINGBUF-STDOUT\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of NCPY-RINGBUF-STDERR\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of NCPY-RINGBUF-STDOUT\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "rotating-rb.txt", 1024 * 8, 16, 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of NCPY-RINGBUF-FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "basic-file-rb.txt", 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-basic.txt", 1024 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}
 		fprintf(stderr, "End of NCPY-RINGBUF-FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "daily-file-rb.txt", 1024 * 1024 * 8 );
-			log_w( "%s", buffer );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-daily.txt", 1024 );
+			unsigned int i = 0;
+			while( i < count_limit ) {
+				log_w( "%s", buffer );
+				i ++;
+			}
 			xlog_printer_destory( g_printer );
 			g_printer = NULL;
 		}

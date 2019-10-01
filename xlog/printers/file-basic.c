@@ -70,6 +70,8 @@ static int __basic_file_append( xlog_printer_t *printer, void *data )
 		#else
 		return size;
 		#endif
+	} else {
+		__XLOG_TRACE( "Invalid file." );
 	}
 	return 0;
 }

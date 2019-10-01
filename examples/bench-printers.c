@@ -127,7 +127,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of STDERR\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "rotating.txt", 1024 * 8, 16 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/rotating.txt", 1024 * 8, 16 );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
@@ -144,7 +144,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "basic-file.txt" );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "./logs/basic-file.txt" );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
@@ -161,7 +161,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "daily-file.txt" );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "./logs/daily-file.txt" );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
@@ -234,7 +234,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of RING-BUFFER\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 * 1024 * 8 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 * 1024 * 8 );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
@@ -251,7 +251,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of RINGBUF-FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-basic.txt", 1024 * 1024 * 8 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-basic.txt", 1024 * 1024 * 8 );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
@@ -268,7 +268,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of RINGBUF-FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-daily.txt", 1024 * 1024 * 8 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-daily.txt", 1024 * 1024 * 8 );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
@@ -339,7 +339,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of NCPY-RINGBUF-STDOUT\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
@@ -356,7 +356,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of NCPY-RINGBUF-FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-basic.txt", 1024 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-basic.txt", 1024 );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {
@@ -373,7 +373,7 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of NCPY-RINGBUF-FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-daily.txt", 1024 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-daily.txt", 1024 );
 			time_t st = time( NULL );
 			unsigned int i = 0;
 			while( time( NULL ) - st < time_limit && i < count_limit ) {

@@ -84,13 +84,14 @@ int main( int argc, char **argv )
 	unsigned int time_limit = 5;
 	unsigned int count_limit = 10000000;
 	char filename[32] = { 0 };
-	snprintf( filename, 32, "bench-multi-threads-%d.txt", nthread );
+	snprintf( filename, 32, "./logs/bench-multi-threads-%d.txt", nthread );
 	FILE *fp = fopen( filename, "w" );
 	
 	// NOTE: non-buffering printers
 	{
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "STDOUT",
 				.printer = g_printer,
@@ -106,6 +107,7 @@ int main( int argc, char **argv )
 		
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "STDERR",
 				.printer = g_printer,
@@ -120,7 +122,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of STDERR\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "rotating.txt", 1024 * 8, 16 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "./logs/rotating.txt", 1024 * 8, 16 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "FILE-ROTATE",
 				.printer = g_printer,
@@ -135,7 +138,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "basic-file.txt" );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC, "./logs/basic-file.txt" );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "FILE-BASIC",
 				.printer = g_printer,
@@ -150,7 +154,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "daily-file.txt" );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY, "./logs/daily-file.txt" );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "FILE-DAILY",
 				.printer = g_printer,
@@ -169,6 +174,7 @@ int main( int argc, char **argv )
 	{
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_RINGBUF, 1024 * 1024 * 8 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "RINGBUF-STDERR",
 				.printer = g_printer,
@@ -184,6 +190,7 @@ int main( int argc, char **argv )
 		
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_RINGBUF, 1024 * 1024 * 8 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "RINGBUF-STDOUT",
 				.printer = g_printer,
@@ -200,6 +207,7 @@ int main( int argc, char **argv )
 		// should be same as RINGBUF_STDOUT
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_RINGBUF, 1024 * 1024 * 8 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "RING-BUFFER",
 				.printer = g_printer,
@@ -214,7 +222,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of RING-BUFFER\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 * 1024 * 8 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 * 1024 * 8 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "RINGBUF-FILE-ROTATE",
 				.printer = g_printer,
@@ -229,7 +238,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of RINGBUF-FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-basic.txt", 1024 * 1024 * 8 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-basic.txt", 1024 * 1024 * 8 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "RINGBUF-FILE-BASIC",
 				.printer = g_printer,
@@ -244,7 +254,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of RINGBUF-FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_RINGBUF, "ringbuf-file-daily.txt", 1024 * 1024 * 8 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_RINGBUF, "./logs/ringbuf-file-daily.txt", 1024 * 1024 * 8 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "RINGBUF-FILE-DAILY",
 				.printer = g_printer,
@@ -263,6 +274,7 @@ int main( int argc, char **argv )
 	{
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "NCPY-RINGBUF-STDOUT",
 				.printer = g_printer,
@@ -278,6 +290,7 @@ int main( int argc, char **argv )
 		
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDERR | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "NCPY-RINGBUF-STDERR",
 				.printer = g_printer,
@@ -293,6 +306,7 @@ int main( int argc, char **argv )
 		
 		{
 			g_printer = xlog_printer_create( XLOG_PRINTER_STDOUT | XLOG_PRINTER_BUFF_NCPYRBUF, 1024 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "NCPY-RINGBUF-STDOUT",
 				.printer = g_printer,
@@ -307,7 +321,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of NCPY-RINGBUF-STDOUT\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-rotating.txt", 1024 * 8, 16, 1024 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "NCPY-RINGBUF-FILE-ROTATE",
 				.printer = g_printer,
@@ -322,7 +337,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of NCPY-RINGBUF-FILE-ROTATE\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-basic.txt", 1024 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_BASIC | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-basic.txt", 1024 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "NCPY-RINGBUF-FILE-BASIC",
 				.printer = g_printer,
@@ -337,7 +353,8 @@ int main( int argc, char **argv )
 		fprintf(stderr, "End of NCPY-RINGBUF-FILE-BASIC\n" );
 		
 		{
-			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "no-copy-ringbuf-file-daily.txt", 1024 );
+			g_printer = xlog_printer_create( XLOG_PRINTER_FILES_DAILY | XLOG_PRINTER_BUFF_NCPYRBUF, "./logs/no-copy-ringbuf-file-daily.txt", 1024 );
+			XLOG_ASSERT( g_printer );
 			bench_param_t param = {
 				.brief = "NCPY-RINGBUF-FILE-DAILY",
 				.printer = g_printer,
