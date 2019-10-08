@@ -368,7 +368,7 @@ int main( int argc, char **argv )
 		}
 		fprintf(stderr, "End of NCPY-RINGBUF-FILE-DAILY\n" );
 	}
-	
+	xlog_close( NULL, 0 );
 	fclose( fp );
 	
 	return 0;

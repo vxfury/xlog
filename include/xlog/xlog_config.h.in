@@ -112,6 +112,9 @@
 /* use default printer if given printer is NULL */
 #cmakedefine XLOG_FEATURE_ENABLE_DEFAULT_PRINTER
 
+/** dynamic default size of payload(auto-buffer) */
+#cmakedefine XLOG_FEATURE_ENABLE_DYNAMIC_DEFAULT_AUTOBUF_SIZE
+
 
 /** xlog policies */
 #cmakedefine XLOG_POLICY_ENABLE_RUNTIME_SAFE

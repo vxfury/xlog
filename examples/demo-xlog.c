@@ -1,3 +1,276 @@
+#define XLOG_PRINTER	__printer
+
+#include <stdio.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <math.h>
+
+#include <xlog/xlog.h>
+
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wshorten-64-to-32"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-macros"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif
+
+static double gaussrand( unsigned int NSUM );
+static int random_integer( void );
+static int shell_make_args( char *cmdline, int *argc_p, char **argv_p, int max_args );
+
+/*
+system
+  kernel
+  logging
+  database
+network
+  http
+  dhcp
+media
+  .audio
+    mp3
+    wav
+  video
+    h264
+    h265
+ */
+
+static xlog_printer_t *__printer = NULL;
+
+static xlog_module_t *m_system = NULL, *m_system_db = NULL, *m_system_kernel = NULL, *m_system_logging = NULL;
+static xlog_module_t *m_network = NULL, *m_network_http = NULL,  *m_network_dhcp = NULL;
+static xlog_module_t *m_audio_mp3 = NULL,  *m_audio_wav = NULL;
+static xlog_module_t *m_video_h264 = NULL,  *m_video_h265 = NULL;
+
+#if !(defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
+static xlog_t *g_master = NULL;
+#define XLOG_CONTEXT g_master
+#define ROOT_MODULE (g_master ? (g_master->module) : NULL)
+#else
+#define ROOT_MODULE NULL
+#endif
+
+#define XLOG_MODULE m_network_dhcp
+
+int main( int argc, char **argv )
+{
+	__printer = xlog_printer_create( XLOG_PRINTER_FILES_ROTATING, "file-rotating.txt", 1024 * 1024 * 16, 8 );
+	xlog_printer_set_default( __printer );
+	XLOG_SET_THREAD_NAME( "demo-xlog" );
+	#if !(defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
+	g_master = xlog_open( "./xlog-nodes", 0 );
+	#endif
+	{
+		m_system = xlog_module_open( "system", XLOG_LEVEL_WARN, ROOT_MODULE );
+		m_system_kernel = xlog_module_open( "/system/kernel", XLOG_LEVEL_WARN, ROOT_MODULE );
+		m_system_db = xlog_module_open( "db", XLOG_LEVEL_FATAL, m_system );
+		m_system_logging = xlog_module_open( "/system/logging", XLOG_LEVEL_ERROR, ROOT_MODULE );
+		
+		m_network = xlog_module_open( "network", XLOG_LEVEL_INFO, ROOT_MODULE );
+		m_network_http = xlog_module_open( "/network/http", XLOG_LEVEL_INFO, ROOT_MODULE );
+		m_network_dhcp = xlog_module_open( "dhcp", XLOG_LEVEL_DEBUG, m_network );
+		
+		m_audio_mp3 = xlog_module_open( "/media/.audio/mp3", XLOG_LEVEL_INFO, ROOT_MODULE );
+		m_audio_wav = xlog_module_open( "/media/.audio/wav", XLOG_LEVEL_INFO, ROOT_MODULE );
+		
+		m_video_h264 = xlog_module_open( "/media/video/h264", XLOG_LEVEL_VERBOSE, ROOT_MODULE );
+		m_video_h265 = xlog_module_open( "/media/video/h265", XLOG_LEVEL_DEBUG, ROOT_MODULE );
+	}
+	
+	{
+		char cmdline[] = "debug -r -L=w /network";
+		int targc;
+		char *targv[10];
+		shell_make_args( cmdline, &targc, targv, 10 );
+		xlog_shell_main( XLOG_CONTEXT, targc, targv );
+
+		#undef XLOG_MODULE
+		#define XLOG_MODULE m_network_http
+		log_d( "Never Print" );
+		log_w( "Should Print" );
+	}
+	
+	{
+		char cmdline[] = "debug -l";
+		int targc;
+		char *targv[10];
+		shell_make_args( cmdline, &targc, targv, 10 );
+		xlog_shell_main( XLOG_CONTEXT, targc, targv );
+	}
+	
+	{
+		char cmdline[] = "debug -a -l";
+		int targc;
+		char *targv[10];
+		shell_make_args( cmdline, &targc, targv, 10 );
+		xlog_shell_main( XLOG_CONTEXT, targc, targv );
+	}
+	
+	xlog_module_set_level( ROOT_MODULE, XLOG_LEVEL_VERBOSE, XLOG_LEVEL_ORECURSIVE | XLOG_LEVEL_OFORCE );
+	
+	{
+		#define TEST_BUFFER_SIZE		64
+		char buffer[TEST_BUFFER_SIZE] = { 0 };
+		for( int i = 0; i < sizeof( buffer ); ++ i ) {
+			buffer[i] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"[random_integer() % ( 10 + 26 * 2 )];
+		}
+		buffer[sizeof( buffer ) - 1] = '\0';
+		
+		log_r( "raw log output test: %s\n", buffer );
+		
+		log_i( "fmt log output test: %s", buffer );
+	}
+	
+	{
+		char version[32];
+		xlog_version( version, 32 );
+		log_e( "Logger version : %s\n", version );
+		
+		log_i( "list modules test" );
+		xlog_list_modules( XLOG_CONTEXT, XLOG_LIST_OWITH_TAG | XLOG_LIST_OONLY_DROP );
+		
+		log_r( "\n\n" );
+		log_i( "list modules test" );
+		xlog_module_list_submodules( ROOT_MODULE, XLOG_LIST_OWITH_TAG );
+	}
+	
+	{
+		xlog_module_t *layfind = xlog_module_lookup( ROOT_MODULE, "/net/http" );
+		
+		log_e( "modulename = %s\n", xlog_module_name( NULL, 0, layfind ) );
+	}
+	
+	{
+		xlog_module_set_level( xlog_module_lookup( ROOT_MODULE, "media/audio" ), XLOG_LEVEL_VERBOSE, XLOG_LEVEL_ORECURSIVE | XLOG_LEVEL_OFORCE );
+	}
+	
+	{
+		xlog_module_set_level( ROOT_MODULE, XLOG_LEVEL_VERBOSE, XLOG_LEVEL_ORECURSIVE );
+		log_v( "verbose: use to trace variables, usually you won't use this level." );
+		log_d( "debug: keep silent in release edition." );
+		log_i(
+		    "info: part of the products, just like those words on the interactive interface.\n"
+		    "Feedback of current system status and/or action, so make sure it's significative and intelligible.\n"
+		    "Usaully meaningful event information, such as user login/logout, program startup/exit event, request event, etc."
+		);
+		log_w(
+		    "warn: running status that is not expected but can continue to process, so you'd better check and fix it.\n"
+		    "Usaully it's owing to improper calling of interface, such as a program invoking an interface that is about to expire, improper parameters, etc."
+		);
+		log_e( "error: runing time error, current process is terminated." );
+		log_f( "fatal: the service/system is not online now." );
+	}
+	
+	{
+		for( int i = 0; i < 1024 * 4; i ++ ) {
+			size_t bufsiz = random_integer() % (1024 - 64) + 64;
+			fprintf(stderr, "bufsiz = %zu\n", bufsiz );
+			char *buffer = malloc( bufsiz );
+			for( int i = 0; i < bufsiz; i ++ ) {
+				*(buffer + i) = random_integer() % (0x7f - 0x20) + 0x20;
+			}
+			*(buffer + bufsiz - 1) = '\0';
+			
+			log_f( "buffer = %s", buffer );
+			free( buffer );
+		}
+		xlog_t *context = xlog_module_context( ROOT_MODULE );
+		fprintf( stderr, "initial-size = %zu\n", context->initial_size );
+	}
+	
+	xlog_list_modules( NULL, XLOG_LIST_OWITH_TAG | XLOG_LIST_OALL );
+	
+	xlog_printer_destory( __printer );
+	
+	xlog_close( NULL, 0 );
+	
+	return 0;
+}
+
+static double gaussrand( unsigned int NSUM )
+{
+	double x = 0;
+	for(int i = 0; i < NSUM; i++) {
+		x += (double)rand() / RAND_MAX;
+	}
+	x -= NSUM / 2.0;
+	x /= sqrt(NSUM / 12.0);
+	
+	return x;
+}
+
+static int random_integer( void )
+{
+	static bool initialized = false;
+	if( !initialized ) {
+		unsigned int seed;
+		
+		int fd = open( "/dev/urandom", O_RDONLY );
+		if( fd < 0 || read( fd, &seed, sizeof( seed ) ) < 0 ) {
+			seed = time( NULL );
+		}
+		if( fd >= 0 ) {
+			close( fd );
+			fd = -1;
+		}
+		
+		srand( seed );
+		initialized = true;
+	}
+	
+	return rand();
+}
+
+static int shell_make_args( char *cmdline, int *argc_p, char **argv_p, int max_args )
+{
+	assert( cmdline );
+	
+	int status = 0, argc = 0;
+	char *ch = cmdline;
+	
+	while( *ch ) {
+		while( isspace( ( unsigned char )*ch ) ) {
+			ch ++;
+		}
+		
+		if( *ch == '\0' ) {
+			break;
+		}
+		
+		if( *ch == '"' ) {
+			argv_p[argc] = ++ch;
+			while( ( *ch != '\0' ) && ( *ch != '"' ) ) {
+				ch ++;
+			}
+		} else {
+			argv_p[argc] = ch;
+			while( ( *ch != '\0' ) && ( !isspace( ( unsigned char )*ch ) ) ) {
+				ch++;
+			}
+		}
+		argc ++;
+		
+		if( *ch == '\0' ) {
+			break;
+		}
+		*ch++ = '\0';
+		
+		if( argc == ( max_args - 1 ) ) {
+			status = -1;
+			break;
+		}
+	}
+	argv_p[argc] = NULL;
+	*argc_p = argc;
+	
+	return status;
+}
+
+#if 0
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -250,6 +523,9 @@ int main( int argc, char **argv )
 	xlog_test_init();
 	xlog_test_set_level();
 	
+	#undef XLOG_MODULE
+	#define XLOG_MODULE NULL
+	
 	xlog_close( xlog_module_context( ROOT_MODULE ), 0 );
 	
 	xlog_printer_destory( g_printer );
@@ -259,70 +535,4 @@ int main( int argc, char **argv )
 	
 	return 0;
 }
-
-static unsigned long random_integer( void )
-{
-	static bool initialized = false;
-	if( !initialized ) {
-		unsigned long seed;
-		
-		int fd = open( "/dev/urandom", O_RDONLY );
-		if( fd < 0 || read( fd, &seed, sizeof( seed ) ) < 0 ) {
-			seed = time( NULL );
-		}
-		if( fd >= 0 ) {
-			close( fd );
-			fd = -1;
-		}
-		
-		srand( ( unsigned int )seed );
-		initialized = true;
-	}
-	
-	return rand();
-}
-
-static int shell_make_args( char *cmdline, int *argc_p, char **argv_p, int max_args )
-{
-	assert( cmdline );
-	
-	int status = 0, argc = 0;
-	char *ch = cmdline;
-	
-	while( *ch ) {
-		while( isspace( ( unsigned char )*ch ) ) {
-			ch ++;
-		}
-		
-		if( *ch == '\0' ) {
-			break;
-		}
-		
-		if( *ch == '"' ) {
-			argv_p[argc] = ++ch;
-			while( ( *ch != '\0' ) && ( *ch != '"' ) ) {
-				ch ++;
-			}
-		} else {
-			argv_p[argc] = ch;
-			while( ( *ch != '\0' ) && ( !isspace( ( unsigned char )*ch ) ) ) {
-				ch++;
-			}
-		}
-		argc ++;
-		
-		if( *ch == '\0' ) {
-			break;
-		}
-		*ch++ = '\0';
-		
-		if( argc == ( max_args - 1 ) ) {
-			status = -1;
-			break;
-		}
-	}
-	argv_p[argc] = NULL;
-	*argc_p = argc;
-	
-	return status;
-}
+#endif

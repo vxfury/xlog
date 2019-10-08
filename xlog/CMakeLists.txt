@@ -16,6 +16,8 @@ option(XLOG_FEATURE_ENABLE_STATS_MODULE "Enable statistics for module(s)" ON)
 
 option(XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT "Create default context if XLOG_CONTEXT is NULL" ON)
 
+option(XLOG_FEATURE_ENABLE_DYNAMIC_DEFAULT_AUTOBUF_SIZE "Dynamic default size of auto-buffer" ON)
+
 option(XLOG_VERSION_WITH_BUILDDATE "Append build-date to version" OFF)
 
 # policies

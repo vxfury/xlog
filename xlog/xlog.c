@@ -177,6 +177,42 @@ static int __rmdir_r( const char *dir )
 	return status;
 }
 
+#if (defined XLOG_FEATURE_ENABLE_DYNAMIC_DEFAULT_AUTOBUF_SIZE)
+static const int vote_thresholds[] = {
+	128, 192, 256, 384, 512, 768, 1024, 1536, 2048, 3072
+};
+
+/* weighted-voting: vote */
+static void weighted_voting_vote( int vote, size_t *votes, const int *thresholds, int length )
+{
+	int i;
+	for( i = 0; i < length; i ++ ) {
+		if( thresholds[i] >= vote ) {
+			break;
+		}
+	}
+	if( i == length ) {
+		// illegal vote, ignore
+		// *(votes + length - 1) += 1;
+	} else {
+		*(votes +  i) += 1;
+	}
+}
+
+/* weighted-voting: calculate */
+static int weighted_voting_calculate( size_t *votes, const int *thresholds, int length )
+{
+	size_t sum_vote = 0, cnt_vote = 0;
+	for( int i = 0; i < length; i ++ ) {
+		sum_vote += votes[i] * thresholds[i] * (1 + 0.8 * (double)i/(double)length);
+		cnt_vote += votes[i];
+		XLOG_TRACE( "votes(%d) = %zu\n", thresholds[i], votes[i] );
+	}
+	
+	return (int)(sum_vote/cnt_vote);
+}
+#endif
+
 /** short name of level, return "#" if not legal level */
 static const char *__xlog_level_short_name( int level )
 {
@@ -1033,6 +1069,15 @@ XLOG_PUBLIC( xlog_t * ) xlog_open( const char *savepath, int option )
 				context->savepath = NULL;
 			}
 			
+			/** NOTE: voting to initial-size of autobuf */
+			context->initial_size = XLOG_DEFAULT_PAYLOAD_SIZE;
+			#if (defined XLOG_FEATURE_ENABLE_DYNAMIC_DEFAULT_AUTOBUF_SIZE)
+			context->size_votes = XLOG_MALLOC( sizeof( size_t ) * XLOG_ARRAY_SIZE( vote_thresholds ) );
+			if( context->size_votes == NULL ) {
+				XLOG_TRACE( "Failed to allocate memory for voting." );
+			}
+			#endif
+			
 			/** NOTE: initialize stats */
 			XLOG_STATS_INIT( &context->stats, XLOG_STATS_CONTEXT_OPTION );
 			
@@ -1055,6 +1100,12 @@ XLOG_PUBLIC( xlog_t * ) xlog_open( const char *savepath, int option )
  */
 XLOG_PUBLIC( int ) xlog_close( xlog_t *context, int option )
 {
+	#if (defined XLOG_FEATURE_ENABLE_DEFAULT_CONTEXT)
+	if( context == NULL ) {
+		XLOG_TRACE( "Redirect to default context." );
+		context = __default_context;
+	}
+	#endif
 	if( context ) {
 		#if (defined XLOG_POLICY_ENABLE_RUNTIME_SAFE)
 		if( context->magic != XLOG_MAGIC_CONTEXT ) {
@@ -1072,6 +1123,9 @@ XLOG_PUBLIC( int ) xlog_close( xlog_t *context, int option )
 			}
 			XLOG_FREE( context->savepath );
 		}
+		#if (defined XLOG_FEATURE_ENABLE_DYNAMIC_DEFAULT_AUTOBUF_SIZE)
+		XLOG_FREE( context->size_votes );
+		#endif
 		XLOG_STATS_FINI( &context->stats );
 		pthread_mutex_unlock( &context->lock );
 		pthread_mutex_destroy( &context->lock );
@@ -1202,7 +1256,7 @@ XLOG_PUBLIC( int ) xlog_output_rawlog(
 		return 0;
 	}
 	
-	autobuf_t *autobuf = autobuf_create( XLOG_PAYLOAD_ID_AUTO, "Log Text", AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN, 240, 64 );
+	autobuf_t *autobuf = autobuf_create( XLOG_PAYLOAD_ID_AUTO, "Log Text", AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN, context ? context->initial_size : 240, 64 );
 	if( autobuf ) {
 		if( prefix ) {
 			autobuf_append_text( &autobuf, prefix );
@@ -1310,7 +1364,7 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	
 	autobuf_t *autobuf = autobuf_create(
 		XLOG_PAYLOAD_ID_AUTO, "Log",
-		AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN | AUTOBUF_OTEXT, XLOG_DEFAULT_PAYLOAD_SIZE, 64
+		AUTOBUF_ODYNAMIC | AUTOBUF_OALIGN | AUTOBUF_OTEXT, context->initial_size, 64
 	);
 	if( autobuf == NULL ) {
 		XLOG_TRACE( "Failed to create autobuf." );
@@ -1411,6 +1465,12 @@ XLOG_PUBLIC( int ) xlog_output_fmtlog(
 	}
 	va_end( ap );
 	autobuf_append_text( &autobuf, XLOG_STYLE_NEWLINE );
+	#if (defined XLOG_FEATURE_ENABLE_DYNAMIC_DEFAULT_AUTOBUF_SIZE)
+	if( context->size_votes ) {
+		weighted_voting_vote( autobuf->offset, context->size_votes, vote_thresholds, XLOG_ARRAY_SIZE( vote_thresholds ) );
+		context->initial_size = weighted_voting_calculate( context->size_votes , vote_thresholds, XLOG_ARRAY_SIZE( vote_thresholds ) );
+	}
+	#endif
 	if( module ) {
 		XLOG_STATS_UPDATE( &module->stats, BYTE, INPUT, autobuf->offset );
 	}
