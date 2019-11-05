@@ -389,7 +389,7 @@ int main( int argc, char **argv )
 		}
 		fprintf(stderr, "End of NCPY-RINGBUF-FILE-DAILY\n" );
 	}
-	
+	xlog_close( NULL, 0 );
 	for( int i = 0; i < index; i ++ ) {
 		fprintf(stderr, "%24s: %8u(%.3f)\n", bench_result[i].brief, bench_result[i].count, (double)bench_result[i].count / (double)bench_result[0].count );
 	}

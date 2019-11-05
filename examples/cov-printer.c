@@ -269,6 +269,7 @@ int main( int argc, char **argv )
 		XLOG_SET_THREAD_NAME( "cov-printer" );
 		log_i( "test info" );
 	}
+	xlog_close( NULL, 0 );
 	
 	return 0;
 }

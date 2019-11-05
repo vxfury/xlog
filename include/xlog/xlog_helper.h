@@ -182,6 +182,10 @@ typedef struct {
 	pthread_mutex_t lock;
 	int options;
 	char *savepath;
+	size_t initial_size;
+	#if (defined XLOG_FEATURE_ENABLE_DYNAMIC_DEFAULT_AUTOBUF_SIZE)
+	size_t *size_votes;
+	#endif
 	xlog_level_attr_t attributes[XLOG_LIMIT_LEVEL_NUMBER];
 	xlog_module_t *module;
 	#ifdef XLOG_FEATURE_ENABLE_STATS

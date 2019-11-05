@@ -25,7 +25,7 @@ network
   http
   dhcp
 media
-  audio
+  .audio
     mp3
     wav
   video
@@ -173,6 +173,8 @@ int main( int argc, char **argv )
 	xlog_list_modules( NULL, XLOG_LIST_OWITH_TAG | XLOG_LIST_OALL );
 	
 	xlog_printer_destory( __printer );
+	
+	xlog_close( NULL, 0 );
 	
 	return 0;
 }

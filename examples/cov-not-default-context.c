@@ -90,7 +90,7 @@ net
   http
   dhcp
 media
-  audio
+  .audio
     mp3
     wav
   video
